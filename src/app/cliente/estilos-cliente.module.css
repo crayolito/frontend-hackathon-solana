@@ -1,73 +1,212 @@
-.contenedor {
-  min-height: 100vh;
-  display: flex;
-  background: var(--fondo, #0a0a0a00);
+/* Tema comercio: misma estructura que admin; solo variables de color y ajustes responsive. */
+
+.temaComercio {
+  --panel-izquierdo-fondo: #0c1929;
+  --panel-izquierdo-acento: #0284c7;
+  --primario: #7dd3fc;
+  --borde-panel: rgba(125, 211, 252, 0.2);
+  --badge-region-bg: rgba(14, 116, 144, 0.55);
+  --logout-bg: #0c4a6e;
+  --logout-bg-hover: #0e7490;
+  --solana-green: #22d3ee;
+  --usuario-bloque-bg: rgba(2, 132, 199, 0.18);
 }
 
-.barra {
-  width: 260px;
-  padding: 18px 14px;
-  border-right: 1px solid var(--borde-panel, rgba(240, 242, 245, 0.18));
-  background: var(--panel-izquierdo-fondo, #1a1a2e);
-}
-
-.marca {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  margin-bottom: 18px;
-}
-
-.titulo {
-  margin: 0;
-  font-size: 16px;
-  color: var(--panel-izquierdo-texto, #f0f2f5);
-  letter-spacing: 0.2px;
-}
-
-.subtitulo {
-  font-size: 12px;
-  color: var(--panel-izquierdo-texto-secundario, rgba(240, 242, 245, 0.7));
-}
-
-.navegacion {
+.columnaBarra {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-}
-
-.enlace {
-  padding: 10px 10px;
-  border-radius: 10px;
-  color: var(--panel-izquierdo-texto, #f0f2f5);
-  text-decoration: none;
-  border: 1px solid transparent;
-}
-
-.enlace:hover {
-  border-color: var(--borde-panel, rgba(240, 242, 245, 0.18));
-}
-
-.enlacePrincipal {
-  border-color: color-mix(
-    in srgb,
-    var(--panel-izquierdo-acento, #6b63ff) 55%,
-    transparent
-  );
-  background: color-mix(
-    in srgb,
-    var(--panel-izquierdo-acento, #6b63ff) 18%,
-    transparent
-  );
-  color: var(--primario, #00f2ff);
-}
-
-.contenido {
   flex: 1;
-  padding: 22px;
-  background: var(--superficie, #f0f2f5);
+  min-height: 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
+.columnaPrincipal {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.barraSitioMovil {
+  display: none;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: var(--superficie, #f0f2f5);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  flex-shrink: 0;
+}
+
+.tituloMovil {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 800;
+  color: var(--texto-primario, #171717);
+}
+
+.botonMenu {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  background: #fff;
+  cursor: pointer;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.botonMenu:hover {
+  background: #f8fafc;
+}
+
+.iconoMenu {
+  display: block;
+  width: 20px;
+  height: 2px;
+  background: #1e293b;
+  border-radius: 2px;
+  position: relative;
+}
+
+.iconoMenu::before,
+.iconoMenu::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  width: 20px;
+  height: 2px;
+  background: #1e293b;
+  border-radius: 2px;
+}
+
+.iconoMenu::before {
+  top: -7px;
+}
+
+.iconoMenu::after {
+  top: 7px;
+}
+
+.fondoAtras {
+  display: none;
+}
+
+.barraCliente {
+  flex-shrink: 0;
+}
+
+@media (max-width: 900px) {
+  .barraSitioMovil {
+    display: flex;
+  }
+
+  .fondoAtras {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 35;
+    background: rgba(0, 0, 0, 0.45);
+    border: 0;
+    padding: 0;
+    cursor: pointer;
+  }
+
+  .barraCliente {
+    position: fixed;
+    left: 0;
+    top: 0;
+    height: 100vh;
+    height: 100dvh;
+    z-index: 40;
+    width: min(280px, 88vw);
+    transform: translateX(-100%);
+    transition: transform 0.22s ease;
+    box-shadow: 8px 0 28px rgba(0, 0, 0, 0.28);
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .barraClienteAbierta {
+    transform: translateX(0);
+  }
+}
+
+@media (min-width: 901px) {
+  .barraCliente {
+    position: relative;
+    transform: none !important;
+  }
+}
+
+.bloqueUsuario {
+  margin-top: auto;
+  flex-shrink: 0;
+  padding: 10px 10px;
+  border-radius: 12px;
+  background: var(--usuario-bloque-bg);
+  border: 1px solid color-mix(in srgb, var(--primario, #7dd3fc) 22%, transparent);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.avatarUsuario {
+  width: 36px;
+  height: 36px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--panel-izquierdo-acento, #0284c7) 55%, #0c4a6e);
+  color: #f0f9ff;
+  font-size: 11px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.textoUsuario {
+  min-width: 0;
+  flex: 1;
+}
+
+.emailUsuario {
+  font-size: 11px;
+  font-weight: 600;
+  color: rgba(240, 249, 255, 0.95);
+  line-height: 1.35;
+  word-break: break-all;
+}
+
+.botonSalirIcono {
+  flex-shrink: 0;
+  width: 38px;
+  height: 38px;
+  padding: 0;
+  border: 0;
+  border-radius: 10px;
+  background: color-mix(in srgb, #000 22%, transparent);
+  color: rgba(255, 255, 255, 0.88);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.15s ease;
+}
+
+.botonSalirIcono:hover {
+  background: color-mix(in srgb, #000 38%, transparent);
+}
+
+.botonSalirIcono:focus-visible {
+  outline: 2px solid var(--primario, #7dd3fc);
+  outline-offset: 2px;
+}
+
+/* Cabecera de página (titulos internos) */
 .cabecera {
   display: flex;
   flex-direction: column;
@@ -77,13 +216,12 @@
 
 .cabecera h1 {
   margin: 0;
-  font-size: 22px;
+  font-size: clamp(1.15rem, 2.5vw, 1.35rem);
   color: var(--texto-primario, #171717);
 }
 
 .cabecera p {
   margin: 0;
-  font-size: 14px;
+  font-size: clamp(0.85rem, 2vw, 0.95rem);
   color: var(--texto-secundario, rgba(0, 0, 0, 0.6));
 }
-

@@ -1,0 +1,358 @@
+/* Tarjetas y tablas compartidas (API Keys, Webhooks, Settings del comercio). */
+
+.contenedor {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  max-width: 960px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.tarjeta {
+  background: #fff;
+  border-radius: 18px;
+  border: 1px solid color-mix(in srgb, var(--texto) 8%, transparent);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+}
+
+.cabeceraTarjeta {
+  padding: 18px 22px;
+  border-bottom: 1px solid #f0f0f5;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.tituloTarjeta {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: var(--texto-primario, #1a1a2e);
+}
+
+.subtituloTarjeta {
+  margin: 4px 0 0;
+  font-size: 0.85rem;
+  color: color-mix(in srgb, var(--texto) 48%, transparent);
+}
+
+.cuerpoTarjeta {
+  padding: 22px;
+}
+
+.pieTarjeta {
+  padding: 14px 22px;
+  background: #f9fafb;
+  border-top: 1px solid #f0f0f5;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.etiqueta {
+  display: block;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--texto) 48%, transparent);
+  margin-bottom: 8px;
+}
+
+.input {
+  width: 100%;
+  padding: 10px 14px;
+  border-radius: 12px;
+  border: 1px solid #d0d0d8;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--texto-primario);
+}
+
+.input:focus {
+  outline: 2px solid color-mix(in srgb, var(--panel-izquierdo-acento, #6c63ff) 35%, transparent);
+  border-color: #6c63ff;
+}
+
+.grid2 {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+}
+
+@media (min-width: 720px) {
+  .grid2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.grid4 {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+  align-items: start;
+}
+
+@media (min-width: 900px) {
+  .grid4 {
+    grid-template-columns: 1fr 3fr;
+  }
+}
+
+.botonPrimario {
+  padding: 10px 20px;
+  border-radius: 12px;
+  border: 0;
+  background: #6c63ff;
+  color: #fff;
+  font-weight: 800;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.botonPrimario:hover {
+  background: #5a52d4;
+}
+
+.botonSecundario {
+  padding: 8px 14px;
+  border-radius: 10px;
+  border: 1px solid #e5e7eb;
+  background: #fff;
+  font-weight: 700;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.botonSecundario:hover {
+  background: #f9fafb;
+}
+
+.botonPeligro {
+  padding: 10px 18px;
+  border-radius: 12px;
+  border: 1px solid #dc2626;
+  background: #fff;
+  color: #dc2626;
+  font-weight: 800;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.botonPeligro:hover {
+  background: #dc2626;
+  color: #fff;
+}
+
+.badge {
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 4px 10px;
+  border-radius: 999px;
+}
+
+.badgeAmbar {
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: #fef3c7;
+  color: #b45309;
+}
+
+.badgeVerde {
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: #d1fae5;
+  color: #047857;
+}
+
+.badgeRojo {
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.badgeGris {
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: #f1f5f9;
+  color: #64748b;
+}
+
+.etiquetaPermisoOk {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: #d1fae5;
+  color: #047857;
+}
+
+.etiquetaPermisoLectura {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: #f1f5f9;
+  color: #64748b;
+}
+
+.toggleGrupo {
+  display: flex;
+  padding: 4px;
+  background: #f1f5f9;
+  border-radius: 10px;
+  gap: 4px;
+}
+
+.toggleBtn {
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: 0;
+  background: transparent;
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: #64748b;
+  cursor: pointer;
+}
+
+.toggleBtnActivo {
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  background: #fff;
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: #6c63ff;
+  cursor: pointer;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+}
+
+.mono {
+  font-family: ui-monospace, "Cascadia Code", monospace;
+  font-size: 0.82rem;
+}
+
+.filaClave {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.cajaClave {
+  flex: 1;
+  min-width: 0;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 10px 14px;
+}
+
+.tabla {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+.tabla thead {
+  background: #f9fafb;
+}
+
+.tabla th,
+.tabla td {
+  padding: 12px 16px;
+  text-align: left;
+  border-bottom: 1px solid #f0f0f5;
+}
+
+.tabla th {
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #64748b;
+}
+
+.eventosGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 10px;
+  padding: 14px;
+  background: #f9fafb;
+  border-radius: 12px;
+}
+
+.filaCheck {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.tarjetaEndpoint {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 18px;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  background: #fff;
+}
+
+.iconoEstado {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+}
+
+.zonaPeligro {
+  border: 1px solid #fecaca;
+  background: #fef2f2;
+  border-radius: 14px;
+  padding: 18px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.enlace {
+  color: #6c63ff;
+  font-weight: 700;
+  font-size: 0.85rem;
+  text-decoration: none;
+}
+
+.enlace:hover {
+  text-decoration: underline;
+}

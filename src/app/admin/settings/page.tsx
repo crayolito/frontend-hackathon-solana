@@ -1,12 +1,18 @@
-import estilosAdmin from "../estilos-administracion.module.css";
+"use client";
 
-// Vista placeholder para Configuración.
+import CabeceraDashboard from "../_componentes/dashboard/CabeceraDashboard";
+import ContenidoConfiguracionAdmin from "../_componentes/configuracion/ContenidoConfiguracionAdmin";
+
+// Ajustes del comercio en admin: red, escrow, notificaciones y API (demo).
 export default function PaginaSettings() {
   return (
-    <div className={estilosAdmin.cabecera}>
-      <h1>Configuración</h1>
-      <p>Aquí configuraremos preferencias y opciones del panel.</p>
-    </div>
+    <>
+      <CabeceraDashboard
+        titulo="Configuración"
+        subtitulo="Parámetros del comercio: red, escrow, avisos e integraciones (vista tipo pasarela)."
+        mostrarSelectorMes={false}
+      />
+      <ContenidoConfiguracionAdmin />
+    </>
   );
 }
-

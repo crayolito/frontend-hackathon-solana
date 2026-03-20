@@ -1,0 +1,133 @@
+/* Ficha de cliente: datos de cuenta + cartera + tabla de transacciones. */
+
+.barraVolver {
+  margin-bottom: 18px;
+}
+
+.enlaceVolver {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.9rem;
+  font-weight: 800;
+  color: #6c63ff;
+  text-decoration: none;
+}
+
+.enlaceVolver:hover {
+  text-decoration: underline;
+}
+
+.tarjetaFicha {
+  background: #fff;
+  border-radius: 18px;
+  border: 1px solid color-mix(in srgb, var(--texto) 8%, transparent);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.08);
+  padding: 22px;
+  margin-bottom: 24px;
+}
+
+.tituloFicha {
+  margin: 0 0 6px;
+  font-size: 1.5rem;
+  font-weight: 900;
+  color: var(--texto-primario, #1a1a2e);
+}
+
+.metaFicha {
+  margin: 0 0 18px;
+  font-size: 0.9rem;
+  color: color-mix(in srgb, var(--texto) 48%, transparent);
+  font-weight: 600;
+}
+
+.gridDatos {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+}
+
+.campoAncho {
+  grid-column: 1 / -1;
+}
+
+@media (min-width: 720px) {
+  .gridDatos {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.etiquetaCampo {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--texto) 48%, transparent);
+  margin: 0 0 6px;
+}
+
+.valorCampo {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--texto-primario);
+}
+
+.filaCartera {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.carteraCompleta {
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 0.78rem;
+  word-break: break-all;
+  color: #4f46e5;
+  font-weight: 600;
+}
+
+.botonCopiar {
+  padding: 8px 12px;
+  border-radius: 10px;
+  border: 1px solid #e5e7eb;
+  background: #fff;
+  font-size: 11px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.botonCopiar:hover {
+  background: #f9fafb;
+}
+
+.filaVolumen {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px;
+}
+
+.pillEstado {
+  display: inline-block;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.estadoActivo {
+  background: #d4edda;
+  color: #1a7a3c;
+}
+
+.estadoPendiente {
+  background: #fef3c7;
+  color: #b45309;
+}
+
+.estadoSuspendido {
+  background: #f3f4f6;
+  color: color-mix(in srgb, var(--texto) 55%, transparent);
+}

@@ -71,7 +71,7 @@
   align-items: center;
   gap: 8px;
   padding: 8px 10px;
-  background: #252545;
+  background: var(--badge-region-bg, #252545);
   border-radius: 999px;
   margin-bottom: 18px;
 }
@@ -138,7 +138,7 @@
 .botonLogout {
   width: 100%;
   border: 0;
-  background: #2a2a3e;
+  background: var(--logout-bg, #2a2a3e);
   color: #fff;
   border-radius: 12px;
   padding: 12px 12px;
@@ -151,7 +151,7 @@
 }
 
 .botonLogout:hover {
-  background: #32324a;
+  background: var(--logout-bg-hover, #32324a);
 }
 
 .textoLogout {
@@ -161,6 +161,7 @@
 
 .contenido {
   flex: 1;
+  min-width: 0;
   padding: 22px;
   background: var(--superficie, #f0f2f5);
 }
