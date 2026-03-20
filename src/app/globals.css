@@ -1,13 +1,39 @@
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --fondo: #ffffff;
+  --texto: #171717;
+
+  --texto-primario: var(--texto);
+  --texto-secundario: color-mix(in srgb, var(--texto) 70%, transparent);
+  --superficie: var(--fondo);
+  --borde: color-mix(in srgb, var(--texto) 12%, transparent);
+
+  /* Colores funcionales base (placeholder para cuando me pases tu paleta final) */
+  --primario: #3b82f6;
+  --secundario: #8b5cf6;
+
+  /* Acentos por sección (placeholder) */
+  --acento-admin: #7c3aed;
+  --acento-admin-alterno: #f97316;
+  --acento-cliente: #06b6d4;
+  --acento-cliente-alterno: #22c55e;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --fondo: #0a0a0a;
+    --texto: #ededed;
   }
+}
+
+/* Overrides del tema por ruta (se aplican vía ProveedorTemaPorRuta) */
+[data-area="admin"] {
+  --primario: var(--acento-admin);
+  --secundario: var(--acento-admin-alterno);
+}
+
+[data-area="cliente"] {
+  --primario: var(--acento-cliente);
+  --secundario: var(--acento-cliente-alterno);
 }
 
 html {
@@ -24,8 +50,8 @@ body {
   min-height: 100%;
   display: flex;
   flex-direction: column;
-  color: var(--foreground);
-  background: var(--background);
+  color: var(--texto-primario);
+  background: var(--fondo);
   font-family: Arial, Helvetica, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
