@@ -1,0 +1,92 @@
+/* Cabecera del dashboard: titulo, selector de mes y exportar. */
+
+.cabeceraPrincipal {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-bottom: 24px;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+@media (min-width: 900px) {
+  .cabeceraPrincipal {
+    flex-direction: row;
+    align-items: flex-end;
+  }
+}
+
+.tituloPrincipal {
+  margin: 0;
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: var(--texto-primario, #1a1a2e);
+  letter-spacing: -0.02em;
+}
+
+.subtituloPrincipal {
+  margin: 6px 0 0;
+  font-size: 0.95rem;
+  color: color-mix(in srgb, var(--texto) 48%, transparent);
+}
+
+.accionesCabecera {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+}
+
+.envoltorioSelector {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.selectorMes {
+  appearance: none;
+  padding: 10px 40px 10px 16px;
+  border-radius: 12px;
+  border: 1px solid #d0d0d8;
+  background: #fff;
+  color: var(--texto-primario, #1a1a2e);
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  min-width: 170px;
+}
+
+.selectorMes:focus {
+  outline: 2px solid color-mix(in srgb, var(--panel-izquierdo-acento, #6c63ff) 55%, transparent);
+  border-color: #6c63ff;
+}
+
+.iconoExpandir {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+  font-size: 10px;
+  color: color-mix(in srgb, var(--texto) 45%, transparent);
+}
+
+.botonExportar {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  border: 0;
+  border-radius: 12px;
+  background: #6c63ff;
+  color: #fff;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  box-shadow: 0 10px 25px rgba(108, 99, 255, 0.25);
+  transition: background-color 0.15s ease;
+}
+
+.botonExportar:hover {
+  background: #5a52d4;
+}

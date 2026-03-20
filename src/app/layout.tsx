@@ -1,14 +1,14 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { JetBrains_Mono, Space_Grotesk } from "next/font/google";
 import "./globals.css";
 import ProveedorTemaPorRuta from "./tema/ProveedorTemaPorRuta";
 
-const fuenteSans = Geist({
+const fuenteSans = Space_Grotesk({
   variable: "--fuente-geist-sans",
   subsets: ["latin"],
 });
 
-const fuenteMono = Geist_Mono({
+const fuenteMono = JetBrains_Mono({
   variable: "--fuente-geist-mono",
   subsets: ["latin"],
 });
