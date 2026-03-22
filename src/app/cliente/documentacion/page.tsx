@@ -1,14 +1,6 @@
-import CabeceraAreaCliente from "../_componentes/CabeceraAreaCliente";
-import ContenidoDocumentacionCliente from "./ContenidoDocumentacionCliente";
+import { redirect } from "next/navigation";
 
-export default function PaginaDocumentacionCliente() {
-  return (
-    <>
-      <CabeceraAreaCliente
-        titulo="Documentación"
-        subtitulo="Cómo usar el panel del comercio: API, webhooks y cobros (guía funcional)."
-      />
-      <ContenidoDocumentacionCliente />
-    </>
-  );
+// La documentación vive en la ruta pública `/documentacion` (CTA desde el home).
+export default function PaginaDocumentacionClienteRedirige() {
+  redirect("/documentacion");
 }

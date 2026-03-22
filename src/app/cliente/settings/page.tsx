@@ -1,14 +1,14 @@
+import ContenidoCuentaApiTrustpay from "../../_componentes/cuenta/ContenidoCuentaApiTrustpay";
 import CabeceraAreaCliente from "../_componentes/CabeceraAreaCliente";
-import ContenidoCuentaSettingsCliente from "../_componentes/ContenidoCuentaSettingsCliente";
 
 export default function PaginaSettingsCliente() {
   return (
     <>
       <CabeceraAreaCliente
         titulo="Ajustes de cuenta"
-        subtitulo="Perfil del negocio, wallet Solana, notificaciones y equipo."
+        subtitulo="Perfil, contraseña y baja de cuenta vinculados al API TrustPay. Conectá Phantom arriba para operar on-chain."
       />
-      <ContenidoCuentaSettingsCliente />
+      <ContenidoCuentaApiTrustpay />
     </>
   );
 }

@@ -11,34 +11,33 @@ import { useRouter } from "next/navigation";
 import estilosInicioSesion from "../../inicio-sesion.module.css";
 import estilosHome from "../../home.module.css";
 import {
-  crearUsuarioDemo,
-  guardarSesion,
-  inicializarUsuariosDemo,
-  verificarCredenciales,
-} from "../../demoAuth";
+  ErrorApiTrustpay,
+  iniciarSesionTrustpay,
+  registrarUsuarioTrustpay,
+} from "../../_lib/apiTrustpay";
+import { guardarSesionTrustpay } from "../../demoAuth";
 import type { ModoModal } from "./tiposAuth";
 
-type PaisLatam = {
+type PaisRegistro = {
   codigo: string;
   etiqueta: string;
-  prefijo: string;
-  maximoDigitos: number;
 };
 
-const paisesLatam: PaisLatam[] = [
-  { codigo: "ar", etiqueta: "Argentina", prefijo: "+54", maximoDigitos: 10 },
-  { codigo: "bo", etiqueta: "Bolivia", prefijo: "+591", maximoDigitos: 8 },
-  { codigo: "cl", etiqueta: "Chile", prefijo: "+56", maximoDigitos: 9 },
-  { codigo: "co", etiqueta: "Colombia", prefijo: "+57", maximoDigitos: 10 },
-  { codigo: "ec", etiqueta: "Ecuador", prefijo: "+593", maximoDigitos: 9 },
-  { codigo: "gt", etiqueta: "Guatemala", prefijo: "+502", maximoDigitos: 8 },
-  { codigo: "mx", etiqueta: "Mexico", prefijo: "+52", maximoDigitos: 10 },
-  { codigo: "pe", etiqueta: "Peru", prefijo: "+51", maximoDigitos: 9 },
-  { codigo: "uy", etiqueta: "Uruguay", prefijo: "+598", maximoDigitos: 8 },
-  { codigo: "ve", etiqueta: "Venezuela", prefijo: "+58", maximoDigitos: 10 },
+// Países con nombre tal como suele esperarse en el backend (string legible).
+const paisesRegistro: PaisRegistro[] = [
+  { codigo: "ar", etiqueta: "Argentina" },
+  { codigo: "bo", etiqueta: "Bolivia" },
+  { codigo: "cl", etiqueta: "Chile" },
+  { codigo: "co", etiqueta: "Colombia" },
+  { codigo: "ec", etiqueta: "Ecuador" },
+  { codigo: "gt", etiqueta: "Guatemala" },
+  { codigo: "mx", etiqueta: "Mexico" },
+  { codigo: "pe", etiqueta: "Peru" },
+  { codigo: "uy", etiqueta: "Uruguay" },
+  { codigo: "ve", etiqueta: "Venezuela" },
 ];
 
-// Renderiza el modal de login/registro usando autenticación demo (localStorage).
+// Modal de login y registro contra el API TrustPay (admin o merchant).
 export default function ModalAutenticacionDemo({
   abierta,
   modoInicial,
@@ -53,8 +52,8 @@ export default function ModalAutenticacionDemo({
   const [modoModal, setModoModal] = useState<ModoModal>(modoInicial);
   const [correo, setCorreo] = useState("");
   const [contrasena, setContrasena] = useState("");
+  const [nombreCompleto, setNombreCompleto] = useState("");
   const [codigoPais, setCodigoPais] = useState("bo");
-  const [telefono, setTelefono] = useState("");
   const [paisDropdownAbierto, setPaisDropdownAbierto] = useState(false);
   const wrapperPaisRef = useRef<HTMLDivElement | null>(null);
 
@@ -62,11 +61,10 @@ export default function ModalAutenticacionDemo({
   const [mensajeAuth, setMensajeAuth] = useState<string | null>(null);
 
   const paisSeleccionado = useMemo(() => {
-    return paisesLatam.find((p) => p.codigo === codigoPais) ?? paisesLatam[0]!;
+    return paisesRegistro.find((p) => p.codigo === codigoPais) ?? paisesRegistro[0]!;
   }, [codigoPais]);
 
   useEffect(() => {
-    // Si abren el modal en “registrar” o “ingresar”, alineamos el estado interno.
     if (!abierta) return;
     setModoModal(modoInicial);
   }, [abierta, modoInicial]);
@@ -79,7 +77,6 @@ export default function ModalAutenticacionDemo({
   useEffect(() => {
     if (!abierta) return;
 
-    // ESC cierra el modal (mejor UX)
     const manejadorTeclado = (evento: KeyboardEvent) => {
       if (evento.key === "Escape") cerrarModalInterno();
     };
@@ -96,7 +93,6 @@ export default function ModalAutenticacionDemo({
   useEffect(() => {
     if (!paisDropdownAbierto) return;
 
-    // Cierra el dropdown si el usuario hace click fuera (para que no se quede “pegado”)
     const manejarClickFuera = (evento: MouseEvent) => {
       const objetivo = evento.target as Node | null;
       if (!objetivo) return;
@@ -109,76 +105,75 @@ export default function ModalAutenticacionDemo({
     return () => window.removeEventListener("mousedown", manejarClickFuera);
   }, [paisDropdownAbierto]);
 
-  useEffect(() => {
-    inicializarUsuariosDemo();
-  }, []);
+  const redirigirSegunRol = (rol: "admin" | "merchant") => {
+    router.push(rol === "admin" ? "/admin" : "/cliente");
+  };
 
   const enviarFormulario = async (evento: FormEvent<HTMLFormElement>) => {
     evento.preventDefault();
     if (cargando) return;
 
-    inicializarUsuariosDemo();
     setMensajeAuth(null);
     setCargando(true);
 
-    // Dejamos el delay para que el UI se sienta "real" aunque sea demo.
-    await new Promise((resolver) => setTimeout(resolver, 350));
-
-    if (modoModal === "ingresar") {
-      const rol = verificarCredenciales(correo, contrasena);
-      setCargando(false);
-
-      if (!rol) {
-        setMensajeAuth("Credenciales inválidas. Revisa tu correo y contraseña.");
+    try {
+      if (modoModal === "ingresar") {
+        const respuesta = await iniciarSesionTrustpay(correo, contrasena);
+        guardarSesionTrustpay({
+          token: respuesta.token,
+          user: {
+            id: respuesta.user.id,
+            fullName: respuesta.user.fullName,
+            email: respuesta.user.email,
+            role: respuesta.user.role,
+            country: respuesta.user.country,
+            walletAddress: respuesta.user.walletAddress,
+            isVerified: respuesta.user.isVerified,
+            isActive: respuesta.user.isActive,
+          },
+        });
+        cerrarModalInterno();
+        redirigirSegunRol(respuesta.user.role);
         return;
       }
 
-      guardarSesion({ email: correo, rol });
+      if (!nombreCompleto.trim()) {
+        setMensajeAuth("Indica tu nombre completo.");
+        setCargando(false);
+        return;
+      }
+
+      const respuesta = await registrarUsuarioTrustpay({
+        email: correo,
+        password: contrasena,
+        fullName: nombreCompleto.trim(),
+        country: paisSeleccionado.etiqueta,
+      });
+
+      guardarSesionTrustpay({
+        token: respuesta.token,
+        user: {
+          id: respuesta.user.id,
+          fullName: respuesta.user.fullName,
+          email: respuesta.user.email,
+          role: respuesta.user.role,
+          country: respuesta.user.country,
+          walletAddress: respuesta.user.walletAddress,
+          isVerified: respuesta.user.isVerified,
+          isActive: respuesta.user.isActive,
+        },
+      });
       cerrarModalInterno();
-      router.push(rol === "admin" ? "/admin" : "/cliente");
-      return;
-    }
-
-    // FASE: registro demo (si el correo no existe)
-    if (!telefono.trim()) {
+      redirigirSegunRol(respuesta.user.role);
+    } catch (error) {
+      if (error instanceof ErrorApiTrustpay) {
+        setMensajeAuth(error.message);
+      } else {
+        setMensajeAuth("No pudimos completar la solicitud. Intenta de nuevo.");
+      }
+    } finally {
       setCargando(false);
-      setMensajeAuth("Falta el teléfono para registrarte.");
-      return;
     }
-
-    const creado = crearUsuarioDemo({
-      email: correo,
-      password: contrasena,
-      rol: "cliente",
-      pais: codigoPais,
-      prefijo: paisSeleccionado.prefijo,
-      telefono,
-    });
-
-    setCargando(false);
-    if (!creado) {
-      setMensajeAuth("Ese correo ya existe. Intenta iniciar sesión.");
-      return;
-    }
-
-    guardarSesion({ email: correo, rol: "cliente" });
-    cerrarModalInterno();
-    router.push("/cliente");
-  };
-
-  const continuarConGoogle = async () => {
-    if (cargando) return;
-    inicializarUsuariosDemo();
-    setMensajeAuth(null);
-    setCargando(true);
-    await new Promise((resolver) => setTimeout(resolver, 350));
-    setCargando(false);
-
-    // Login demo: si ya digitaste correo, usamos ese; si no, usamos el cliente demo.
-    const email = correo.trim() ? correo.trim() : "cliente@gmail.com";
-    guardarSesion({ email, rol: "cliente" });
-    cerrarModalInterno();
-    router.push("/cliente");
   };
 
   if (!abierta) return null;
@@ -204,8 +199,8 @@ export default function ModalAutenticacionDemo({
             </h2>
             <p className={estilosHome.modalSubtitulo}>
               {modoModal === "ingresar"
-                ? "Accede con tu correo y contraseña o con Google."
-                : "Regístrate con tu correo, contraseña y teléfono por país."}
+                ? "Accede con tu correo y contraseña (admin o comercio)."
+                : "Regístrate como comercio con correo, contraseña, nombre y país."}
             </p>
           </div>
 
@@ -217,29 +212,6 @@ export default function ModalAutenticacionDemo({
           >
             ×
           </button>
-        </div>
-
-        <div className={estilosHome.modalAccionesExternas}>
-          <button
-            type="button"
-            className={estilosInicioSesion.botonGoogle}
-            onClick={continuarConGoogle}
-            disabled={cargando}
-          >
-            {cargando ? (
-              "Procesando..."
-            ) : (
-              <>
-                <img
-                  className={estilosInicioSesion.iconoGoogle}
-                  src="/imagenes/logo-google.svg"
-                  alt="Google"
-                />
-              </>
-            )}
-          </button>
-
-          <div className={estilosHome.modalSeparador}>o</div>
         </div>
 
         {mensajeAuth && (
@@ -272,14 +244,30 @@ export default function ModalAutenticacionDemo({
               name="contrasena"
               required
               placeholder="••••••••"
-              autoComplete="current-password"
+              autoComplete={
+                modoModal === "ingresar" ? "current-password" : "new-password"
+              }
               value={contrasena}
               onChange={(e) => setContrasena(e.target.value)}
             />
           </label>
 
           {modoModal === "registrar" && (
-            <div className={estilosHome.telefonoFila}>
+            <>
+              <label className={estilosInicioSesion.label}>
+                Nombre completo
+                <input
+                  className={estilosInicioSesion.input}
+                  type="text"
+                  name="nombreCompleto"
+                  required
+                  placeholder="Tu nombre o razón social"
+                  autoComplete="name"
+                  value={nombreCompleto}
+                  onChange={(e) => setNombreCompleto(e.target.value)}
+                />
+              </label>
+
               <label className={estilosInicioSesion.label}>
                 País
                 <div
@@ -291,12 +279,10 @@ export default function ModalAutenticacionDemo({
                     className={estilosInicioSesion.dropdownBoton}
                     aria-haspopup="listbox"
                     aria-expanded={paisDropdownAbierto}
-                    onClick={() =>
-                      setPaisDropdownAbierto((valor) => !valor)
-                    }
+                    onClick={() => setPaisDropdownAbierto((v) => !v)}
                   >
                     <span className={estilosInicioSesion.dropdownTexto}>
-                      {paisSeleccionado.etiqueta} ({paisSeleccionado.prefijo})
+                      {paisSeleccionado.etiqueta}
                     </span>
                     <span
                       className={estilosInicioSesion.dropdownFlecha}
@@ -310,7 +296,7 @@ export default function ModalAutenticacionDemo({
                       role="listbox"
                       aria-label="Seleccionar país"
                     >
-                      {paisesLatam.map((pais) => (
+                      {paisesRegistro.map((pais) => (
                         <button
                           key={pais.codigo}
                           type="button"
@@ -322,38 +308,14 @@ export default function ModalAutenticacionDemo({
                             setPaisDropdownAbierto(false);
                           }}
                         >
-                          {pais.etiqueta} ({pais.prefijo})
+                          {pais.etiqueta}
                         </button>
                       ))}
                     </div>
                   )}
                 </div>
               </label>
-
-              <label className={estilosHome.telefonoInput}>
-                Teléfono
-                <div className={estilosHome.telefonoFilaInterna}>
-                  <span className={estilosHome.telefonoPrefijo}>
-                    {paisSeleccionado.prefijo}
-                  </span>
-                  <input
-                    className={`${estilosInicioSesion.input} ${estilosHome.telefonoCampo}`}
-                    type="tel"
-                    name="telefono"
-                    inputMode="numeric"
-                    autoComplete="tel"
-                    required
-                    placeholder="987654321"
-                    maxLength={paisSeleccionado.maximoDigitos}
-                    value={telefono}
-                    onChange={(e) => {
-                      const soloDigitos = e.target.value.replace(/\D/g, "");
-                      setTelefono(soloDigitos);
-                    }}
-                  />
-                </div>
-              </label>
-            </div>
+            </>
           )}
 
           <button
@@ -387,4 +349,3 @@ export default function ModalAutenticacionDemo({
     </div>
   );
 }
-

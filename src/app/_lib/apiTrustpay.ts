@@ -1,0 +1,170 @@
+// Cliente HTTP hacia el backend TrustPay: login, registro, perfil y cuenta.
+// Centraliza la URL base y el header Bearer para no repetir lógica en componentes.
+
+const URL_POR_DEFECTO = "https://trustpay-backend.fly.dev";
+
+export function obtenerUrlBaseTrustpay() {
+  const desdeEntorno = process.env.NEXT_PUBLIC_TRUSTPAY_API_URL?.trim();
+  return desdeEntorno && desdeEntorno.length > 0 ? desdeEntorno : URL_POR_DEFECTO;
+}
+
+export type RolTrustpayApi = "admin" | "merchant";
+
+export type UsuarioTrustpayRespuesta = {
+  id: string;
+  fullName: string;
+  email: string;
+  role: RolTrustpayApi;
+  country: string;
+  walletAddress: string | null;
+  isVerified?: boolean;
+  isActive?: boolean;
+};
+
+export type RespuestaLoginRegistro = {
+  user: UsuarioTrustpayRespuesta;
+  token: string;
+};
+
+export type CuerpoErrorApi = {
+  message?: string;
+  error?: string;
+  statusCode?: number;
+};
+
+export class ErrorApiTrustpay extends Error {
+  codigoEstado: number;
+  cuerpo: unknown;
+
+  constructor(mensaje: string, codigoEstado: number, cuerpo: unknown) {
+    super(mensaje);
+    this.name = "ErrorApiTrustpay";
+    this.codigoEstado = codigoEstado;
+    this.cuerpo = cuerpo;
+  }
+}
+
+async function parsearError(respuesta: Response): Promise<never> {
+  let cuerpo: unknown;
+  try {
+    cuerpo = await respuesta.json();
+  } catch {
+    cuerpo = null;
+  }
+  const mensaje =
+    typeof cuerpo === "object" &&
+    cuerpo !== null &&
+    "message" in cuerpo &&
+    typeof (cuerpo as CuerpoErrorApi).message === "string"
+      ? (cuerpo as CuerpoErrorApi).message!
+      : respuesta.statusText || "Error de red";
+  throw new ErrorApiTrustpay(mensaje, respuesta.status, cuerpo);
+}
+
+async function solicitudJson<T>(
+  ruta: string,
+  opciones: RequestInit & { token?: string }
+): Promise<T> {
+  const base = obtenerUrlBaseTrustpay();
+  const encabezados = new Headers(opciones.headers);
+  if (!encabezados.has("Content-Type") && opciones.body !== undefined) {
+    encabezados.set("Content-Type", "application/json");
+  }
+  if (opciones.token) {
+    encabezados.set("Authorization", `Bearer ${opciones.token}`);
+  }
+
+  const respuesta = await fetch(`${base}${ruta}`, {
+    ...opciones,
+    headers: encabezados,
+  });
+
+  if (!respuesta.ok) {
+    await parsearError(respuesta);
+  }
+
+  if (respuesta.status === 204) {
+    return undefined as T;
+  }
+
+  const texto = await respuesta.text();
+  if (!texto) return undefined as T;
+  return JSON.parse(texto) as T;
+}
+
+export async function iniciarSesionTrustpay(correo: string, contrasena: string) {
+  return solicitudJson<RespuestaLoginRegistro>("/auth/login", {
+    method: "POST",
+    body: JSON.stringify({ email: correo.trim(), password: contrasena }),
+  });
+}
+
+export async function registrarUsuarioTrustpay(cuerpo: {
+  email: string;
+  password: string;
+  fullName: string;
+  country: string;
+}) {
+  return solicitudJson<RespuestaLoginRegistro>("/auth/register", {
+    method: "POST",
+    body: JSON.stringify({
+      email: cuerpo.email.trim(),
+      password: cuerpo.password,
+      fullName: cuerpo.fullName.trim(),
+      country: cuerpo.country.trim(),
+    }),
+  });
+}
+
+export async function obtenerPerfilAuth(token: string) {
+  return solicitudJson<UsuarioTrustpayRespuesta>("/auth/profile", {
+    method: "GET",
+    token,
+  });
+}
+
+export async function obtenerUsuarioYo(token: string) {
+  return solicitudJson<UsuarioTrustpayRespuesta>("/users/me", {
+    method: "GET",
+    token,
+  });
+}
+
+export async function actualizarUsuarioYo(token: string, datos: { fullName: string }) {
+  return solicitudJson<UsuarioTrustpayRespuesta>("/users/me", {
+    method: "PATCH",
+    token,
+    body: JSON.stringify({ fullName: datos.fullName.trim() }),
+  });
+}
+
+export async function eliminarCuentaUsuarioYo(token: string, contrasena: string) {
+  return solicitudJson<void>("/users/me", {
+    method: "DELETE",
+    token,
+    body: JSON.stringify({ password: contrasena }),
+  });
+}
+
+export async function cambiarContrasenaTrustpay(
+  token: string,
+  contrasenaActual: string,
+  contrasenaNueva: string
+) {
+  return solicitudJson<unknown>("/auth/change-password", {
+    method: "POST",
+    token,
+    body: JSON.stringify({
+      currentPassword: contrasenaActual,
+      newPassword: contrasenaNueva,
+    }),
+  });
+}
+
+export async function verificarContrasenaTrustpay(token: string, contrasena: string) {
+  return solicitudJson<unknown>("/auth/verify-password", {
+    method: "POST",
+    token,
+    body: JSON.stringify({ password: contrasena }),
+  });
+}

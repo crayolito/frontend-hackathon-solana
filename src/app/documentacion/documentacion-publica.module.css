@@ -1,0 +1,42 @@
+.pagina {
+  min-height: 100vh;
+  background: var(--superficie, #f0f2f5);
+  padding: 24px 20px 48px;
+  box-sizing: border-box;
+}
+
+.cabecera {
+  max-width: 960px;
+  margin: 0 auto 28px;
+}
+
+.enlaceInicio {
+  display: inline-block;
+  margin-bottom: 16px;
+  font-weight: 700;
+  color: #0284c7;
+  text-decoration: none;
+}
+
+.enlaceInicio:hover {
+  text-decoration: underline;
+}
+
+.titulo {
+  margin: 0 0 8px;
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: var(--texto-primario, #0f172a);
+}
+
+.subtitulo {
+  margin: 0;
+  font-size: 1rem;
+  color: color-mix(in srgb, var(--texto-primario, #0f172a) 55%, transparent);
+  max-width: 52ch;
+}
+
+.contenidoMax {
+  max-width: 960px;
+  margin: 0 auto;
+}

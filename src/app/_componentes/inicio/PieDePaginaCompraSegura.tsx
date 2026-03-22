@@ -1,38 +1,85 @@
+import Link from "next/link";
 import estilosHome from "../../home.module.css";
 
-const soporteTelefono = "+51 900 123 456";
-const soporteCorreo = "soporte@comprasegura.com";
-
-// Pie de página del home.
+// Footer multcolumna: navegación ancla, developers, soporte y disclaimer.
 export default function PieDePaginaCompraSegura() {
   return (
     <footer className={estilosHome.footer}>
       <div className={estilosHome.footerInner}>
-        <div>
-          <h3 className={estilosHome.footerTitulo}>Soporte</h3>
-          <p className={estilosHome.footerSubtitulo}>
-            Si tienes dudas sobre pagos, entregas o integración, escríbenos.
-            Queremos ayudarte con lo que necesites.
-          </p>
-
-          <div className={estilosHome.footerContacto}>
-            <div className={estilosHome.chipContacto}>
-              <a href={`tel:${soporteTelefono.replaceAll(" ", "")}`}>
-                Tel: {soporteTelefono}
-              </a>
-            </div>
-            <div className={estilosHome.chipContacto}>
-              <a href={`mailto:${soporteCorreo}`}>Correo: {soporteCorreo}</a>
-            </div>
+        <div className={estilosHome.footerColumnas}>
+          <div className={estilosHome.footerCol}>
+            <h3 className={estilosHome.footerColTitulo}>TrustPay</h3>
+            <ul className={estilosHome.footerLista}>
+              <li>
+                <a href="/#inicio" className={estilosHome.footerEnlace}>
+                  Inicio
+                </a>
+              </li>
+              <li>
+                <Link href="/documentacion" className={estilosHome.footerEnlace}>
+                  Documentación
+                </Link>
+              </li>
+              <li>
+                <a href="/#como-funciona" className={estilosHome.footerEnlace}>
+                  Cómo funciona
+                </a>
+              </li>
+              <li>
+                <a href="/#precios" className={estilosHome.footerEnlace}>
+                  Precios
+                </a>
+              </li>
+              <li>
+                <a href="/#quienes-somos" className={estilosHome.footerEnlace}>
+                  Quiénes somos
+                </a>
+              </li>
+            </ul>
+          </div>
+          <div className={estilosHome.footerCol}>
+            <h3 className={estilosHome.footerColTitulo}>Developers</h3>
+            <ul className={estilosHome.footerLista}>
+              <li>
+                <Link href="/documentacion" className={estilosHome.footerEnlace}>
+                  Documentación
+                </Link>
+              </li>
+              <li>
+                <span className={estilosHome.footerEnlaceMuted}>API Reference</span>
+              </li>
+              <li>
+                <span className={estilosHome.footerEnlaceMuted}>Sandbox</span>
+              </li>
+              <li>
+                <span className={estilosHome.footerEnlaceMuted}>Webhooks</span>
+              </li>
+            </ul>
+          </div>
+          <div className={estilosHome.footerCol}>
+            <h3 className={estilosHome.footerColTitulo}>Soporte</h3>
+            <ul className={estilosHome.footerLista}>
+              <li>
+                <a href="mailto:soporte@trustpay.app" className={estilosHome.footerEnlace}>
+                  soporte@trustpay.app
+                </a>
+              </li>
+              <li>
+                <span className={estilosHome.footerEnlaceMuted}>Preguntas frecuentes</span>
+              </li>
+            </ul>
           </div>
         </div>
 
+        <p className={estilosHome.footerDisclaimer}>
+          TrustPay no es un exchange, no asesora fiscalmente y no custodia fondos fuera de
+          los contratos de escrow que el usuario elija usar.
+        </p>
+
         <div className={estilosHome.footerCopy}>
-          © {new Date().getFullYear()} CompraSegura. Todos los derechos
-          reservados.
+          © {new Date().getFullYear()} TrustPay. Todos los derechos reservados.
         </div>
       </div>
     </footer>
   );
 }
-

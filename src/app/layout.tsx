@@ -14,8 +14,9 @@ const fuenteMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Aplicación Hackathon Solana",
-  description: "Panel por rol: admin y cliente",
+  title: "TrustPay — Pasarela de pagos en Solana",
+  description:
+    "Cobra en cripto como una pasarela moderna: QR, enlaces y contratos para LATAM.",
 };
 
 export default function LayoutRaiz({
@@ -25,7 +26,7 @@ export default function LayoutRaiz({
 }>) {
   return (
     <html lang="es" className={`${fuenteSans.variable} ${fuenteMono.variable}`}>
-      <body>
+      <body suppressHydrationWarning>
         <ProveedorTemaPorRuta>{contenido}</ProveedorTemaPorRuta>
       </body>
     </html>

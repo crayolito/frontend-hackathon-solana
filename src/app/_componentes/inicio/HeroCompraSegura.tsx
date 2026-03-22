@@ -1,6 +1,7 @@
 import estilosHome from "../../home.module.css";
+import LandingMockupHero from "./LandingMockupHero";
 
-// Sección principal: mensaje de valor + CTA para registrarse.
+// Hero principal de la landing: copy del brief + mockup animado (QR, pago, métricas).
 export default function HeroCompraSegura({
   onEmpezarGratis,
 }: Readonly<{
@@ -10,17 +11,17 @@ export default function HeroCompraSegura({
     <section className={estilosHome.hero}>
       <div className={estilosHome.heroTexto}>
         <h1 className={estilosHome.heroTitulo}>
-          <span className={estilosHome.tituloNeonCyan}>Accept payments</span>
-          <br />
-          <span className={estilosHome.tituloNeonVerde}>
-            with delivery guarantee
+          <span className={estilosHome.tituloNeonCyan}>
+            El dinero no debería necesitar
           </span>
+          <br />
+          <span className={estilosHome.tituloNeonVerde}>un banco para moverse.</span>
         </h1>
 
         <p className={estilosHome.heroSubtexto}>
-          CompraSegura crea un método de pago tipo Stripe, pero usando la red
-          de Solana. Por eso, tu dinero se libera solo con confirmación de
-          entrega (escrow seguro).
+          TrustPay es la pasarela de pagos con cripto para negocios en Latinoamérica. Cobra
+          con Solana y USDC, generá tu QR en minutos y pagá solo el 1% por transacción. Sin
+          burocracia bancaria. Sin excusas.
         </p>
 
         <div className={estilosHome.botonesHero}>
@@ -29,17 +30,25 @@ export default function HeroCompraSegura({
             className={estilosHome.botonPrimario}
             onClick={onEmpezarGratis}
           >
-            Empieza de forma gratis
+            Abre tu cuenta gratis
           </button>
-          <a
-            className={estilosHome.botonSecundario}
-            href="#documentacion"
-          >
+          <a className={estilosHome.botonSecundario} href="/documentacion">
             Ver documentación
           </a>
         </div>
+
+        <p className={estilosHome.heroMensajesClave}>
+          <span>&ldquo;Cobrá en cripto como si fuera Stripe. Sin banco, sin burocracia.&rdquo;</span>
+          <span>&ldquo;Tu QR de Solana listo en 5 minutos para tu negocio.&rdquo;</span>
+          <span>
+            &ldquo;Contratos inteligentes para recompensas, anticréticos y pagos seguros.&rdquo;
+          </span>
+        </p>
+      </div>
+
+      <div className={estilosHome.heroVisual}>
+        <LandingMockupHero />
       </div>
     </section>
   );
 }
-

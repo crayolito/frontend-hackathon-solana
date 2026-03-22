@@ -8,10 +8,22 @@
     "start": "next start"
   },
   "dependencies": {
+    "@noble/curves": "^1.9.7",
+    "@noble/hashes": "^1.8.0",
+    "@solana/buffer-layout": "^4.0.1",
+    "@solana/codecs-numbers": "^2.1.0",
+    "@solana/wallet-adapter-base": "^0.9.27",
+    "@solana/wallet-adapter-react": "^0.15.39",
+    "@solana/wallet-adapter-wallets": "^0.19.37",
+    "@solana/web3.js": "^1.98.4",
+    "buffer": "^6.0.3",
     "chart.js": "^4.5.1",
     "next": "16.2.0",
     "react": "19.2.4",
-    "react-dom": "19.2.4"
+    "react-dom": "19.2.4",
+    "safe-buffer": "^5.2.1",
+    "superstruct": "^2.0.2",
+    "uuid": "^11.1.0"
   },
   "devDependencies": {
     "@types/node": "^20",

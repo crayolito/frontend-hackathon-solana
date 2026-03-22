@@ -1,103 +1,68 @@
-// DemoAuth: autenticacion de prueba para la hackathon.
-// Guarda usuarios y sesion en localStorage para que el modal de login funcione
-// sin necesitar backend por ahora.
+// Sesión TrustPay en el navegador: JWT y snapshot del usuario (roles admin | merchant).
+// El área de rutas `/cliente` corresponde al rol `merchant` del API.
 
-export type RolDemo = "admin" | "cliente";
+export type RolSesion = "admin" | "merchant";
 
-export type UsuarioDemo = {
+export type UsuarioSesion = {
+  id: string;
+  fullName: string;
   email: string;
-  password: string;
-  rol: RolDemo;
-  telefono?: string;
-  pais?: string;
+  role: RolSesion;
+  country: string;
+  walletAddress: string | null;
+  isVerified?: boolean;
+  isActive?: boolean;
 };
 
-const CLAVE_USUARIOS = "compra_segura_usuarios_v1";
-const CLAVE_SESION = "compra_segura_sesion_v1";
+export type DatosSesionTrustpay = {
+  token: string;
+  user: UsuarioSesion;
+};
 
-const USUARIOS_SEMILLA: UsuarioDemo[] = [
-  { email: "admin@gmail.com", password: "clave123", rol: "admin" },
-  { email: "cliente@gmail.com", password: "clave123", rol: "cliente" },
-];
+const CLAVE_SESION = "trustpay_sesion_v1";
 
 function normalizarEmail(email: string) {
   return email.trim().toLowerCase();
 }
 
-export function inicializarUsuariosDemo() {
+// Guarda token y usuario tras login o registro exitoso.
+export function guardarSesionTrustpay(datos: DatosSesionTrustpay) {
   if (typeof window === "undefined") return;
-
   try {
-    const guardados = window.localStorage.getItem(CLAVE_USUARIOS);
-    if (guardados) return;
-
-    window.localStorage.setItem(CLAVE_USUARIOS, JSON.stringify(USUARIOS_SEMILLA));
+    window.localStorage.setItem(CLAVE_SESION, JSON.stringify(datos));
   } catch {
-    // Si falla localStorage, no bloqueamos la UI. El login no funcionara en ese caso.
+    // localStorage lleno o deshabilitado: el login no persistirá
   }
 }
 
-export function obtenerUsuariosDemo(): UsuarioDemo[] {
-  if (typeof window === "undefined") return [];
-
+export function obtenerSesionTrustpay(): DatosSesionTrustpay | null {
+  if (typeof window === "undefined") return null;
   try {
-    const guardados = window.localStorage.getItem(CLAVE_USUARIOS);
-    if (!guardados) return [];
-    const datos = JSON.parse(guardados) as UsuarioDemo[];
-    if (!Array.isArray(datos)) return [];
+    const crudo = window.localStorage.getItem(CLAVE_SESION);
+    if (!crudo) return null;
+    const datos = JSON.parse(crudo) as DatosSesionTrustpay;
+    if (
+      !datos?.token ||
+      !datos?.user?.email ||
+      (datos.user.role !== "admin" && datos.user.role !== "merchant")
+    ) {
+      return null;
+    }
     return datos;
   } catch {
-    return [];
+    return null;
   }
 }
 
-export function verificarCredenciales(
-  email: string,
-  password: string
-): RolDemo | null {
-  const emailNorm = normalizarEmail(email);
-  const users = obtenerUsuariosDemo();
-  const encontrado = users.find(
-    (u) => normalizarEmail(u.email) === emailNorm && u.password === password
-  );
-  return encontrado?.rol ?? null;
+export function obtenerTokenSesion(): string | null {
+  return obtenerSesionTrustpay()?.token ?? null;
 }
 
-export function crearUsuarioDemo(params: {
-  email: string;
-  password: string;
-  rol: RolDemo;
-  pais?: string;
-  prefijo?: string;
-  telefono?: string;
-}) {
-  const emailNorm = normalizarEmail(params.email);
-
-  if (!emailNorm || !params.password) return false;
-
-  const users = obtenerUsuariosDemo();
-  const existe = users.some((u) => normalizarEmail(u.email) === emailNorm);
-  if (existe) return false;
-
-  const nuevo: UsuarioDemo = {
-    email: emailNorm,
-    password: params.password,
-    rol: params.rol,
-    pais: params.pais ? `${params.pais}${params.prefijo ? ` ${params.prefijo}` : ""}` : undefined,
-    telefono: params.telefono,
-  };
-
-  const actualizados = [...users, nuevo];
-  window.localStorage.setItem(CLAVE_USUARIOS, JSON.stringify(actualizados));
-  return true;
-}
-
-export function guardarSesion(params: { email: string; rol: RolDemo }) {
-  if (typeof window === "undefined") return;
-  window.localStorage.setItem(
-    CLAVE_SESION,
-    JSON.stringify({ email: normalizarEmail(params.email), rol: params.rol })
-  );
+// Actualiza solo el objeto user (p. ej. tras PATCH /users/me) sin tocar el token.
+export function actualizarUsuarioEnSesion(usuario: UsuarioSesion) {
+  const actual = obtenerSesionTrustpay();
+  if (!actual) return;
+  guardarSesionTrustpay({ token: actual.token, user: usuario });
 }
 
 export function cerrarSesion() {
@@ -105,17 +70,12 @@ export function cerrarSesion() {
   window.localStorage.removeItem(CLAVE_SESION);
 }
 
-export function obtenerSesion(): { email: string; rol: RolDemo } | null {
-  if (typeof window === "undefined") return null;
-
-  try {
-    const sesion = window.localStorage.getItem(CLAVE_SESION);
-    if (!sesion) return null;
-    const data = JSON.parse(sesion) as { email: string; rol: RolDemo };
-    if (!data || !data.email || !data.rol) return null;
-    return data;
-  } catch {
-    return null;
-  }
+/**
+ * Compatibilidad con layouts que solo necesitan email + rol para la UI.
+ * El rol del API `merchant` es el comercio (rutas `/cliente`).
+ */
+export function obtenerSesion(): { email: string; rol: RolSesion } | null {
+  const s = obtenerSesionTrustpay();
+  if (!s) return null;
+  return { email: normalizarEmail(s.user.email), rol: s.user.role };
 }
-

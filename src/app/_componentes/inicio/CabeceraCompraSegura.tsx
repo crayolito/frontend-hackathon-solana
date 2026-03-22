@@ -1,6 +1,8 @@
+"use client";
+
 import estilosHome from "../../home.module.css";
 
-// Barra superior del home (marca + botón para abrir el modal de inicio de sesión).
+// Barra superior del home TrustPay: marca e inicio de sesión (Phantom solo en panel comercio).
 export default function CabeceraCompraSegura({
   onIniciarSesion,
 }: Readonly<{
@@ -9,7 +11,7 @@ export default function CabeceraCompraSegura({
   return (
     <header className={estilosHome.header}>
       <div className={estilosHome.headerInner}>
-        <div className={estilosHome.marca} aria-label="CompraSegura">
+        <div className={estilosHome.marca} aria-label="TrustPay">
           <div className={estilosHome.logoSolana}>
             <img
               className={estilosHome.logoImagen}
@@ -17,7 +19,7 @@ export default function CabeceraCompraSegura({
               alt="Solana"
             />
           </div>
-          <div className={estilosHome.tituloMarca}>CompraSegura</div>
+          <div className={estilosHome.tituloMarca}>TrustPay</div>
         </div>
 
         <div className={estilosHome.headerAcciones}>

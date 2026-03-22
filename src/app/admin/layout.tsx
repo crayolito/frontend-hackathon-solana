@@ -1,13 +1,14 @@
 // Layout para todo el area `/admin` (barra lateral + contenido).
-// Usa iconos de `public/iconos` y marca Compra Segura con logo Solana.
+// Solo entra sesión con rol API `admin`; iconos en `public/iconos`.
 "use client";
 
 import type { ReactNode } from "react";
+import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 
-import { cerrarSesion } from "../demoAuth";
+import { cerrarSesion, obtenerSesionTrustpay } from "../demoAuth";
 import { estiloMascaraIcono } from "./_utilidades/estiloMascaraIcono";
 import estilos from "./estilos-administracion.module.css";
 
@@ -29,6 +30,20 @@ const opcionesAdmin: OpcionAdmin[] = [
 export default function LayoutDeAdministracion({ children }: Readonly<{ children: ReactNode }>) {
   const rutaActual = usePathname();
   const router = useRouter();
+  const [sesionLista, setSesionLista] = useState(false);
+
+  useEffect(() => {
+    const datos = obtenerSesionTrustpay();
+    if (!datos) {
+      router.replace("/");
+      return;
+    }
+    if (datos.user.role !== "admin") {
+      router.replace("/cliente");
+      return;
+    }
+    setSesionLista(true);
+  }, [router]);
 
   const cerrarSesionYSalir = () => {
     cerrarSesion();
@@ -39,6 +54,14 @@ export default function LayoutDeAdministracion({ children }: Readonly<{ children
     if (opcion.esPanel) return rutaActual === "/admin";
     return rutaActual?.startsWith(opcion.ruta) ?? false;
   };
+
+  if (!sesionLista) {
+    return (
+      <div className={estilos.contenedor} style={{ padding: 28, fontWeight: 700 }}>
+        Comprobando sesión…
+      </div>
+    );
+  }
 
   return (
     <div className={estilos.contenedor}>
@@ -54,7 +77,7 @@ export default function LayoutDeAdministracion({ children }: Readonly<{ children
               priority
             />
             <div className={estilos.marcaTexto}>
-              <h2 className={estilos.titulo}>Compra Segura</h2>
+              <h2 className={estilos.titulo}>TrustPay</h2>
               <div className={estilos.subtitulo}>Panel de administración</div>
             </div>
           </div>

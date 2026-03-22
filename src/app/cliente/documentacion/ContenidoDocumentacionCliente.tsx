@@ -1,14 +1,14 @@
 import estilos from "./documentacion-cliente.module.css";
 
-// Guia funcional para el comercio: flujos, claves y webhooks (texto demo).
+// Guía funcional para el comercio: flujos, claves y webhooks (referencia de producto).
 export default function ContenidoDocumentacionCliente() {
   return (
     <article className={estilos.prosa}>
       <h2>Qué es esta área</h2>
       <p>
-        Desde el panel del <strong>comercio</strong> configurás integración con Compra Segura: cobros en
-        Solana, claves de API, webhooks y datos de tu cuenta. Lo que ves es una vista previa con datos de
-        demostración hasta conectar backend.
+        Desde el panel del <strong>comercio</strong> configurás la integración con TrustPay: cobros en Solana,
+        claves de API, webhooks y datos de tu cuenta. Parte del panel sigue en modo demostración hasta conectar
+        todos los servicios de backend.
       </p>
 
       <h2>Flujo general</h2>

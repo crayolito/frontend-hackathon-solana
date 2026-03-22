@@ -6,9 +6,12 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 
-import { cerrarSesion, obtenerSesion } from "../demoAuth";
+import { cerrarSesion, obtenerSesionTrustpay } from "../demoAuth";
 import { estiloMascaraIcono } from "../admin/_utilidades/estiloMascaraIcono";
 import estilosAdmin from "../admin/estilos-administracion.module.css";
+import ProveedorSolana from "../solana/ProveedorSolana";
+import NotificacionSuperiorCliente from "./_componentes/NotificacionSuperiorCliente";
+import SeccionBilleteraCliente from "./_componentes/SeccionBilleteraCliente";
 import estilos from "./estilos-cliente.module.css";
 
 type OpcionCliente = {
@@ -24,7 +27,6 @@ const opcionesCliente: OpcionCliente[] = [
   { href: "/cliente/api-keys", etiqueta: "Claves API", iconoSrc: "/iconos/icon-llave.svg" },
   { href: "/cliente/webhooks", etiqueta: "Webhooks", iconoSrc: "/iconos/icon-webhook.svg" },
   { href: "/cliente/settings", etiqueta: "Configuración", iconoSrc: "/iconos/icon-settings.svg" },
-  { href: "/cliente/documentacion", etiqueta: "Documentación", iconoSrc: "/iconos/icon-analytics.svg" },
 ];
 
 function inicialesDesdeEmail(email: string) {
@@ -33,18 +35,40 @@ function inicialesDesdeEmail(email: string) {
   return local.slice(0, 2).toUpperCase();
 }
 
-// Misma base que admin (logo, badge, nav). Pie: correo + icono cerrar sesión (sin botón ancho duplicado).
-// Colores vía `.temaComercio`; en pantallas pequeñas la barra es panel deslizante.
+function inicialesUsuario(nombreCompleto: string, email: string) {
+  const partes = nombreCompleto.trim().split(/\s+/).filter(Boolean);
+  if (partes.length >= 2) {
+    return `${partes[0]![0] ?? ""}${partes[1]![0] ?? ""}`.toUpperCase();
+  }
+  if (partes.length === 1 && partes[0]!.length >= 2) {
+    return partes[0]!.slice(0, 2).toUpperCase();
+  }
+  return inicialesDesdeEmail(email);
+}
+
+// Shell del comercio (rol API `merchant`): navegación, guard de sesión y conexión Phantom solo aquí.
 export default function DisposicionDeCliente({ children }: Readonly<{ children: ReactNode }>) {
   const rutaActual = usePathname();
   const router = useRouter();
   const [menuAbierto, setMenuAbierto] = useState(false);
+  const [sesionLista, setSesionLista] = useState(false);
   const [emailSesion, setEmailSesion] = useState<string | null>(null);
+  const [nombreSesion, setNombreSesion] = useState("");
 
   useEffect(() => {
-    const s = obtenerSesion();
-    setEmailSesion(s?.email ?? null);
-  }, []);
+    const datos = obtenerSesionTrustpay();
+    if (!datos) {
+      router.replace("/");
+      return;
+    }
+    if (datos.user.role !== "merchant") {
+      router.replace("/admin");
+      return;
+    }
+    setEmailSesion(datos.user.email);
+    setNombreSesion(datos.user.fullName);
+    setSesionLista(true);
+  }, [router]);
 
   useEffect(() => {
     setMenuAbierto(false);
@@ -61,111 +85,135 @@ export default function DisposicionDeCliente({ children }: Readonly<{ children: 
   };
 
   const etiquetaUsuario = useMemo(() => {
+    if (nombreSesion.trim()) return nombreSesion.trim();
     if (emailSesion) return emailSesion;
-    return "Sesión demo (comercio)";
-  }, [emailSesion]);
+    return "Comercio";
+  }, [emailSesion, nombreSesion]);
 
   const iniciales = useMemo(
-    () => inicialesDesdeEmail(emailSesion ?? "co@mercio.com"),
-    [emailSesion],
+    () => inicialesUsuario(nombreSesion, emailSesion ?? "co@mercio.com"),
+    [emailSesion, nombreSesion],
   );
 
+  const mensajeBienvenida = useMemo(() => {
+    const primero = nombreSesion.trim().split(/\s+/)[0];
+    if (primero) {
+      return `Hola, ${primero}. Abrí «Billetera Phantom» en el menú para conectar tu wallet (devnet).`;
+    }
+    return "Abrí «Billetera Phantom» en el menú lateral para conectar tu wallet en devnet.";
+  }, [nombreSesion]);
+
+  if (!sesionLista) {
+    return (
+      <div className={`${estilosAdmin.contenedor} ${estilos.temaComercio}`} style={{ padding: 28, fontWeight: 700 }}>
+        Comprobando sesión…
+      </div>
+    );
+  }
+
   return (
-    <div className={`${estilosAdmin.contenedor} ${estilos.temaComercio}`}>
-      {menuAbierto ? (
-        <button
-          type="button"
-          className={estilos.fondoAtras}
-          aria-label="Cerrar menú"
-          onClick={() => setMenuAbierto(false)}
-        />
-      ) : null}
+    <ProveedorSolana>
+      <div className={`${estilosAdmin.contenedor} ${estilos.temaComercio}`}>
+        {menuAbierto ? (
+          <button
+            type="button"
+            className={estilos.fondoAtras}
+            aria-label="Cerrar menú"
+            onClick={() => setMenuAbierto(false)}
+          />
+        ) : null}
 
-      <aside
-        id="menu-cliente"
-        className={`${estilosAdmin.barra} ${estilos.barraCliente} ${menuAbierto ? estilos.barraClienteAbierta : ""}`}
-        data-purpose="cliente-sidebar"
-      >
-        <div className={estilos.columnaBarra}>
-          <div className={estilosAdmin.encabezadoMarca}>
-            <Image
-              className={estilosAdmin.logoSolana}
-              src="/imagenes/logo1-solana.png"
-              alt="Solana"
-              width={40}
-              height={40}
-              priority
-            />
-            <div className={estilosAdmin.marcaTexto}>
-              <h2 className={estilosAdmin.titulo}>Compra Segura</h2>
-              <div className={estilosAdmin.subtitulo}>Área del comercio</div>
+        <aside
+          id="menu-cliente"
+          className={`${estilosAdmin.barra} ${estilos.barraCliente} ${menuAbierto ? estilos.barraClienteAbierta : ""}`}
+          data-purpose="cliente-sidebar"
+        >
+          <div className={estilos.columnaBarra}>
+            <div className={estilosAdmin.encabezadoMarca}>
+              <Image
+                className={estilosAdmin.logoSolana}
+                src="/imagenes/logo1-solana.png"
+                alt="Solana"
+                width={40}
+                height={40}
+                priority
+              />
+              <div className={estilosAdmin.marcaTexto}>
+                <h2 className={estilosAdmin.titulo}>TrustPay</h2>
+                <div className={estilosAdmin.subtitulo}>Área del comercio</div>
+              </div>
             </div>
-          </div>
 
-          <div className={estilosAdmin.badgeRegion} aria-hidden="true">
-            <span className={estilosAdmin.puntoRegion} />
-            <span className={estilosAdmin.textoBadge}>Cuenta comercio</span>
-          </div>
+            <div className={estilosAdmin.badgeRegion} aria-hidden="true">
+              <span className={estilosAdmin.puntoRegion} />
+              <span className={estilosAdmin.textoBadge}>Merchant</span>
+            </div>
 
-          <nav className={estilosAdmin.navegacion}>
-            {opcionesCliente.map((opcion) => (
-              <Link
-                key={opcion.href}
-                href={opcion.href}
-                className={`${estilosAdmin.enlace} ${esActivo(opcion) ? estilosAdmin.enlacePrincipal : ""}`}
+            <nav className={estilosAdmin.navegacion}>
+              {opcionesCliente.map((opcion) => (
+                <Link
+                  key={opcion.href}
+                  href={opcion.href}
+                  className={`${estilosAdmin.enlace} ${esActivo(opcion) ? estilosAdmin.enlacePrincipal : ""}`}
+                >
+                  <span
+                    className={estilosAdmin.mascaraIconoNav}
+                    style={estiloMascaraIcono(opcion.iconoSrc)}
+                    aria-hidden
+                  />
+                  <span className={estilosAdmin.etiquetaEnlace}>{opcion.etiqueta}</span>
+                </Link>
+              ))}
+            </nav>
+
+            <SeccionBilleteraCliente />
+
+            <div className={estilos.bloqueUsuario}>
+              <div className={estilos.avatarUsuario}>{iniciales}</div>
+              <div className={estilos.textoUsuario}>
+                <div className={estilos.emailUsuario} title={etiquetaUsuario}>
+                  {etiquetaUsuario}
+                </div>
+              </div>
+              <button
+                type="button"
+                className={estilos.botonSalirIcono}
+                onClick={cerrarSesionYSalir}
+                aria-label="Cerrar sesión"
+                data-purpose="cliente-logout"
               >
                 <span
                   className={estilosAdmin.mascaraIconoNav}
-                  style={estiloMascaraIcono(opcion.iconoSrc)}
+                  style={estiloMascaraIcono("/iconos/icon-cerrar-sesion.svg")}
                   aria-hidden
                 />
-                <span className={estilosAdmin.etiquetaEnlace}>{opcion.etiqueta}</span>
-              </Link>
-            ))}
-          </nav>
-
-          <div className={estilos.bloqueUsuario}>
-            <div className={estilos.avatarUsuario}>{iniciales}</div>
-            <div className={estilos.textoUsuario}>
-              <div className={estilos.emailUsuario} title={etiquetaUsuario}>
-                {etiquetaUsuario}
-              </div>
+              </button>
             </div>
-            <button
-              type="button"
-              className={estilos.botonSalirIcono}
-              onClick={cerrarSesionYSalir}
-              aria-label="Cerrar sesión"
-              data-purpose="cliente-logout"
-            >
-              <span
-                className={estilosAdmin.mascaraIconoNav}
-                style={estiloMascaraIcono("/iconos/icon-cerrar-sesion.svg")}
-                aria-hidden
-              />
-            </button>
           </div>
+        </aside>
+
+        <div className={estilos.columnaPrincipal}>
+          <header className={estilos.barraSuperiorCliente}>
+            <div className={estilos.barraSuperiorIzquierda}>
+              <button
+                type="button"
+                className={estilos.botonMenu}
+                aria-expanded={menuAbierto}
+                aria-controls="menu-cliente"
+                onClick={() => setMenuAbierto((v) => !v)}
+              >
+                <span className={estilos.iconoMenu} />
+              </button>
+              <h1 className={estilos.tituloBarraCliente}>TrustPay · Comercio</h1>
+            </div>
+            <NotificacionSuperiorCliente mensaje={mensajeBienvenida} duracionMs={14000} />
+          </header>
+
+          <main className={estilosAdmin.contenido} data-purpose="cliente-main">
+            {children}
+          </main>
         </div>
-      </aside>
-
-      <div className={estilos.columnaPrincipal}>
-        <header className={estilos.barraSitioMovil}>
-          <button
-            type="button"
-            className={estilos.botonMenu}
-            aria-expanded={menuAbierto}
-            aria-controls="menu-cliente"
-            onClick={() => setMenuAbierto((v) => !v)}
-          >
-            <span className={estilos.iconoMenu} />
-          </button>
-          <h1 className={estilos.tituloMovil}>Compra Segura</h1>
-        </header>
-
-        <main className={estilosAdmin.contenido} data-purpose="cliente-main">
-          {children}
-        </main>
       </div>
-    </div>
+    </ProveedorSolana>
   );
 }

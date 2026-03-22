@@ -4,12 +4,12 @@ import { useState } from "react";
 import estilosHome from "../../home.module.css";
 import type { ModoModal } from "../autenticacion/tiposAuth";
 import CabeceraCompraSegura from "./CabeceraCompraSegura";
+import ContenidoLandingTrustpay from "./ContenidoLandingTrustpay";
 import HeroCompraSegura from "./HeroCompraSegura";
-import SeccionDocumentacion from "./SeccionDocumentacion";
 import PieDePaginaCompraSegura from "./PieDePaginaCompraSegura";
 import ModalAutenticacionDemo from "../autenticacion/ModalAutenticacionDemo";
 
-// Monta la UI del home de CompraSegura y controla el modal de autenticación demo.
+// Home público TrustPay y modal de login/registro contra el API.
 export default function PaginaCompraSegura() {
   const [modalAbierto, setModalAbierto] = useState(false);
   const [modoModal, setModoModal] = useState<ModoModal>("ingresar");
@@ -27,9 +27,9 @@ export default function PaginaCompraSegura() {
     <div className={estilosHome.contenedor}>
       <CabeceraCompraSegura onIniciarSesion={() => abrirModal("ingresar")} />
 
-      <main className={estilosHome.main}>
+      <main id="inicio" className={estilosHome.main}>
         <HeroCompraSegura onEmpezarGratis={() => abrirModal("registrar")} />
-        <SeccionDocumentacion />
+        <ContenidoLandingTrustpay onCrearCuentaGratis={() => abrirModal("registrar")} />
       </main>
 
       <PieDePaginaCompraSegura />
