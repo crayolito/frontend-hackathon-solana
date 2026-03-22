@@ -1,31 +1,38 @@
-import { resumenClientesDemo } from "../../_datos/datosCuentasAdminDemo";
+import type { UsuarioTrustpayRespuesta } from "../../../_lib/apiTrustpay";
 import estilos from "./tarjetas-kpi-clientes.module.css";
 
-// Resumen rapido de cartera de clientes (conteos demo alineados a datosCuentasAdminDemo).
-export default function TarjetasKpiClientes() {
-  const { total, activos, escrowAbiertos, disputasAbiertas } = resumenClientesDemo;
+type Props = {
+  totalRegistros: number;
+  usuariosPagina: UsuarioTrustpayRespuesta[];
+};
+
+// Resumen del listado admin: totales desde la API y conteos sobre la página actual.
+export default function TarjetasKpiClientes({ totalRegistros, usuariosPagina }: Props) {
+  const activos = usuariosPagina.filter((u) => u.isActive !== false).length;
+  const comercios = usuariosPagina.filter((u) => u.role === "merchant").length;
+  const administradores = usuariosPagina.filter((u) => u.role === "admin").length;
 
   return (
     <section className={estilos.gridTarjetas} data-purpose="admin-clientes-kpis">
       <article className={estilos.tarjeta}>
-        <p className={estilos.nombreTarjeta}>Clientes registrados</p>
-        <h3 className={estilos.valorTarjeta}>{total}</h3>
-        <p className={estilos.pieTarjeta}>Cuentas con cartera Solana vinculada</p>
+        <p className={estilos.nombreTarjeta}>Usuarios totales</p>
+        <h3 className={estilos.valorTarjeta}>{totalRegistros}</h3>
+        <p className={estilos.pieTarjeta}>Registros que devuelve el API (paginado)</p>
       </article>
       <article className={estilos.tarjeta}>
-        <p className={estilos.nombreTarjeta}>Activos</p>
+        <p className={estilos.nombreTarjeta}>Activos en esta página</p>
         <h3 className={estilos.valorTarjeta}>{activos}</h3>
-        <p className={estilos.pieTarjeta}>Pueden iniciar pagos y escrow</p>
+        <p className={estilos.pieTarjeta}>Cuentas con cuenta habilitada</p>
       </article>
       <article className={estilos.tarjeta}>
-        <p className={estilos.nombreTarjeta}>Escrow abiertos</p>
-        <h3 className={estilos.valorTarjeta}>{escrowAbiertos}</h3>
-        <p className={estilos.pieTarjeta}>Fondos bloqueados o pendientes de firma</p>
+        <p className={estilos.nombreTarjeta}>Comercios (página)</p>
+        <h3 className={estilos.valorTarjeta}>{comercios}</h3>
+        <p className={estilos.pieTarjeta}>Rol merchant en la página actual</p>
       </article>
       <article className={estilos.tarjeta}>
-        <p className={estilos.nombreTarjeta}>Disputas</p>
-        <h3 className={estilos.valorTarjeta}>{disputasAbiertas}</h3>
-        <p className={estilos.pieTarjeta}>Requieren revision del equipo</p>
+        <p className={estilos.nombreTarjeta}>Admins (página)</p>
+        <h3 className={estilos.valorTarjeta}>{administradores}</h3>
+        <p className={estilos.pieTarjeta}>Rol admin en la página actual</p>
       </article>
     </section>
   );

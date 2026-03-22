@@ -38,7 +38,9 @@ export default function HeroCompraSegura({
         </div>
 
         <p className={estilosHome.heroMensajesClave}>
-          <span>&ldquo;Cobrá en cripto como si fuera Stripe. Sin banco, sin burocracia.&rdquo;</span>
+          <span>
+            &ldquo;Cobrá en cripto como con una pasarela clásica, pero en cadena. Sin banco, sin burocracia.&rdquo;
+          </span>
           <span>&ldquo;Tu QR de Solana listo en 5 minutos para tu negocio.&rdquo;</span>
           <span>
             &ldquo;Contratos inteligentes para recompensas, anticréticos y pagos seguros.&rdquo;

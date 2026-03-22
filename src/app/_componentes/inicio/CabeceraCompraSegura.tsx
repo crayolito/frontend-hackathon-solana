@@ -2,7 +2,7 @@
 
 import estilosHome from "../../home.module.css";
 
-// Barra superior del home TrustPay: marca e inicio de sesión (Phantom solo en panel comercio).
+// Barra superior del home TrustPay: marca e inicio de sesión.
 export default function CabeceraCompraSegura({
   onIniciarSesion,
 }: Readonly<{

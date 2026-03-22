@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import estilosHome from "../../home.module.css";
+import ProveedorSolana from "../../solana/ProveedorSolana";
 import type { ModoModal } from "../autenticacion/tiposAuth";
 import CabeceraCompraSegura from "./CabeceraCompraSegura";
 import ContenidoLandingTrustpay from "./ContenidoLandingTrustpay";
@@ -23,23 +24,30 @@ export default function PaginaCompraSegura() {
     setModalAbierto(false);
   };
 
+  // Tras cerrar sesión o volver al home, el scroll no debe quedar abajo del documento anterior.
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+  }, []);
+
   return (
-    <div className={estilosHome.contenedor}>
-      <CabeceraCompraSegura onIniciarSesion={() => abrirModal("ingresar")} />
+    <ProveedorSolana>
+      <div className={estilosHome.contenedor}>
+        <CabeceraCompraSegura onIniciarSesion={() => abrirModal("ingresar")} />
 
-      <main id="inicio" className={estilosHome.main}>
-        <HeroCompraSegura onEmpezarGratis={() => abrirModal("registrar")} />
-        <ContenidoLandingTrustpay onCrearCuentaGratis={() => abrirModal("registrar")} />
-      </main>
+        <main id="inicio" className={estilosHome.main}>
+          <HeroCompraSegura onEmpezarGratis={() => abrirModal("registrar")} />
+          <ContenidoLandingTrustpay onCrearCuentaGratis={() => abrirModal("registrar")} />
+        </main>
 
-      <PieDePaginaCompraSegura />
+        <PieDePaginaCompraSegura />
 
-      <ModalAutenticacionDemo
-        abierta={modalAbierto}
-        modoInicial={modoModal}
-        alCerrar={cerrarModal}
-      />
-    </div>
+        <ModalAutenticacionDemo
+          abierta={modalAbierto}
+          modoInicial={modoModal}
+          alCerrar={cerrarModal}
+        />
+      </div>
+    </ProveedorSolana>
   );
 }
 

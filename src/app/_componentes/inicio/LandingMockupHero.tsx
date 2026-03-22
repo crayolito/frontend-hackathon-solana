@@ -1,6 +1,6 @@
 import estilosHome from "../../home.module.css";
 
-// Mockup estilo Stripe: QR animado, aviso de pago y mini dashboard (solo CSS).
+// Mockup estilo dashboard de cobro: QR animado, aviso de pago y mini panel (solo CSS).
 export default function LandingMockupHero() {
   return (
     <div className={estilosHome.mockupContenedor} aria-hidden="true">

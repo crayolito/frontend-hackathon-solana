@@ -25,42 +25,13 @@ export default function ContenidoConfiguracionAdmin() {
 
   return (
     <div className={estilos.contenedor}>
-      <section className={estilos.tarjeta} aria-labelledby="config-red">
-        <h2 id="config-red" className={estilos.tituloTarjeta}>
-          Red Solana
-        </h2>
-        <p className={estilos.descripcionTarjeta}>
-          Misma idea que elegir ambiente en una pasarela: aqui fijamos la red y el endpoint RPC que usa el
-          panel para leer saldos y transacciones.
-        </p>
-        <div className={estilos.gridCampos}>
-          <div>
-            <label className={estilos.etiqueta} htmlFor="rpc-url">
-              URL del RPC (solo lectura en demo)
-            </label>
-            <input
-              id="rpc-url"
-              className={estilos.inputTexto}
-              readOnly
-              value="https://api.mainnet-beta.solana.com"
-            />
-          </div>
-          <div>
-            <label className={estilos.etiqueta} htmlFor="red-nombre">
-              Red activa
-            </label>
-            <input id="red-nombre" className={estilos.inputTexto} readOnly value="Mainnet-beta" />
-          </div>
-        </div>
-      </section>
-
       <section className={estilos.tarjeta} aria-labelledby="config-escrow">
         <h2 id="config-escrow" className={estilos.tituloTarjeta}>
           Escrow y comisiones
         </h2>
         <p className={estilos.descripcionTarjeta}>
-          Parametros tipo Stripe Billing: comision de la plataforma y tiempo minimo de custodia antes de
-          liberar o disputar.
+          Parametros tipo facturacion de pasarela: comision de la plataforma y tiempo minimo de custodia
+          antes de liberar o disputar.
         </p>
         <div className={estilos.gridCampos}>
           <div>
@@ -131,7 +102,8 @@ export default function ContenidoConfiguracionAdmin() {
           API del comercio
         </h2>
         <p className={estilos.descripcionTarjeta}>
-          Claves para integrar tu checkout o ERP, similar a las claves secretas de Stripe.
+          Claves para integrar tu checkout o ERP, al estilo de las claves secretas de un procesador de
+          pagos.
         </p>
         <div className={estilos.gridCampos}>
           <div>

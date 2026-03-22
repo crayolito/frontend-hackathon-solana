@@ -104,6 +104,7 @@ export async function registrarUsuarioTrustpay(cuerpo: {
   password: string;
   fullName: string;
   country: string;
+  walletAddress: string;
 }) {
   return solicitudJson<RespuestaLoginRegistro>("/auth/register", {
     method: "POST",
@@ -112,6 +113,7 @@ export async function registrarUsuarioTrustpay(cuerpo: {
       password: cuerpo.password,
       fullName: cuerpo.fullName.trim(),
       country: cuerpo.country.trim(),
+      walletAddress: cuerpo.walletAddress.trim(),
     }),
   });
 }
@@ -167,4 +169,89 @@ export async function verificarContrasenaTrustpay(token: string, contrasena: str
     token,
     body: JSON.stringify({ password: contrasena }),
   });
+}
+
+// --- Panel admin: usuarios (listado paginado, detalle, rol/activo y alternar estado).
+
+/** Interpreta el JSON del listado porque el backend puede devolver `data`, `users` o un arreglo plano. */
+function normalizarListadoAdminUsuarios(
+  crudo: unknown,
+  paginaPedida: number,
+  limitePedido: number
+): {
+  usuarios: UsuarioTrustpayRespuesta[];
+  total: number;
+  pagina: number;
+  limite: number;
+} {
+  if (Array.isArray(crudo)) {
+    return {
+      usuarios: crudo as UsuarioTrustpayRespuesta[],
+      total: crudo.length,
+      pagina: paginaPedida,
+      limite: limitePedido,
+    };
+  }
+  if (crudo && typeof crudo === "object") {
+    const o = crudo as Record<string, unknown>;
+    const posibleLista = o.data ?? o.users ?? o.items;
+    const usuarios = Array.isArray(posibleLista)
+      ? (posibleLista as UsuarioTrustpayRespuesta[])
+      : [];
+    const total =
+      typeof o.total === "number"
+        ? o.total
+        : typeof o.totalItems === "number"
+          ? o.totalItems
+          : usuarios.length;
+    const pagina = typeof o.page === "number" ? o.page : paginaPedida;
+    const limite = typeof o.limit === "number" ? o.limit : limitePedido;
+    return { usuarios, total, pagina, limite };
+  }
+  return { usuarios: [], total: 0, pagina: paginaPedida, limite: limitePedido };
+}
+
+export async function listarUsuariosAdmin(token: string, pagina: number, limite: number) {
+  const consulta = new URLSearchParams({
+    page: String(pagina),
+    limit: String(limite),
+  });
+  const crudo = await solicitudJson<unknown>(`/admin/users?${consulta.toString()}`, {
+    method: "GET",
+    token,
+  });
+  return normalizarListadoAdminUsuarios(crudo, pagina, limite);
+}
+
+export async function obtenerUsuarioAdminPorId(token: string, idUsuario: string) {
+  return solicitudJson<UsuarioTrustpayRespuesta>(`/admin/users/${encodeURIComponent(idUsuario)}`, {
+    method: "GET",
+    token,
+  });
+}
+
+export async function actualizarUsuarioAdmin(
+  token: string,
+  idUsuario: string,
+  datos: { role: RolTrustpayApi; isActive: boolean }
+) {
+  return solicitudJson<UsuarioTrustpayRespuesta>(`/admin/users/${encodeURIComponent(idUsuario)}`, {
+    method: "PATCH",
+    token,
+    body: JSON.stringify({
+      role: datos.role,
+      isActive: datos.isActive,
+    }),
+  });
+}
+
+/** Alterna activo/inactivo en servidor (POST dedicado). */
+export async function alternarActivoUsuarioAdmin(token: string, idUsuario: string) {
+  return solicitudJson<UsuarioTrustpayRespuesta | void>(
+    `/admin/users/${encodeURIComponent(idUsuario)}/toggle-active`,
+    {
+      method: "POST",
+      token,
+    }
+  );
 }

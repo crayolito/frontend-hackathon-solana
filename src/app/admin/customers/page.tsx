@@ -1,42 +1,88 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 
+import {
+  ErrorApiTrustpay,
+  listarUsuariosAdmin,
+  type UsuarioTrustpayRespuesta,
+} from "../../_lib/apiTrustpay";
+import { cerrarSesion, obtenerTokenSesion } from "../../demoAuth";
 import CabeceraDashboard from "../_componentes/dashboard/CabeceraDashboard";
 import TablaListaClientes from "../_componentes/clientes/TablaListaClientes";
 import TarjetasKpiClientes from "../_componentes/clientes/TarjetasKpiClientes";
 import estilosLista from "../_componentes/clientes/lista-clientes.module.css";
-import { clientesDemo } from "../_datos/datosCuentasAdminDemo";
 
-// Listado de clientes con busqueda local y KPIs (demo tipo pasarela + cartera Solana).
+const LIMITE_POR_PAGINA = 10;
+
+// Listado de usuarios reales vía GET /admin/users (paginación y búsqueda local en la página).
 export default function PaginaCustomers() {
+  const router = useRouter();
   const [consulta, setConsulta] = useState("");
+  const [pagina, setPagina] = useState(1);
+  const [cargando, setCargando] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [usuarios, setUsuarios] = useState<UsuarioTrustpayRespuesta[]>([]);
+  const [totalRegistros, setTotalRegistros] = useState(0);
 
-  const clientesFiltrados = useMemo(() => {
+  const cargar = useCallback(async () => {
+    const token = obtenerTokenSesion();
+    if (!token) {
+      setCargando(false);
+      return;
+    }
+    setCargando(true);
+    setError(null);
+    try {
+      const { usuarios: lista, total } = await listarUsuariosAdmin(token, pagina, LIMITE_POR_PAGINA);
+      setUsuarios(lista);
+      setTotalRegistros(total);
+    } catch (e) {
+      if (e instanceof ErrorApiTrustpay && e.codigoEstado === 401) {
+        cerrarSesion();
+        router.replace("/");
+        return;
+      }
+      setError(e instanceof ErrorApiTrustpay ? e.message : "No se pudo cargar el listado.");
+      setUsuarios([]);
+      setTotalRegistros(0);
+    } finally {
+      setCargando(false);
+    }
+  }, [pagina, router]);
+
+  useEffect(() => {
+    void cargar();
+  }, [cargar]);
+
+  const usuariosFiltrados = useMemo(() => {
     const q = consulta.trim().toLowerCase();
-    if (!q) return clientesDemo;
-    return clientesDemo.filter(
-      (c) =>
-        c.alias.toLowerCase().includes(q) ||
-        c.correo.toLowerCase().includes(q) ||
-        c.cartera.toLowerCase().includes(q) ||
-        c.id.toLowerCase().includes(q),
+    if (!q) return usuarios;
+    return usuarios.filter(
+      (u) =>
+        u.fullName.toLowerCase().includes(q) ||
+        u.email.toLowerCase().includes(q) ||
+        u.id.toLowerCase().includes(q) ||
+        (u.walletAddress?.toLowerCase().includes(q) ?? false),
     );
-  }, [consulta]);
+  }, [consulta, usuarios]);
+
+  const totalPaginas = Math.max(1, Math.ceil(totalRegistros / LIMITE_POR_PAGINA));
 
   const exportarCsv = () => {
     const lineas = [
-      "id,alias,correo,cartera,estado,transacciones,volumen_sol,volumen_usdc,ultima_actividad",
-      ...clientesFiltrados.map(
-        (c) =>
-          `${c.id},"${c.alias}",${c.correo},${c.cartera},${c.estado},${c.transaccionesTotal},${c.volumenSolEtiqueta},${c.volumenUsdcEtiqueta},${c.ultimaActividad}`,
+      "id,fullName,email,role,country,walletAddress,isActive",
+      ...usuariosFiltrados.map(
+        (u) =>
+          `${u.id},"${u.fullName.replace(/"/g, '""')}",${u.email},${u.role},${u.country},${u.walletAddress ?? ""},${u.isActive !== false}`,
       ),
     ];
     const blob = new Blob([lineas.join("\n")], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
     const enlace = document.createElement("a");
     enlace.href = url;
-    enlace.download = "compra-segura-clientes.csv";
+    enlace.download = "trustpay-usuarios-admin.csv";
     enlace.click();
     URL.revokeObjectURL(url);
   };
@@ -46,9 +92,12 @@ export default function PaginaCustomers() {
       <CabeceraDashboard
         alExportar={exportarCsv}
         titulo="Clientes"
-        subtitulo="Cuentas que operan con cartera Solana, escrow y pagos (vista tipo pasarela)."
+        subtitulo="Usuarios de la plataforma (API admin): rol, cartera y estado de cuenta."
       />
-      <TarjetasKpiClientes />
+      {error ? (
+        <p style={{ marginBottom: 16, color: "#b91c1c", fontWeight: 700 }}>{error}</p>
+      ) : null}
+      <TarjetasKpiClientes totalRegistros={totalRegistros} usuariosPagina={usuarios} />
       <div className={estilosLista.barraHerramientas}>
         <input
           type="search"
@@ -58,8 +107,30 @@ export default function PaginaCustomers() {
           onChange={(e) => setConsulta(e.target.value)}
           aria-label="Buscar clientes"
         />
+        <div className={estilosLista.barraPaginacion}>
+          <button
+            type="button"
+            className={estilosLista.botonPagina}
+            disabled={pagina <= 1 || cargando}
+            onClick={() => setPagina((p) => Math.max(1, p - 1))}
+          >
+            Anterior
+          </button>
+          <span className={estilosLista.textoPagina}>
+            Página {pagina} de {totalPaginas}
+            {cargando ? " · Cargando…" : ""}
+          </span>
+          <button
+            type="button"
+            className={estilosLista.botonPagina}
+            disabled={pagina >= totalPaginas || cargando}
+            onClick={() => setPagina((p) => p + 1)}
+          >
+            Siguiente
+          </button>
+        </div>
       </div>
-      <TablaListaClientes clientes={clientesFiltrados} />
+      <TablaListaClientes usuarios={usuariosFiltrados} />
     </>
   );
 }

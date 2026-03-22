@@ -1,5 +1,6 @@
 "use client";
 
+import { useWallet } from "@solana/wallet-adapter-react";
 import {
   useEffect,
   useMemo,
@@ -10,6 +11,7 @@ import {
 import { useRouter } from "next/navigation";
 import estilosInicioSesion from "../../inicio-sesion.module.css";
 import estilosHome from "../../home.module.css";
+import BotonConexionWallet from "../../solana/BotonConexionWallet";
 import {
   ErrorApiTrustpay,
   iniciarSesionTrustpay,
@@ -48,6 +50,7 @@ export default function ModalAutenticacionDemo({
   alCerrar: () => void;
 }>) {
   const router = useRouter();
+  const { connected, publicKey } = useWallet();
 
   const [modoModal, setModoModal] = useState<ModoModal>(modoInicial);
   const [correo, setCorreo] = useState("");
@@ -68,6 +71,17 @@ export default function ModalAutenticacionDemo({
     if (!abierta) return;
     setModoModal(modoInicial);
   }, [abierta, modoInicial]);
+
+  // Al cerrar el modal dejamos el formulario limpio para la próxima vez.
+  useEffect(() => {
+    if (abierta) return;
+    setCorreo("");
+    setContrasena("");
+    setNombreCompleto("");
+    setCodigoPais("bo");
+    setMensajeAuth(null);
+    setPaisDropdownAbierto(false);
+  }, [abierta]);
 
   const cerrarModalInterno = () => {
     setCargando(false);
@@ -143,11 +157,18 @@ export default function ModalAutenticacionDemo({
         return;
       }
 
+      if (!connected || !publicKey) {
+        setMensajeAuth("Conectá tu billetera Solana (Phantom) para completar el registro.");
+        setCargando(false);
+        return;
+      }
+
       const respuesta = await registrarUsuarioTrustpay({
         email: correo,
         password: contrasena,
         fullName: nombreCompleto.trim(),
         country: paisSeleccionado.etiqueta,
+        walletAddress: publicKey.toBase58(),
       });
 
       guardarSesionTrustpay({
@@ -199,8 +220,8 @@ export default function ModalAutenticacionDemo({
             </h2>
             <p className={estilosHome.modalSubtitulo}>
               {modoModal === "ingresar"
-                ? "Accede con tu correo y contraseña (admin o comercio)."
-                : "Regístrate como comercio con correo, contraseña, nombre y país."}
+                ? "Solo correo y contraseña. La billetera no hace falta para entrar."
+                : "Correo, contraseña, datos del comercio y billetera Solana vinculada a la cuenta."}
             </p>
           </div>
 
@@ -315,6 +336,13 @@ export default function ModalAutenticacionDemo({
                   )}
                 </div>
               </label>
+
+              <div className={estilosInicioSesion.bloqueWalletRegistro}>
+                <p className={estilosInicioSesion.textoWalletRegistro}>
+                  Obligatorio: conectá Phantom (devnet) para registrar la dirección de cobros.
+                </p>
+                <BotonConexionWallet />
+              </div>
             </>
           )}
 
@@ -334,9 +362,10 @@ export default function ModalAutenticacionDemo({
             <button
               type="button"
               className={estilosInicioSesion.enlace}
-              onClick={() =>
-                setModoModal(modoModal === "ingresar" ? "registrar" : "ingresar")
-              }
+              onClick={() => {
+                setMensajeAuth(null);
+                setModoModal(modoModal === "ingresar" ? "registrar" : "ingresar");
+              }}
               disabled={cargando}
             >
               {modoModal === "ingresar"

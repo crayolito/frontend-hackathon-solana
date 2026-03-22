@@ -31,7 +31,7 @@ export default function ContenidoLandingTrustpay({
         <div className={estilosHome.landingPanel}>
           <span className={estilosHome.landingPildora}>Por qué TrustPay</span>
           <h2 className={estilosHome.landingTituloXL}>
-            Stripe no llegó a LATAM.
+            Las pasarelas clásicas no llegaron a LATAM.
             <span className={estilosHome.landingTituloAcento}> Los bancos tampoco ayudan.</span>
           </h2>
           <p className={estilosHome.landingLead}>
@@ -45,9 +45,11 @@ export default function ContenidoLandingTrustpay({
               <div className={estilosHome.landingIconoAro} data-variant="cyan">
                 <IconoPagoRechazado color="var(--primario)" />
               </div>
-              <h3 className={estilosHome.landingTarjetaTitulo}>PayPal y Stripe no aceptan cripto</h3>
+              <h3 className={estilosHome.landingTarjetaTitulo}>
+                PayPal y otras pasarelas cobran mucho y no habilitan cripto
+              </h3>
               <p className={estilosHome.landingTarjetaTexto}>
-                No podés cobrar en BTC, SOL ni USDC con las pasarelas tradicionales.
+                Con los agregadores tradicionales no podés cobrar en BTC, SOL ni USDC de forma nativa.
               </p>
             </div>
             <div className={estilosHome.landingTarjetaProblema}>

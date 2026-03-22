@@ -1,7 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -9,9 +9,6 @@ import { usePathname, useRouter } from "next/navigation";
 import { cerrarSesion, obtenerSesionTrustpay } from "../demoAuth";
 import { estiloMascaraIcono } from "../admin/_utilidades/estiloMascaraIcono";
 import estilosAdmin from "../admin/estilos-administracion.module.css";
-import ProveedorSolana from "../solana/ProveedorSolana";
-import NotificacionSuperiorCliente from "./_componentes/NotificacionSuperiorCliente";
-import SeccionBilleteraCliente from "./_componentes/SeccionBilleteraCliente";
 import estilos from "./estilos-cliente.module.css";
 
 type OpcionCliente = {
@@ -46,7 +43,7 @@ function inicialesUsuario(nombreCompleto: string, email: string) {
   return inicialesDesdeEmail(email);
 }
 
-// Shell del comercio (rol API `merchant`): navegación, guard de sesión y conexión Phantom solo aquí.
+// Shell del comercio (rol API `merchant`): navegación y guard de sesión. La billetera se enlaza al registrarse.
 export default function DisposicionDeCliente({ children }: Readonly<{ children: ReactNode }>) {
   const rutaActual = usePathname();
   const router = useRouter();
@@ -70,12 +67,19 @@ export default function DisposicionDeCliente({ children }: Readonly<{ children: 
     setSesionLista(true);
   }, [router]);
 
+  // Evita que el documento quede scrolleado abajo al montar el panel (p. ej. foco en el menú inferior).
+  useLayoutEffect(() => {
+    if (!sesionLista) return;
+    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+  }, [sesionLista]);
+
   useEffect(() => {
     setMenuAbierto(false);
   }, [rutaActual]);
 
   const cerrarSesionYSalir = () => {
     cerrarSesion();
+    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
     router.push("/");
   };
 
@@ -95,14 +99,6 @@ export default function DisposicionDeCliente({ children }: Readonly<{ children: 
     [emailSesion, nombreSesion],
   );
 
-  const mensajeBienvenida = useMemo(() => {
-    const primero = nombreSesion.trim().split(/\s+/)[0];
-    if (primero) {
-      return `Hola, ${primero}. Abrí «Billetera Phantom» en el menú para conectar tu wallet (devnet).`;
-    }
-    return "Abrí «Billetera Phantom» en el menú lateral para conectar tu wallet en devnet.";
-  }, [nombreSesion]);
-
   if (!sesionLista) {
     return (
       <div className={`${estilosAdmin.contenedor} ${estilos.temaComercio}`} style={{ padding: 28, fontWeight: 700 }}>
@@ -112,8 +108,7 @@ export default function DisposicionDeCliente({ children }: Readonly<{ children: 
   }
 
   return (
-    <ProveedorSolana>
-      <div className={`${estilosAdmin.contenedor} ${estilos.temaComercio}`}>
+    <div className={`${estilosAdmin.contenedor} ${estilos.temaComercio}`}>
         {menuAbierto ? (
           <button
             type="button"
@@ -166,8 +161,6 @@ export default function DisposicionDeCliente({ children }: Readonly<{ children: 
               ))}
             </nav>
 
-            <SeccionBilleteraCliente />
-
             <div className={estilos.bloqueUsuario}>
               <div className={estilos.avatarUsuario}>{iniciales}</div>
               <div className={estilos.textoUsuario}>
@@ -206,7 +199,6 @@ export default function DisposicionDeCliente({ children }: Readonly<{ children: 
               </button>
               <h1 className={estilos.tituloBarraCliente}>TrustPay · Comercio</h1>
             </div>
-            <NotificacionSuperiorCliente mensaje={mensajeBienvenida} duracionMs={14000} />
           </header>
 
           <main className={estilosAdmin.contenido} data-purpose="cliente-main">
@@ -214,6 +206,5 @@ export default function DisposicionDeCliente({ children }: Readonly<{ children: 
           </main>
         </div>
       </div>
-    </ProveedorSolana>
   );
 }

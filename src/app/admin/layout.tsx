@@ -3,7 +3,7 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { useEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
@@ -45,8 +45,14 @@ export default function LayoutDeAdministracion({ children }: Readonly<{ children
     setSesionLista(true);
   }, [router]);
 
+  useLayoutEffect(() => {
+    if (!sesionLista) return;
+    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+  }, [sesionLista]);
+
   const cerrarSesionYSalir = () => {
     cerrarSesion();
+    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
     router.push("/");
   };
 
@@ -80,11 +86,6 @@ export default function LayoutDeAdministracion({ children }: Readonly<{ children
               <h2 className={estilos.titulo}>TrustPay</h2>
               <div className={estilos.subtitulo}>Panel de administración</div>
             </div>
-          </div>
-
-          <div className={estilos.badgeRegion} aria-hidden="true">
-            <span className={estilos.puntoRegion} />
-            <span className={estilos.textoBadge}>Solana Mainnet</span>
           </div>
 
           <nav className={estilos.navegacion}>

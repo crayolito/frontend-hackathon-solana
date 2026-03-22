@@ -1,79 +1,63 @@
 import Link from "next/link";
 
-import type { ClienteDemo } from "../../_datos/datosCuentasAdminDemo";
+import type { UsuarioTrustpayRespuesta } from "../../../_lib/apiTrustpay";
 import { recortarCartera } from "../../_datos/datosCuentasAdminDemo";
 import estilos from "./lista-clientes.module.css";
 
 type Props = {
-  clientes: ClienteDemo[];
+  usuarios: UsuarioTrustpayRespuesta[];
 };
 
-function claseEstado(estado: ClienteDemo["estado"]) {
-  switch (estado) {
-    case "activo":
-      return estilos.estadoActivo;
-    case "pendiente":
-      return estilos.estadoPendiente;
-    case "suspendido":
-      return estilos.estadoSuspendido;
-    default:
-      return estilos.estadoPendiente;
-  }
+function claseActivo(activo: boolean | undefined) {
+  if (activo === false) return estilos.estadoSuspendido;
+  return estilos.estadoActivo;
 }
 
-function etiquetaEstado(estado: ClienteDemo["estado"]) {
-  const mapa: Record<ClienteDemo["estado"], string> = {
-    activo: "Activo",
-    pendiente: "Pendiente",
-    suspendido: "Suspendido",
-  };
-  return mapa[estado];
+function etiquetaActivo(activo: boolean | undefined) {
+  if (activo === false) return "Inactivo";
+  return "Activo";
 }
 
-// Tabla principal de clientes con enlace al detalle (demo).
-export default function TablaListaClientes({ clientes }: Props) {
+// Tabla de usuarios del API admin: enlaces al detalle para editar rol y estado.
+export default function TablaListaClientes({ usuarios }: Props) {
   return (
     <div className={estilos.tarjetaTabla}>
-      {clientes.length === 0 ? (
+      {usuarios.length === 0 ? (
         <p className={estilos.vacio}>No hay resultados para esta búsqueda.</p>
       ) : (
         <div className={estilos.envoltorioTabla}>
           <table className={estilos.tabla}>
             <thead>
               <tr>
-                <th>Cliente</th>
+                <th>Usuario</th>
                 <th>Correo</th>
                 <th>Cartera</th>
-                <th>Volumen (SOL / USDC)</th>
-                <th>Tx</th>
+                <th>Rol</th>
+                <th>País</th>
                 <th>Estado</th>
-                <th>Última actividad</th>
                 <th />
               </tr>
             </thead>
             <tbody>
-              {clientes.map((c) => (
-                <tr key={c.id}>
+              {usuarios.map((u) => (
+                <tr key={u.id}>
                   <td>
-                    <div className={estilos.celdaPrincipal}>{c.alias}</div>
-                    <div className={estilos.celdaSecundaria}>{c.id}</div>
+                    <div className={estilos.celdaPrincipal}>{u.fullName}</div>
+                    <div className={estilos.celdaSecundaria}>{u.id}</div>
                   </td>
-                  <td className={estilos.celdaSecundaria}>{c.correo}</td>
-                  <td className={estilos.mono}>{recortarCartera(c.cartera)}</td>
-                  <td className={estilos.celdaSecundaria}>
-                    {c.volumenSolEtiqueta}
-                    <br />
-                    {c.volumenUsdcEtiqueta}
+                  <td className={estilos.celdaSecundaria}>{u.email}</td>
+                  <td className={estilos.mono}>
+                    {u.walletAddress ? recortarCartera(u.walletAddress) : "—"}
                   </td>
-                  <td>{c.transaccionesTotal}</td>
+                  <td>{u.role}</td>
+                  <td className={estilos.celdaSecundaria}>{u.country}</td>
                   <td>
-                    <span className={`${estilos.pillEstado} ${claseEstado(c.estado)}`}>
-                      {etiquetaEstado(c.estado)}
+                    <span className={`${estilos.pillEstado} ${claseActivo(u.isActive)}`}>
+                      {etiquetaActivo(u.isActive)}
                     </span>
                   </td>
-                  <td className={estilos.celdaSecundaria}>{c.ultimaActividad}</td>
                   <td>
-                    <Link className={estilos.enlaceDetalle} href={`/admin/customers/${c.id}`}>
+                    <Link className={estilos.enlaceDetalle} href={`/admin/customers/${u.id}`}>
                       Ver detalle
                     </Link>
                   </td>

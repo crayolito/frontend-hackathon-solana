@@ -12,7 +12,42 @@
     flex-direction: row;
     align-items: center;
     justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
   }
+}
+
+.barraPaginacion {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.botonPagina {
+  padding: 10px 16px;
+  border-radius: 10px;
+  border: 1px solid #e5e7eb;
+  background: #fff;
+  font-size: 0.82rem;
+  font-weight: 800;
+  color: var(--texto-primario, #1a1a2e);
+  cursor: pointer;
+}
+
+.botonPagina:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.botonPagina:not(:disabled):hover {
+  background: #f9fafb;
+}
+
+.textoPagina {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: color-mix(in srgb, var(--texto) 55%, transparent);
 }
 
 .campoBusqueda {
