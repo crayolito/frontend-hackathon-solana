@@ -9,9 +9,9 @@ import {
   type FormEvent,
 } from "react";
 import { useRouter } from "next/navigation";
-import estilosInicioSesion from "../../inicio-sesion.module.css";
 import estilosHome from "../../home.module.css";
 import BotonConexionWallet from "../../solana/BotonConexionWallet";
+import estilosModal from "./modal-autenticacion.module.css";
 import {
   ErrorApiTrustpay,
   iniciarSesionTrustpay,
@@ -158,7 +158,7 @@ export default function ModalAutenticacionDemo({
       }
 
       if (!connected || !publicKey) {
-        setMensajeAuth("Conectá tu billetera Solana (Phantom) para completar el registro.");
+        setMensajeAuth("Conectá Phantom (devnet) para continuar.");
         setCargando(false);
         return;
       }
@@ -199,6 +199,9 @@ export default function ModalAutenticacionDemo({
 
   if (!abierta) return null;
 
+  const claseTamano =
+    modoModal === "ingresar" ? estilosModal.tamanoIngresar : estilosModal.tamanoRegistro;
+
   return (
     <div
       className={estilosHome.modalOverlay}
@@ -210,170 +213,231 @@ export default function ModalAutenticacionDemo({
       }}
     >
       <div
-        className={estilosHome.modalContenedor}
+        className={`${estilosHome.modalContenedor} ${claseTamano}`}
         onMouseDown={(evento) => evento.stopPropagation()}
       >
-        <div className={estilosHome.modalBarra}>
-          <div>
-            <h2 id="titulo-modal" className={estilosInicioSesion.titulo}>
-              {modoModal === "ingresar" ? "Inicia sesión" : "Crea tu cuenta"}
-            </h2>
-            <p className={estilosHome.modalSubtitulo}>
-              {modoModal === "ingresar"
-                ? "Solo correo y contraseña. La billetera no hace falta para entrar."
-                : "Correo, contraseña, datos del comercio y billetera Solana vinculada a la cuenta."}
-            </p>
-          </div>
-
-          <button
-            type="button"
-            className={estilosHome.modalCerrar}
-            onClick={cerrarModalInterno}
-            aria-label="Cerrar modal"
-          >
-            ×
-          </button>
-        </div>
-
-        {mensajeAuth && (
-          <p className={estilosInicioSesion.mensajeAuth}>{mensajeAuth}</p>
-        )}
-
-        <form
-          className={estilosInicioSesion.formulario}
-          onSubmit={enviarFormulario}
-        >
-          <label className={estilosInicioSesion.label}>
-            Correo electrónico
-            <input
-              className={estilosInicioSesion.input}
-              type="email"
-              name="correo"
-              required
-              placeholder="tu@correo.com"
-              autoComplete="email"
-              value={correo}
-              onChange={(e) => setCorreo(e.target.value)}
-            />
-          </label>
-
-          <label className={estilosInicioSesion.label}>
-            Contraseña
-            <input
-              className={estilosInicioSesion.input}
-              type="password"
-              name="contrasena"
-              required
-              placeholder="••••••••"
-              autoComplete={
-                modoModal === "ingresar" ? "current-password" : "new-password"
-              }
-              value={contrasena}
-              onChange={(e) => setContrasena(e.target.value)}
-            />
-          </label>
-
-          {modoModal === "registrar" && (
-            <>
-              <label className={estilosInicioSesion.label}>
-                Nombre completo
-                <input
-                  className={estilosInicioSesion.input}
-                  type="text"
-                  name="nombreCompleto"
-                  required
-                  placeholder="Tu nombre o razón social"
-                  autoComplete="name"
-                  value={nombreCompleto}
-                  onChange={(e) => setNombreCompleto(e.target.value)}
-                />
-              </label>
-
-              <label className={estilosInicioSesion.label}>
-                País
-                <div
-                  ref={wrapperPaisRef}
-                  className={estilosInicioSesion.dropdownControl}
-                >
-                  <button
-                    type="button"
-                    className={estilosInicioSesion.dropdownBoton}
-                    aria-haspopup="listbox"
-                    aria-expanded={paisDropdownAbierto}
-                    onClick={() => setPaisDropdownAbierto((v) => !v)}
-                  >
-                    <span className={estilosInicioSesion.dropdownTexto}>
-                      {paisSeleccionado.etiqueta}
-                    </span>
-                    <span
-                      className={estilosInicioSesion.dropdownFlecha}
-                      aria-hidden="true"
-                    />
-                  </button>
-
-                  {paisDropdownAbierto && (
-                    <div
-                      className={estilosInicioSesion.dropdownMenu}
-                      role="listbox"
-                      aria-label="Seleccionar país"
-                    >
-                      {paisesRegistro.map((pais) => (
-                        <button
-                          key={pais.codigo}
-                          type="button"
-                          className={estilosInicioSesion.dropdownItem}
-                          data-activo={pais.codigo === codigoPais}
-                          aria-selected={pais.codigo === codigoPais}
-                          onClick={() => {
-                            setCodigoPais(pais.codigo);
-                            setPaisDropdownAbierto(false);
-                          }}
-                        >
-                          {pais.etiqueta}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </label>
-
-              <div className={estilosInicioSesion.bloqueWalletRegistro}>
-                <p className={estilosInicioSesion.textoWalletRegistro}>
-                  Obligatorio: conectá Phantom (devnet) para registrar la dirección de cobros.
+        <div className={estilosModal.modalInterior}>
+          <div className={estilosModal.modalScroll}>
+            <div className={estilosModal.cabeceraCompacta}>
+              <div>
+                <h2 id="titulo-modal" className={estilosModal.tituloModal}>
+                  {modoModal === "ingresar" ? "Entrá a TrustPay" : "Alta de comercio"}
+                </h2>
+                <p className={estilosModal.hintLinea}>
+                  {modoModal === "ingresar"
+                    ? "Correo y contraseña. Sin billetera."
+                    : "Datos básicos + Phantom (devnet) en una sola pantalla."}
                 </p>
-                <BotonConexionWallet />
               </div>
-            </>
-          )}
+              <button
+                type="button"
+                className={estilosHome.modalCerrar}
+                onClick={cerrarModalInterno}
+                aria-label="Cerrar modal"
+              >
+                ×
+              </button>
+            </div>
 
-          <button
-            className={estilosInicioSesion.boton}
-            type="submit"
-            disabled={cargando}
-          >
-            {cargando
-              ? "Enviando..."
-              : modoModal === "ingresar"
-                ? "Entrar"
-                : "Registrarse"}
-          </button>
-
-          <div className={estilosInicioSesion.enlaces}>
-            <button
-              type="button"
-              className={estilosInicioSesion.enlace}
-              onClick={() => {
-                setMensajeAuth(null);
-                setModoModal(modoModal === "ingresar" ? "registrar" : "ingresar");
-              }}
-              disabled={cargando}
+            <div
+              className={estilosModal.segmentoGrupo}
+              role="tablist"
+              aria-label="Elegir acceso"
             >
-              {modoModal === "ingresar"
-                ? "No tengo cuenta — Registrarme"
-                : "Ya tengo cuenta — Iniciar sesión"}
-            </button>
+              <button
+                type="button"
+                role="tab"
+                aria-selected={modoModal === "ingresar"}
+                className={`${estilosModal.segmentoBoton} ${modoModal === "ingresar" ? estilosModal.segmentoBotonActivo : ""}`}
+                disabled={cargando}
+                onClick={() => {
+                  setMensajeAuth(null);
+                  setModoModal("ingresar");
+                }}
+              >
+                Iniciar sesión
+              </button>
+              <button
+                type="button"
+                role="tab"
+                aria-selected={modoModal === "registrar"}
+                className={`${estilosModal.segmentoBoton} ${modoModal === "registrar" ? estilosModal.segmentoBotonActivo : ""}`}
+                disabled={cargando}
+                onClick={() => {
+                  setMensajeAuth(null);
+                  setModoModal("registrar");
+                }}
+              >
+                Crear cuenta
+              </button>
+            </div>
+
+            {mensajeAuth ? (
+              <p className={estilosModal.mensajeAuth} role="alert">
+                {mensajeAuth}
+              </p>
+            ) : null}
+
+            <form className={estilosModal.formulario} onSubmit={enviarFormulario}>
+              {modoModal === "registrar" ? (
+                <div className={estilosModal.gridRegistro}>
+                  <label
+                    className={`${estilosModal.etiqueta} ${estilosModal.campoLargo}`}
+                  >
+                    Correo
+                    <input
+                      className={estilosModal.input}
+                      type="email"
+                      name="correo"
+                      required
+                      placeholder="tu@correo.com"
+                      autoComplete="email"
+                      value={correo}
+                      onChange={(e) => setCorreo(e.target.value)}
+                    />
+                  </label>
+
+                  <label className={estilosModal.etiqueta}>
+                    Contraseña
+                    <input
+                      className={estilosModal.input}
+                      type="password"
+                      name="contrasena"
+                      required
+                      placeholder="••••••••"
+                      autoComplete="new-password"
+                      value={contrasena}
+                      onChange={(e) => setContrasena(e.target.value)}
+                    />
+                  </label>
+
+                  <label className={estilosModal.etiqueta}>
+                    País
+                    <div
+                      ref={wrapperPaisRef}
+                      className={estilosModal.dropdownControl}
+                    >
+                      <button
+                        type="button"
+                        className={estilosModal.dropdownBoton}
+                        aria-haspopup="listbox"
+                        aria-expanded={paisDropdownAbierto}
+                        onClick={() => setPaisDropdownAbierto((v) => !v)}
+                      >
+                        <span className={estilosModal.dropdownTexto}>
+                          {paisSeleccionado.etiqueta}
+                        </span>
+                        <span
+                          className={estilosModal.dropdownFlecha}
+                          aria-hidden="true"
+                        />
+                      </button>
+
+                      {paisDropdownAbierto ? (
+                        <div
+                          className={estilosModal.dropdownMenu}
+                          role="listbox"
+                          aria-label="Seleccionar país"
+                        >
+                          {paisesRegistro.map((pais) => (
+                            <button
+                              key={pais.codigo}
+                              type="button"
+                              className={estilosModal.dropdownItem}
+                              data-activo={pais.codigo === codigoPais}
+                              aria-selected={pais.codigo === codigoPais}
+                              onClick={() => {
+                                setCodigoPais(pais.codigo);
+                                setPaisDropdownAbierto(false);
+                              }}
+                            >
+                              {pais.etiqueta}
+                            </button>
+                          ))}
+                        </div>
+                      ) : null}
+                    </div>
+                  </label>
+
+                  <label
+                    className={`${estilosModal.etiqueta} ${estilosModal.campoLargo}`}
+                  >
+                    Nombre o razón social
+                    <input
+                      className={estilosModal.input}
+                      type="text"
+                      name="nombreCompleto"
+                      required
+                      placeholder="Ej. Mi negocio SRL"
+                      autoComplete="organization"
+                      value={nombreCompleto}
+                      onChange={(e) => setNombreCompleto(e.target.value)}
+                    />
+                  </label>
+
+                  <div
+                    className={`${estilosModal.cintaWallet} ${estilosModal.campoLargo}`}
+                  >
+                    <div className={estilosModal.cintaWalletTextos}>
+                      <p className={estilosModal.cintaWalletKicker}>Cobros en cadena</p>
+                      <p className={estilosModal.cintaWalletDetalle}>
+                        Vinculá Phantom para guardar tu dirección de cobro.
+                      </p>
+                      {connected && publicKey ? (
+                        <span className={estilosModal.pillOk}>Listo para registrar</span>
+                      ) : null}
+                    </div>
+                    <div className={estilosModal.cintaWalletAccion}>
+                      <BotonConexionWallet compacto />
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <label className={estilosModal.etiqueta}>
+                    Correo
+                    <input
+                      className={estilosModal.input}
+                      type="email"
+                      name="correo"
+                      required
+                      placeholder="tu@correo.com"
+                      autoComplete="email"
+                      value={correo}
+                      onChange={(e) => setCorreo(e.target.value)}
+                    />
+                  </label>
+
+                  <label className={estilosModal.etiqueta}>
+                    Contraseña
+                    <input
+                      className={estilosModal.input}
+                      type="password"
+                      name="contrasena"
+                      required
+                      placeholder="••••••••"
+                      autoComplete="current-password"
+                      value={contrasena}
+                      onChange={(e) => setContrasena(e.target.value)}
+                    />
+                  </label>
+                </>
+              )}
+
+              <button
+                className={estilosModal.botonEnviar}
+                type="submit"
+                disabled={cargando}
+              >
+                {cargando
+                  ? "Procesando…"
+                  : modoModal === "ingresar"
+                    ? "Entrar"
+                    : "Crear cuenta"}
+              </button>
+            </form>
           </div>
-        </form>
+        </div>
       </div>
     </div>
   );

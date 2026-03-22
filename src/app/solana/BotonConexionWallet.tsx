@@ -21,7 +21,8 @@ function acortarDireccion(base58: string) {
  */
 export default function BotonConexionWallet({
   className: claseExtra,
-}: Readonly<{ className?: string }> = {}) {
+  compacto = false,
+}: Readonly<{ className?: string; compacto?: boolean }> = {}) {
   const { connection } = useConnection();
   const { select, disconnect, connecting, connected, publicKey, wallet, wallets } = useWallet();
 
@@ -93,37 +94,51 @@ export default function BotonConexionWallet({
     }
   }, [connected, disconnect, entradaPhantom, select, wallets]);
 
-  const tituloPrincipal = connecting
-    ? "Conectando…"
-    : connected
-      ? "Cartera conectada · clic para desconectar"
-      : "Conectar mi billetera";
+  const tituloPrincipal = compacto
+    ? connecting
+      ? "Conectando…"
+      : connected
+        ? "Conectado"
+        : "Conectar"
+    : connecting
+      ? "Conectando…"
+      : connected
+        ? "Cartera conectada · clic para desconectar"
+        : "Conectar mi billetera";
 
   const subtitulo =
     connected && publicKey
       ? acortarDireccion(publicKey.toBase58())
-      : "Phantom · red devnet";
+      : compacto
+        ? "Phantom · devnet"
+        : "Phantom · red devnet";
 
   return (
     <button
       type="button"
-      className={`${estilosHome.phantomCarteraBtn} ${connected ? estilosHome.phantomCarteraBtnConectado : ""} ${claseExtra ?? ""}`}
+      className={`${estilosHome.phantomCarteraBtn} ${compacto ? estilosHome.phantomCarteraBtnCompacto : ""} ${connected ? estilosHome.phantomCarteraBtnConectado : ""} ${claseExtra ?? ""}`}
       onClick={() => void alternar()}
       disabled={connecting}
       aria-label={connected ? "Desconectar Phantom" : "Conectar mi billetera con Phantom"}
       title={connected && publicKey ? publicKey.toBase58() : "Usa Phantom en devnet"}
     >
       <img
-        className={estilosHome.phantomCarteraImg}
+        className={`${estilosHome.phantomCarteraImg} ${compacto ? estilosHome.phantomCarteraImgCompacto : ""}`}
         src="/imagenes/logo-phantom.svg"
         alt=""
-        width={42}
-        height={42}
+        width={compacto ? 30 : 42}
+        height={compacto ? 30 : 42}
         decoding="async"
       />
       <span className={estilosHome.phantomCarteraTextos}>
-        <span className={estilosHome.phantomCarteraTitulo}>{tituloPrincipal}</span>
-        <span className={estilosHome.phantomCarteraSub}>{subtitulo}</span>
+        <span
+          className={`${estilosHome.phantomCarteraTitulo} ${compacto ? estilosHome.phantomCarteraTituloCompacto : ""}`}
+        >
+          {tituloPrincipal}
+        </span>
+        <span className={`${estilosHome.phantomCarteraSub} ${compacto ? estilosHome.phantomCarteraSubCompacto : ""}`}>
+          {subtitulo}
+        </span>
       </span>
     </button>
   );

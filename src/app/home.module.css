@@ -97,6 +97,30 @@
   border-color: color-mix(in srgb, var(--primario) 45%, transparent);
 }
 
+/* Variante compacta (modal de registro, barras estrechas) */
+.phantomCarteraBtnCompacto {
+  padding: 6px 10px 6px 8px;
+  gap: 8px;
+  max-width: 100%;
+  border-radius: 12px;
+}
+
+.phantomCarteraImgCompacto {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+}
+
+.phantomCarteraTituloCompacto {
+  font-size: 12px;
+  line-height: 1.2;
+}
+
+.phantomCarteraSubCompacto {
+  font-size: 11px;
+  line-height: 1.25;
+}
+
 .phantomCarteraImg {
   width: 42px;
   height: 42px;
@@ -460,7 +484,6 @@
 
 .modalContenedor {
   width: 100%;
-  max-width: 520px;
   border-radius: 18px;
   background: color-mix(in srgb, var(--fondo) 86%, rgba(236, 245, 255, 0.12));
   border: 1px solid rgba(236, 245, 255, 0.16);
