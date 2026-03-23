@@ -24,7 +24,6 @@ const opcionesAdmin: OpcionAdmin[] = [
   { ruta: "/admin/analytics", etiqueta: "Analítica", iconoSrc: "/iconos/icon-analytics.svg" },
   { ruta: "/admin/transactions", etiqueta: "Transacciones", iconoSrc: "/iconos/icon-transacciones.svg" },
   { ruta: "/admin/customers", etiqueta: "Clientes", iconoSrc: "/iconos/icon-usuarios.svg" },
-  { ruta: "/admin/settings", etiqueta: "Configuración", iconoSrc: "/iconos/icon-settings.svg" },
 ];
 
 export default function LayoutDeAdministracion({ children }: Readonly<{ children: ReactNode }>) {

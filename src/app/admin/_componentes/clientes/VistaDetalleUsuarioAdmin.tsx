@@ -32,6 +32,11 @@ function etiquetaActivo(activo: boolean | undefined) {
   return "Activo";
 }
 
+function textoBotonToggle(activo: boolean | undefined) {
+  if (activo === false) return "Activar cuenta";
+  return "Desactivar cuenta";
+}
+
 // Ficha de usuario con GET /admin/users/:id, PATCH de rol/activo y POST toggle-active.
 export default function VistaDetalleUsuarioAdmin({
   idUsuario,
@@ -254,7 +259,7 @@ export default function VistaDetalleUsuarioAdmin({
                 disabled={alternando}
                 onClick={() => void ejecutarToggle()}
               >
-                {alternando ? "Procesando…" : "Alternar estado"}
+                {alternando ? "Procesando…" : textoBotonToggle(usuario.isActive)}
               </button>
             </div>
             {mensaje ? (

@@ -55,7 +55,12 @@ export default function ModalDetalleUsuarioAdmin({ abierta, idUsuario, alCerrar,
         </div>
 
         <div className={estilos.contenido}>
-          <VistaDetalleUsuarioAdmin idUsuario={idUsuario} modoModal alActualizarLista={alActualizarLista} />
+          <VistaDetalleUsuarioAdmin
+            idUsuario={idUsuario}
+            modoModal
+            alActualizarLista={alActualizarLista}
+            mostrarConfiguracion
+          />
         </div>
       </div>
     </div>
