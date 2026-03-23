@@ -21,6 +21,7 @@ type OpcionCliente = {
 
 const opcionesCliente: OpcionCliente[] = [
   { href: "/cliente", etiqueta: "Panel", iconoSrc: "/iconos/icon-dashboard.svg", esPanel: true },
+  { href: "/cliente/analytics", etiqueta: "Analítica", iconoSrc: "/iconos/icon-analytics.svg" },
   { href: "/cliente/negocios", etiqueta: "Negocios", iconoSrc: "/iconos/icon-transacciones.svg" },
   { href: "/cliente/transacciones", etiqueta: "Transacciones", iconoSrc: "/iconos/icon-transacciones.svg" },
   { href: "/cliente/settings", etiqueta: "Cuenta", iconoSrc: "/iconos/icon-settings.svg" },
