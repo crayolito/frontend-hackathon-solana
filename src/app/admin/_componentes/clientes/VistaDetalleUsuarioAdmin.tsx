@@ -13,6 +13,7 @@ import {
   type RolTrustpayApi,
   type UsuarioTrustpayRespuesta,
 } from "../../../_lib/apiTrustpay";
+import { useNotificacion } from "../../../_componentes/ProveedorNotificaciones";
 import { cerrarSesion, obtenerTokenSesion } from "../../../demoAuth";
 import estilos from "./detalle-cliente.module.css";
 
@@ -53,6 +54,7 @@ export default function VistaDetalleUsuarioAdmin({
   alActualizarLista,
   mostrarConfiguracion = false,
 }: Props) {
+  const { mostrarNotificacion } = useNotificacion();
   const router = useRouter();
   const [cargando, setCargando] = useState(true);
   const [usuario, setUsuario] = useState<UsuarioTrustpayRespuesta | null>(null);
@@ -66,7 +68,6 @@ export default function VistaDetalleUsuarioAdmin({
   const [guardando, setGuardando] = useState(false);
   const [alternando, setAlternando] = useState(false);
   const [verificando, setVerificando] = useState(false);
-  const [mensaje, setMensaje] = useState<string | null>(null);
 
   const aplicarUsuario = useCallback((u: UsuarioTrustpayRespuesta) => {
     setUsuario(u);
@@ -91,12 +92,14 @@ export default function VistaDetalleUsuarioAdmin({
         router.replace("/");
         return;
       }
-      setErrorCarga(e instanceof ErrorApiTrustpay ? e.message : "No se pudo cargar el usuario.");
+      const texto = e instanceof ErrorApiTrustpay ? e.message : "No se pudo cargar el usuario.";
+      setErrorCarga(texto);
+      mostrarNotificacion(texto);
       setUsuario(null);
     } finally {
       setCargando(false);
     }
-  }, [aplicarUsuario, idUsuario, router]);
+  }, [aplicarUsuario, idUsuario, router, mostrarNotificacion]);
 
   useEffect(() => {
     void recargar();
@@ -109,7 +112,6 @@ export default function VistaDetalleUsuarioAdmin({
   const guardarCambios = useCallback(async () => {
     const token = obtenerTokenSesion();
     if (!token || !idUsuario) return;
-    setMensaje(null);
     setGuardando(true);
     try {
       const actualizado = await actualizarUsuarioAdmin(token, idUsuario, {
@@ -120,7 +122,7 @@ export default function VistaDetalleUsuarioAdmin({
         walletAddress: carteraEdit,
       });
       aplicarUsuario(actualizado);
-      setMensaje("Cambios guardados.");
+      mostrarNotificacion("Cambios guardados.");
       alActualizarLista?.();
     } catch (e) {
       if (e instanceof ErrorApiTrustpay && e.codigoEstado === 401) {
@@ -128,7 +130,7 @@ export default function VistaDetalleUsuarioAdmin({
         router.replace("/");
         return;
       }
-      setMensaje(e instanceof ErrorApiTrustpay ? e.message : "No se pudo guardar.");
+      mostrarNotificacion(e instanceof ErrorApiTrustpay ? e.message : "No se pudo guardar.");
     } finally {
       setGuardando(false);
     }
@@ -142,12 +144,12 @@ export default function VistaDetalleUsuarioAdmin({
     rolEdit,
     router,
     alActualizarLista,
+    mostrarNotificacion,
   ]);
 
   const ejecutarToggle = useCallback(async () => {
     const token = obtenerTokenSesion();
     if (!token || !idUsuario) return;
-    setMensaje(null);
     setAlternando(true);
     try {
       const respuesta = await alternarActivoUsuarioAdmin(token, idUsuario);
@@ -156,7 +158,7 @@ export default function VistaDetalleUsuarioAdmin({
       } else {
         await recargar();
       }
-      setMensaje("Estado alternado en el servidor.");
+      mostrarNotificacion("Estado actualizado correctamente.");
       alActualizarLista?.();
     } catch (e) {
       if (e instanceof ErrorApiTrustpay && e.codigoEstado === 401) {
@@ -164,16 +166,15 @@ export default function VistaDetalleUsuarioAdmin({
         router.replace("/");
         return;
       }
-      setMensaje(e instanceof ErrorApiTrustpay ? e.message : "No se pudo alternar el estado.");
+      mostrarNotificacion(e instanceof ErrorApiTrustpay ? e.message : "No se pudo alternar el estado.");
     } finally {
       setAlternando(false);
     }
-  }, [aplicarUsuario, idUsuario, recargar, router, alActualizarLista]);
+  }, [aplicarUsuario, idUsuario, recargar, router, alActualizarLista, mostrarNotificacion]);
 
   const ejecutarVerificar = useCallback(async () => {
     const token = obtenerTokenSesion();
     if (!token || !idUsuario) return;
-    setMensaje(null);
     setVerificando(true);
     try {
       const respuesta = await verificarUsuarioAdmin(token, idUsuario);
@@ -182,7 +183,7 @@ export default function VistaDetalleUsuarioAdmin({
       } else {
         await recargar();
       }
-      setMensaje("Usuario verificado correctamente.");
+      mostrarNotificacion("Usuario verificado correctamente.");
       alActualizarLista?.();
     } catch (e) {
       if (e instanceof ErrorApiTrustpay && e.codigoEstado === 401) {
@@ -190,11 +191,11 @@ export default function VistaDetalleUsuarioAdmin({
         router.replace("/");
         return;
       }
-      setMensaje(e instanceof ErrorApiTrustpay ? e.message : "No se pudo verificar el usuario.");
+      mostrarNotificacion(e instanceof ErrorApiTrustpay ? e.message : "No se pudo verificar el usuario.");
     } finally {
       setVerificando(false);
     }
-  }, [aplicarUsuario, idUsuario, recargar, router, alActualizarLista]);
+  }, [aplicarUsuario, idUsuario, recargar, router, alActualizarLista, mostrarNotificacion]);
 
   if (cargando && !usuario) {
     return (
@@ -363,15 +364,6 @@ export default function VistaDetalleUsuarioAdmin({
                 </button>
               ) : null}
             </div>
-            {mensaje ? (
-              <p
-                className={`${estilos.mensajeForm} ${
-                  mensaje.startsWith("No ") || mensaje.includes("Error") ? estilos.mensajeError : ""
-                }`}
-              >
-                {mensaje}
-              </p>
-            ) : null}
           </div>
         ) : null}
       </section>
