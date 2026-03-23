@@ -192,11 +192,11 @@
 .listaQr {
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 14px;
 }
 
 .itemQr {
-  padding: 16px;
+  padding: 14px;
   border-radius: 14px;
   border: 1px solid #e5e7eb;
   background: #fafafa;
@@ -214,14 +214,15 @@
   margin: 0;
   font-size: 0.95rem;
   font-weight: 800;
+  color: #0f172a;
 }
 
 .wrapQr {
   display: flex;
   justify-content: center;
-  padding: 12px;
+  padding: 8px;
   background: #fff;
-  border-radius: 12px;
+  border-radius: 10px;
 }
 
 .monoPeq {

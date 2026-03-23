@@ -306,44 +306,43 @@ export default function ContenidoCuentaApiTrustpay() {
 
       <section className={estilos.tarjeta}>
         <div className={estilos.cabeceraTarjeta}>
-          <h2 className={estilos.tituloTarjeta}>Marca del comercio</h2>
+          <h2 className={estilos.tituloTarjeta}>Marca y wallet de la cuenta</h2>
         </div>
         <div className={estilos.cuerpoTarjeta}>
-          <p className={estilos.subtituloTarjeta} style={{ marginTop: 0 }}>
-            Subí el logo con Cloudinary; se guarda en este navegador hasta que el API permita adjuntarlo al perfil.
-          </p>
-          <ZonaSubidaLogoCloudinary
-            etiqueta="Logo"
-            url={logoMarcaUrl}
-            alCambiarUrl={persistirLogoMarca}
-            claseBotonSecundario={estilos.botonSecundario}
-          />
-        </div>
-      </section>
+          <div className={estilos.grid2}>
+            <div>
+              <p className={estilos.subtituloTarjeta} style={{ marginTop: 0 }}>
+                Subí el logo con Cloudinary; se guarda en este navegador hasta que el API permita adjuntarlo al perfil.
+              </p>
+              <ZonaSubidaLogoCloudinary
+                etiqueta="Logo"
+                url={logoMarcaUrl}
+                alCambiarUrl={persistirLogoMarca}
+                claseBotonSecundario={estilos.botonSecundario}
+              />
+            </div>
 
-      <section className={estilos.tarjeta}>
-        <div className={estilos.cabeceraTarjeta}>
-          <h2 className={estilos.tituloTarjeta}>Wallet de la cuenta</h2>
-        </div>
-        <div className={estilos.cuerpoTarjeta}>
-          <p className={estilos.subtituloTarjeta} style={{ marginTop: 0 }}>
-            Es la dirección que registraste y la que usamos al crear negocios si Phantom no está conectada.
-          </p>
-          <span className={estilos.etiqueta}>Dirección en cuenta</span>
-          <p
-            style={{
-              margin: "6px 0 14px",
-              fontFamily: "var(--fuente-geist-mono, ui-monospace, monospace)",
-              fontSize: "0.82rem",
-              wordBreak: "break-all",
-              fontWeight: 600,
-            }}
-          >
-            {usuario.walletAddress ?? "— Sin wallet guardada —"}
-          </p>
-          <span className={estilos.etiqueta}>Phantom (devnet)</span>
-          <div style={{ marginTop: 8 }}>
-            <BotonConexionWallet />
+            <div>
+              <p className={estilos.subtituloTarjeta} style={{ marginTop: 0 }}>
+                Es la dirección que registraste y la que usamos al crear negocios si Phantom no está conectada.
+              </p>
+              <span className={estilos.etiqueta}>Dirección en cuenta</span>
+              <p
+                style={{
+                  margin: "6px 0 14px",
+                  fontFamily: "var(--fuente-geist-mono, ui-monospace, monospace)",
+                  fontSize: "0.82rem",
+                  wordBreak: "break-all",
+                  fontWeight: 600,
+                }}
+              >
+                {usuario.walletAddress ?? "— Sin wallet guardada —"}
+              </p>
+              <span className={estilos.etiqueta}>Phantom (devnet)</span>
+              <div style={{ marginTop: 8 }}>
+                <BotonConexionWallet />
+              </div>
+            </div>
           </div>
         </div>
       </section>

@@ -177,6 +177,8 @@ textarea.input {
   letter-spacing: 0.06em;
   padding: 4px 10px;
   border-radius: 999px;
+  background: #f1f5f9;
+  color: #64748b;
 }
 
 .badgeAmbar {

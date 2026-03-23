@@ -1,7 +1,9 @@
 .contenedor {
   min-height: 100vh;
+  height: 100vh;
   display: flex;
   background: var(--fondo, #0a0a0a00);
+  overflow: hidden;
 }
 
 .barra {
@@ -17,7 +19,8 @@
   /* Mantiene el logout y el usuario visibles al scrollear el contenido principal. */
   position: sticky;
   top: 0;
-  height: 100vh;
+  max-height: 100vh;
+  overflow: hidden;
 }
 
 .barraCabecera {
@@ -181,8 +184,10 @@
 .contenido {
   flex: 1;
   min-width: 0;
+  min-height: 0;
   padding: 22px;
   background: var(--superficie, #f0f2f5);
+  overflow-y: auto;
 }
 
 .cabecera {

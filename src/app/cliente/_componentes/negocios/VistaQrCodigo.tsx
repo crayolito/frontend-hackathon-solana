@@ -17,7 +17,7 @@ export default function VistaQrCodigo({ respuesta, etiqueta }: Props) {
   if (v.tipo === "imagen") {
     return (
       <div className={estilos.wrapQr}>
-        <img src={v.src} alt={v.alt} width={200} height={200} style={{ objectFit: "contain" }} />
+        <img src={v.src} alt={v.alt} width={160} height={160} style={{ objectFit: "contain" }} />
       </div>
     );
   }
@@ -25,7 +25,7 @@ export default function VistaQrCodigo({ respuesta, etiqueta }: Props) {
   if (v.tipo === "texto") {
     return (
       <div className={estilos.wrapQr}>
-        <QRCode value={v.valor} size={200} level="M" />
+        <QRCode value={v.valor} size={160} level="M" bgColor="#ffffff" fgColor="#0f172a" />
       </div>
     );
   }

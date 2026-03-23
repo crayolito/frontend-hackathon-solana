@@ -229,48 +229,48 @@ export default function DetalleNegocioCliente({ idNegocio }: Props) {
           </button>
         </div>
         <div className={estilosDev.cuerpoTarjeta}>
-          <p className={estilosDev.subtituloTarjeta} style={{ marginTop: 0 }}>
-            Categoría: <strong>{negocio.category}</strong>
-            {negocio.isVerified === true ? (
-              <>
-                {" "}
-                <span className={estilosDev.badgeVerde}>Verificado</span>
-              </>
-            ) : null}
-            {negocio.isActive === false ? (
-              <>
-                {" "}
-                <span className={estilosDev.badgeRojo}>Inactivo</span>
-              </>
-            ) : null}
-            {negocio.description ? (
-              <>
-                <br />
-                {negocio.description}
-              </>
-            ) : null}
-          </p>
-          {negocio.walletAddress ? (
-            <p className={estilos.monoPeq} style={{ marginBottom: 0 }}>
-              Wallet de cobro: {negocio.walletAddress}
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 10, alignItems: "center", marginBottom: 10 }}>
+            <span className={estilosDev.badgeGris}>{negocio.category || "Categoría"}</span>
+            {negocio.isVerified === true ? <span className={estilosDev.badgeVerde}>Verificado</span> : null}
+            {negocio.isActive === false ? <span className={estilosDev.badgeRojo}>Inactivo</span> : null}
+          </div>
+
+          {negocio.description ? (
+            <p className={estilosDev.subtituloTarjeta} style={{ marginTop: 0, lineHeight: 1.5 }}>
+              {negocio.description}
             </p>
           ) : null}
-          {negocio.solanaTxRegister ? (
-            <p className={estilos.monoPeq} style={{ marginTop: 10, marginBottom: 0 }}>
-              Registro on-chain:{" "}
-              <a
-                href={enlaceExploradorTx(negocio.solanaTxRegister)}
-                target="_blank"
-                rel="noopener noreferrer"
-                className={estilos.enlaceVolver}
-                style={{ marginBottom: 0, wordBreak: "break-all" }}
-              >
-                {negocio.solanaTxRegister}
-              </a>
-            </p>
-          ) : null}
+
+          <div className={estilosDev.grid2} style={{ marginTop: 14 }}>
+            {negocio.walletAddress ? (
+              <div>
+                <span className={estilosDev.etiqueta}>Wallet de cobro</span>
+                <p className={estilos.monoPeq} style={{ marginBottom: 0 }}>
+                  {negocio.walletAddress}
+                </p>
+              </div>
+            ) : null}
+
+            {negocio.solanaTxRegister ? (
+              <div>
+                <span className={estilosDev.etiqueta}>Registro on-chain</span>
+                <p className={estilos.monoPeq} style={{ marginTop: 8, marginBottom: 0 }}>
+                  <a
+                    href={enlaceExploradorTx(negocio.solanaTxRegister)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={estilos.enlaceVolver}
+                    style={{ marginBottom: 0, wordBreak: "break-all" }}
+                  >
+                    {negocio.solanaTxRegister}
+                  </a>
+                </p>
+              </div>
+            ) : null}
+          </div>
+
           {negocio.createdAt ? (
-            <p className={estilos.monoPeq} style={{ marginTop: 8, marginBottom: 0, color: "#64748b" }}>
+            <p className={estilos.monoPeq} style={{ marginTop: 12, marginBottom: 0, color: "#64748b" }}>
               Creado: {new Date(negocio.createdAt).toLocaleString()}
             </p>
           ) : null}
@@ -318,59 +318,59 @@ export default function DetalleNegocioCliente({ idNegocio }: Props) {
         }}
       />
 
-      <section className={estilosDev.tarjeta}>
-        <div className={estilosDev.cabeceraTarjeta}>
-          <h2 className={estilosDev.tituloTarjeta}>Códigos QR (servidor)</h2>
-        </div>
-        <div className={estilosDev.cuerpoTarjeta}>
-          <p className={estilosDev.subtituloTarjeta} style={{ marginTop: 0 }}>
-            Listado desde <code className={estilosDev.mono}>/businesses/…/qr-codes</code> (paginado).
-          </p>
-          {cargandoQrsApi ? (
-            <p style={{ color: "var(--texto-secundario)" }}>Cargando QRs…</p>
-          ) : null}
-          {!cargandoQrsApi && qrsApi.length === 0 ? (
-            <p style={{ color: "var(--texto-secundario)" }}>No hay códigos registrados en el servidor todavía.</p>
-          ) : null}
-          <div className={estilos.listaQr} aria-live="polite">
-            {qrsApi.map((item, idx) => (
-              <div key={claveEstableQrApi(item, idx)} className={estilos.itemQr}>
-                <div className={estilos.cabeceraQr}>
-                  <h3 className={estilos.tituloQr}>{etiquetaItemQrApi(item)}</h3>
-                </div>
-                <VistaQrCodigo respuesta={item} etiqueta={etiquetaItemQrApi(item)} />
-              </div>
-            ))}
+      <div className={estilosDev.grid2} style={{ gap: 18 }}>
+        <section className={estilosDev.tarjeta}>
+          <div className={estilosDev.cabeceraTarjeta}>
+            <h2 className={estilosDev.tituloTarjeta}>Códigos QR (servidor)</h2>
           </div>
-        </div>
-      </section>
+          <div className={estilosDev.cuerpoTarjeta}>
+            <p className={estilosDev.subtituloTarjeta} style={{ marginTop: 0 }}>
+              Listado desde <code className={estilosDev.mono}>/businesses/…/qr-codes</code> (paginado).
+            </p>
+            {cargandoQrsApi ? <p style={{ color: "var(--texto-secundario)" }}>Cargando QRs…</p> : null}
+            {!cargandoQrsApi && qrsApi.length === 0 ? (
+              <p style={{ color: "var(--texto-secundario)" }}>No hay códigos registrados en el servidor todavía.</p>
+            ) : null}
+            <div className={estilos.listaQr} aria-live="polite">
+              {qrsApi.map((item, idx) => (
+                <div key={claveEstableQrApi(item, idx)} className={estilos.itemQr}>
+                  <div className={estilos.cabeceraQr}>
+                    <h3 className={estilos.tituloQr}>{etiquetaItemQrApi(item)}</h3>
+                  </div>
+                  <VistaQrCodigo respuesta={item} etiqueta={etiquetaItemQrApi(item)} />
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
 
-      <section className={estilosDev.tarjeta}>
-        <div className={estilosDev.cabeceraTarjeta}>
-          <h2 className={estilosDev.tituloTarjeta}>Códigos QR de esta sesión</h2>
-        </div>
-        <div className={estilosDev.cuerpoTarjeta}>
-          <p className={estilosDev.subtituloTarjeta} style={{ marginTop: 0 }}>
-            Copia local en el navegador hasta cerrar la pestaña (útil si el POST acaba de devolver un QR).
-          </p>
-          {qrsLocales.length === 0 ? (
-            <p style={{ color: "var(--texto-secundario)" }}>Todavía no generaste QRs en esta sesión.</p>
-          ) : null}
-          <div className={estilos.listaQr} key={tickQr} aria-live="polite">
-            {qrsLocales.map((q) => (
-              <div key={q.id} className={estilos.itemQr}>
-                <div className={estilos.cabeceraQr}>
-                  <h3 className={estilos.tituloQr}>{q.etiqueta}</h3>
-                  <span className={estilosDev.badge}>
-                    {q.montoVariable ? "Monto variable" : "Monto fijo"}
-                  </span>
-                </div>
-                <VistaQrCodigo respuesta={q.respuesta} etiqueta={q.etiqueta} />
-              </div>
-            ))}
+        <section className={estilosDev.tarjeta}>
+          <div className={estilosDev.cabeceraTarjeta}>
+            <h2 className={estilosDev.tituloTarjeta}>Códigos QR de esta sesión</h2>
           </div>
-        </div>
-      </section>
+          <div className={estilosDev.cuerpoTarjeta}>
+            <p className={estilosDev.subtituloTarjeta} style={{ marginTop: 0 }}>
+              Copia local en el navegador hasta cerrar la pestaña (útil si el POST acaba de devolver un QR).
+            </p>
+            {qrsLocales.length === 0 ? (
+              <p style={{ color: "var(--texto-secundario)" }}>Todavía no generaste QRs en esta sesión.</p>
+            ) : null}
+            <div className={estilos.listaQr} key={tickQr} aria-live="polite">
+              {qrsLocales.map((q) => (
+                <div key={q.id} className={estilos.itemQr}>
+                  <div className={estilos.cabeceraQr}>
+                    <h3 className={estilos.tituloQr}>{q.etiqueta}</h3>
+                    <span className={estilosDev.badge}>
+                      {q.montoVariable ? "Monto variable" : "Monto fijo"}
+                    </span>
+                  </div>
+                  <VistaQrCodigo respuesta={q.respuesta} etiqueta={q.etiqueta} />
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      </div>
     </div>
   );
 }
