@@ -17,7 +17,12 @@ import {
   obtenerTokenSesion,
   type UsuarioSesion,
 } from "../../demoAuth";
+import BotonConexionWallet from "../../solana/BotonConexionWallet";
 import estilos from "../../cliente/_componentes/desarrollador.module.css";
+import ZonaSubidaLogoCloudinary from "./ZonaSubidaLogoCloudinary";
+
+const CLAVE_LOGO_CUENTA = "trustpay_logo_cuenta_marca";
+const CLAVE_PREFS_TRANSACCIONES = "trustpay_prefs_transacciones_cuenta";
 
 // Formularios de perfil, contraseña y baja de cuenta contra el API TrustPay (admin o merchant).
 export default function ContenidoCuentaApiTrustpay() {
@@ -41,6 +46,10 @@ export default function ContenidoCuentaApiTrustpay() {
   const [contrasenaBaja, setContrasenaBaja] = useState("");
   const [mensajeBaja, setMensajeBaja] = useState<string | null>(null);
   const [eliminando, setEliminando] = useState(false);
+
+  const [logoMarcaUrl, setLogoMarcaUrl] = useState("");
+  const [correoPorTransaccion, setCorreoPorTransaccion] = useState(true);
+  const [resumenDiarioTx, setResumenDiarioTx] = useState(true);
 
   const sincronizarUsuario = useCallback((u: UsuarioSesion) => {
     setUsuario(u);
@@ -71,6 +80,18 @@ export default function ContenidoCuentaApiTrustpay() {
           isActive: datos.isActive,
         };
         sincronizarUsuario(u);
+        try {
+          const logoGuardado = localStorage.getItem(CLAVE_LOGO_CUENTA);
+          if (logoGuardado) setLogoMarcaUrl(logoGuardado);
+          const prefsCrudo = localStorage.getItem(CLAVE_PREFS_TRANSACCIONES);
+          if (prefsCrudo) {
+            const p = JSON.parse(prefsCrudo) as { correo?: boolean; resumen?: boolean };
+            if (typeof p.correo === "boolean") setCorreoPorTransaccion(p.correo);
+            if (typeof p.resumen === "boolean") setResumenDiarioTx(p.resumen);
+          }
+        } catch {
+          /* ignore */
+        }
       } catch (error) {
         if (cancelado) return;
         if (error instanceof ErrorApiTrustpay && error.codigoEstado === 401) {
@@ -92,6 +113,30 @@ export default function ContenidoCuentaApiTrustpay() {
       cancelado = true;
     };
   }, [router, sincronizarUsuario]);
+
+  const persistirPreferenciasTransacciones = useCallback(
+    (correo: boolean, resumen: boolean) => {
+      try {
+        localStorage.setItem(
+          CLAVE_PREFS_TRANSACCIONES,
+          JSON.stringify({ correo, resumen }),
+        );
+      } catch {
+        /* ignore */
+      }
+    },
+    [],
+  );
+
+  const persistirLogoMarca = useCallback((url: string) => {
+    setLogoMarcaUrl(url);
+    try {
+      if (url) localStorage.setItem(CLAVE_LOGO_CUENTA, url);
+      else localStorage.removeItem(CLAVE_LOGO_CUENTA);
+    } catch {
+      /* ignore */
+    }
+  }, []);
 
   const guardarPerfil = useCallback(async () => {
     const token = obtenerTokenSesion();
@@ -245,6 +290,99 @@ export default function ContenidoCuentaApiTrustpay() {
           >
             {guardandoPerfil ? "Guardando…" : "Guardar perfil"}
           </button>
+        </div>
+      </section>
+
+      <section className={estilos.tarjeta}>
+        <div className={estilos.cabeceraTarjeta}>
+          <h2 className={estilos.tituloTarjeta}>Marca del comercio</h2>
+        </div>
+        <div className={estilos.cuerpoTarjeta}>
+          <p className={estilos.subtituloTarjeta} style={{ marginTop: 0 }}>
+            Subí el logo con Cloudinary; se guarda en este navegador hasta que el API permita adjuntarlo al perfil.
+          </p>
+          <ZonaSubidaLogoCloudinary
+            etiqueta="Logo"
+            url={logoMarcaUrl}
+            alCambiarUrl={persistirLogoMarca}
+            claseBotonSecundario={estilos.botonSecundario}
+          />
+        </div>
+      </section>
+
+      <section className={estilos.tarjeta}>
+        <div className={estilos.cabeceraTarjeta}>
+          <h2 className={estilos.tituloTarjeta}>Wallet de la cuenta</h2>
+        </div>
+        <div className={estilos.cuerpoTarjeta}>
+          <p className={estilos.subtituloTarjeta} style={{ marginTop: 0 }}>
+            Es la dirección que registraste y la que usamos al crear negocios si Phantom no está conectada.
+          </p>
+          <span className={estilos.etiqueta}>Dirección en cuenta</span>
+          <p
+            style={{
+              margin: "6px 0 14px",
+              fontFamily: "var(--fuente-geist-mono, ui-monospace, monospace)",
+              fontSize: "0.82rem",
+              wordBreak: "break-all",
+              fontWeight: 600,
+            }}
+          >
+            {usuario.walletAddress ?? "— Sin wallet guardada —"}
+          </p>
+          <span className={estilos.etiqueta}>Phantom (devnet)</span>
+          <div style={{ marginTop: 8 }}>
+            <BotonConexionWallet />
+          </div>
+        </div>
+      </section>
+
+      <section className={estilos.tarjeta}>
+        <div className={estilos.cabeceraTarjeta}>
+          <h2 className={estilos.tituloTarjeta}>Transacciones y avisos</h2>
+        </div>
+        <div className={estilos.cuerpoTarjeta}>
+          <p className={estilos.subtituloTarjeta} style={{ marginTop: 0 }}>
+            Preferencias a nivel cuenta (demo local). Cuando exista endpoint, se sincronizarán con el servidor.
+          </p>
+          <label style={{ display: "block", cursor: "pointer", marginBottom: 16 }}>
+            <div style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
+              <input
+                type="checkbox"
+                checked={correoPorTransaccion}
+                onChange={(e) => {
+                  const v = e.target.checked;
+                  setCorreoPorTransaccion(v);
+                  persistirPreferenciasTransacciones(v, resumenDiarioTx);
+                }}
+              />
+              <span>
+                <strong style={{ fontSize: "0.95rem" }}>Correo por cada cobro</strong>
+                <p className={estilos.subtituloTarjeta} style={{ marginTop: 4 }}>
+                  Aviso inmediato cuando se confirme un pago hacia tus negocios.
+                </p>
+              </span>
+            </div>
+          </label>
+          <label style={{ display: "block", cursor: "pointer" }}>
+            <div style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
+              <input
+                type="checkbox"
+                checked={resumenDiarioTx}
+                onChange={(e) => {
+                  const v = e.target.checked;
+                  setResumenDiarioTx(v);
+                  persistirPreferenciasTransacciones(correoPorTransaccion, v);
+                }}
+              />
+              <span>
+                <strong style={{ fontSize: "0.95rem" }}>Resumen diario de movimientos</strong>
+                <p className={estilos.subtituloTarjeta} style={{ marginTop: 4 }}>
+                  Un solo correo al día con totales y conteo de transacciones.
+                </p>
+              </span>
+            </div>
+          </label>
         </div>
       </section>
 

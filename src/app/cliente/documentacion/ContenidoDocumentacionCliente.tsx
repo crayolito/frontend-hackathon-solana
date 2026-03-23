@@ -1,53 +1,40 @@
 import estilos from "./documentacion-cliente.module.css";
 
-// Guía funcional para el comercio: flujos, claves y webhooks (referencia de producto).
+// Guía funcional para el comercio: flujos, cuenta y cobros (referencia de producto).
 export default function ContenidoDocumentacionCliente() {
   return (
     <article className={estilos.prosa}>
       <h2>Qué es esta área</h2>
       <p>
-        Desde el panel del <strong>comercio</strong> configurás la integración con TrustPay: cobros en Solana,
-        claves de API, webhooks y datos de tu cuenta. Parte del panel sigue en modo demostración hasta conectar
-        todos los servicios de backend.
+        Desde el panel del <strong>comercio</strong> gestionás negocios, QRs, un listado de{" "}
+        <strong>Transacciones</strong> (demo con datos fijos) y tu{" "}
+        <strong>Cuenta</strong> (perfil, marca, wallet y avisos). El resto se conecta al backend cuando esté listo.
       </p>
 
       <h2>Flujo general</h2>
       <ol className={estilos.lista}>
         <li>El comprador paga y el fondo queda en escrow on-chain según tu reglas.</li>
-        <li>Recibís eventos en la URL de webhook que configures (por ejemplo escrow liberado).</li>
-        <li>Validás la firma del cuerpo con el <strong>secreto de webhooks</strong> que ves en Claves API.</li>
-        <li>Los cobros pueden liquidarse a la wallet SOL que cargues en Configuración.</li>
+        <li>En producción podrás recibir eventos en tu servidor (webhooks) cuando el backend lo exponga.</li>
+        <li>
+          En <strong>Developers &amp; API</strong> tenés una firma de eventos simulada para la demo de integración.
+        </li>
+        <li>Los cobros se asocian a la wallet de tu cuenta o a Phantom; revisala en <strong>Cuenta</strong>.</li>
       </ol>
 
-      <h2>Claves API</h2>
+      <h2>Transacciones en el panel</h2>
       <p>
-        La clave <strong>publicable</strong> va en el front (checkout embebido). La <strong>secreta</strong>{" "}
-        solo en tu servidor para crear cargos o consultar el API. Rotá la secreta si se filtra.
-      </p>
-      <code className={estilos.codigo}>
-        Authorization: Bearer sk_test_…
-      </code>
-
-      <h2>Webhooks</h2>
-      <p>
-        Registrás una URL HTTPS. Elegís eventos (<code>escrow.created</code>, <code>payment.succeeded</code>,
-        etc.). Cada entrega aparece en la tabla de logs con código HTTP para depurar.
+        La pantalla <strong>Transacciones</strong> muestra KPIs y movimientos de ejemplo para la presentación. Cuando
+        exista API de movimientos, reemplazamos esos datos por los reales sin cambiar el diseño base.
       </p>
       <div className={estilos.tarjetaInfo}>
-        Consejo: respondé 2xx rápido; procesá en cola interna. Si fallás con 5xx, reintentamos según política
-        (demo no muestra reintentos reales).
+        Los webhooks hacia tu URL siguen siendo parte del modelo de producto; en esta hackathon el foco está en el
+        flujo de cobro y el panel del comercio.
       </div>
 
-      <h2>Pagos</h2>
+      <h2>Cuenta</h2>
       <p>
-        Aquí verás el listado de operaciones del comercio (mismo concepto que “transacciones” en el backoffice
-        interno, pero filtrado a tu cuenta).
-      </p>
-
-      <h2>Configuración</h2>
-      <p>
-        Perfil comercial, dirección de cobro en Solana, notificaciones y equipo. Cambiar la wallet de cobro
-        puede disparar una verificación extra antes de retiros.
+        Perfil sincronizado con el API, logo de marca (subida vía Cloudinary en el navegador), wallet de la cuenta,
+        conexión Phantom y preferencias de avisos por transacción (hoy guardadas en local hasta exista endpoint).
       </p>
     </article>
   );

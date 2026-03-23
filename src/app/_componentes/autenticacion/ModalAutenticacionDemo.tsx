@@ -18,6 +18,7 @@ import {
   registrarUsuarioTrustpay,
 } from "../../_lib/apiTrustpay";
 import { guardarSesionTrustpay } from "../../demoAuth";
+import { useNotificacion } from "../ProveedorNotificaciones";
 import type { ModoModal } from "./tiposAuth";
 
 type PaisRegistro = {
@@ -50,6 +51,7 @@ export default function ModalAutenticacionDemo({
   alCerrar: () => void;
 }>) {
   const router = useRouter();
+  const { mostrarNotificacion } = useNotificacion();
   const { connected, publicKey } = useWallet();
 
   const [modoModal, setModoModal] = useState<ModoModal>(modoInicial);
@@ -61,7 +63,6 @@ export default function ModalAutenticacionDemo({
   const wrapperPaisRef = useRef<HTMLDivElement | null>(null);
 
   const [cargando, setCargando] = useState(false);
-  const [mensajeAuth, setMensajeAuth] = useState<string | null>(null);
 
   const paisSeleccionado = useMemo(() => {
     return paisesRegistro.find((p) => p.codigo === codigoPais) ?? paisesRegistro[0]!;
@@ -79,7 +80,6 @@ export default function ModalAutenticacionDemo({
     setContrasena("");
     setNombreCompleto("");
     setCodigoPais("bo");
-    setMensajeAuth(null);
     setPaisDropdownAbierto(false);
   }, [abierta]);
 
@@ -127,7 +127,6 @@ export default function ModalAutenticacionDemo({
     evento.preventDefault();
     if (cargando) return;
 
-    setMensajeAuth(null);
     setCargando(true);
 
     try {
@@ -152,15 +151,37 @@ export default function ModalAutenticacionDemo({
       }
 
       if (!nombreCompleto.trim()) {
-        setMensajeAuth("Indica tu nombre completo.");
+        mostrarNotificacion("Indica tu nombre completo.");
         setCargando(false);
         return;
       }
 
       if (!connected || !publicKey) {
-        setMensajeAuth("Conectá Phantom (devnet) para continuar.");
+        mostrarNotificacion("Conectá Phantom (devnet) para continuar.");
         setCargando(false);
         return;
+      }
+
+      const walletAddressRegistro = publicKey.toBase58();
+
+      // Solo desarrollo: verificar en consola / localStorage qué wallet se manda al registrar (quitar cuando no haga falta).
+      if (process.env.NODE_ENV === "development") {
+        console.info(
+          "[TrustPay dev] Registro obligatorio con wallet — walletAddress enviado al API:",
+          walletAddressRegistro
+        );
+        try {
+          window.localStorage.setItem(
+            "trustpay_dev_ultimo_registro_wallet",
+            JSON.stringify({
+              wallet_address: walletAddressRegistro,
+              email: correo.trim(),
+              ts: new Date().toISOString(),
+            })
+          );
+        } catch {
+          // localStorage lleno o bloqueado
+        }
       }
 
       const respuesta = await registrarUsuarioTrustpay({
@@ -168,7 +189,7 @@ export default function ModalAutenticacionDemo({
         password: contrasena,
         fullName: nombreCompleto.trim(),
         country: paisSeleccionado.etiqueta,
-        walletAddress: publicKey.toBase58(),
+        walletAddress: walletAddressRegistro,
       });
 
       guardarSesionTrustpay({
@@ -188,9 +209,9 @@ export default function ModalAutenticacionDemo({
       redirigirSegunRol(respuesta.user.role);
     } catch (error) {
       if (error instanceof ErrorApiTrustpay) {
-        setMensajeAuth(error.message);
+        mostrarNotificacion(error.message, 14_000);
       } else {
-        setMensajeAuth("No pudimos completar la solicitud. Intenta de nuevo.");
+        mostrarNotificacion("No pudimos completar la solicitud. Intenta de nuevo.");
       }
     } finally {
       setCargando(false);
@@ -250,10 +271,7 @@ export default function ModalAutenticacionDemo({
                 aria-selected={modoModal === "ingresar"}
                 className={`${estilosModal.segmentoBoton} ${modoModal === "ingresar" ? estilosModal.segmentoBotonActivo : ""}`}
                 disabled={cargando}
-                onClick={() => {
-                  setMensajeAuth(null);
-                  setModoModal("ingresar");
-                }}
+                onClick={() => setModoModal("ingresar")}
               >
                 Iniciar sesión
               </button>
@@ -263,20 +281,11 @@ export default function ModalAutenticacionDemo({
                 aria-selected={modoModal === "registrar"}
                 className={`${estilosModal.segmentoBoton} ${modoModal === "registrar" ? estilosModal.segmentoBotonActivo : ""}`}
                 disabled={cargando}
-                onClick={() => {
-                  setMensajeAuth(null);
-                  setModoModal("registrar");
-                }}
+                onClick={() => setModoModal("registrar")}
               >
                 Crear cuenta
               </button>
             </div>
-
-            {mensajeAuth ? (
-              <p className={estilosModal.mensajeAuth} role="alert">
-                {mensajeAuth}
-              </p>
-            ) : null}
 
             <form className={estilosModal.formulario} onSubmit={enviarFormulario}>
               {modoModal === "registrar" ? (

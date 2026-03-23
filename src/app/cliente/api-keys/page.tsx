@@ -1,14 +1,6 @@
-import CabeceraAreaCliente from "../_componentes/CabeceraAreaCliente";
-import ContenidoApiKeysCliente from "../_componentes/ContenidoApiKeysCliente";
+import { redirect } from "next/navigation";
 
+// Las claves API se retiraron del menú comercio; la configuración vive en Cuenta.
 export default function PaginaApiKeysCliente() {
-  return (
-    <>
-      <CabeceraAreaCliente
-        titulo="Developers & API"
-        subtitulo="Claves publishable/secret, secreto de webhooks y permisos (demo)."
-      />
-      <ContenidoApiKeysCliente />
-    </>
-  );
+  redirect("/cliente/settings");
 }

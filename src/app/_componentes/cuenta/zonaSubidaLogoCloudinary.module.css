@@ -1,0 +1,130 @@
+/* Zona de arrastre / clic para subir logo a Cloudinary (área comercio y modales). */
+
+.etiqueta {
+  display: block;
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: color-mix(in srgb, var(--texto-primario, #0f172a) 55%, transparent);
+  margin-bottom: 8px;
+}
+
+.fila {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 14px;
+}
+
+.zonaClic {
+  position: relative;
+  width: 104px;
+  height: 104px;
+  border-radius: 14px;
+  border: 2px dashed color-mix(in srgb, var(--texto-primario, #0f172a) 22%, #cbd5e1);
+  background: color-mix(in srgb, #f8fafc 85%, #fff);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  transition: border-color 0.15s ease, background 0.15s ease;
+  padding: 0;
+  color: inherit;
+  font: inherit;
+}
+
+.zonaClic:hover {
+  border-color: color-mix(in srgb, var(--panel-izquierdo-acento, #0284c7) 55%, #94a3b8);
+  background: color-mix(in srgb, #eff6ff 40%, #fff);
+}
+
+.zonaClic:focus-visible {
+  outline: 2px solid var(--panel-izquierdo-acento, #0284c7);
+  outline-offset: 2px;
+}
+
+.zonaClic:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.placeholder {
+  text-align: center;
+  padding: 8px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #64748b;
+  line-height: 1.25;
+}
+
+.imagenPreview {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.acciones {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: flex-start;
+}
+
+.botonArchivo {
+  font-size: 0.88rem;
+  font-weight: 700;
+  padding: 8px 14px;
+  border-radius: 10px;
+  border: 1px solid #cbd5e1;
+  background: #fff;
+  color: #0f172a;
+  cursor: pointer;
+}
+
+.botonArchivo:hover:not(:disabled) {
+  border-color: #94a3b8;
+  background: #f8fafc;
+}
+
+.botonArchivo:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.botonQuitar {
+  font-size: 0.82rem;
+  font-weight: 600;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: #64748b;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.botonQuitar:hover {
+  color: #b91c1c;
+}
+
+.hint {
+  margin: 0;
+  font-size: 0.8rem;
+  color: #64748b;
+  max-width: 280px;
+}
+
+.error {
+  margin: 6px 0 0;
+  font-size: 0.82rem;
+  color: #b91c1c;
+}
+
+.inputOculto {
+  position: absolute;
+  width: 0;
+  height: 0;
+  opacity: 0;
+  pointer-events: none;
+}

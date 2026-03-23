@@ -1,6 +1,7 @@
 import estilos from "./estilos-cliente.module.css";
 
 import CabeceraAreaCliente from "./_componentes/CabeceraAreaCliente";
+import ResumenNegociosEnPanel from "./_componentes/negocios/ResumenNegociosEnPanel";
 
 // Resumen del panel del comercio (demo; sin exportar datos).
 export default function PaginaCliente() {
@@ -10,6 +11,7 @@ export default function PaginaCliente() {
         titulo="Panel del comercio"
         subtitulo="Resumen de actividad; conecta backend cuando esté listo."
       />
+      <ResumenNegociosEnPanel />
       <section className={estilos.cabecera} style={{ marginTop: 8 }}>
         <h2 style={{ margin: 0, fontSize: "1.05rem", color: "var(--texto-primario)" }}>
           Estado

@@ -1,17 +1,6 @@
-import CabeceraAreaCliente from "../_componentes/CabeceraAreaCliente";
+import { redirect } from "next/navigation";
 
-// Pagos del comercio (placeholder; sin botón exportar).
+// Los cobros por API/pagos no están en el alcance actual; la cuenta unifica la configuración.
 export default function PaginaPagosCliente() {
-  return (
-    <>
-      <CabeceraAreaCliente
-        titulo="Pagos"
-        subtitulo="Listado de cobros y estados de escrow (contenido demo pendiente de enlazar)."
-      />
-      <p style={{ color: "var(--texto-secundario)", maxWidth: 560 }}>
-        Aquí irá la tabla de pagos del comercio. No incluimos exportación CSV en esta cabecera por
-        requisito de producto.
-      </p>
-    </>
-  );
+  redirect("/cliente/settings");
 }

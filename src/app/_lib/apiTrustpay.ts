@@ -255,3 +255,274 @@ export async function alternarActivoUsuarioAdmin(token: string, idUsuario: strin
     }
   );
 }
+
+// --- Comercio: negocios y códigos QR (Bearer merchant).
+
+/** Coincide con el JSON del backend (POST/GET/PATCH y cada ítem de `data` en el listado paginado). */
+export type NegocioTrustpay = {
+  id: string;
+  userId?: string;
+  name: string;
+  description: string | null;
+  category: string;
+  logoUrl: string | null;
+  walletAddress: string | null;
+  isActive?: boolean;
+  isVerified?: boolean;
+  solanaTxRegister?: string | null;
+  solanaTxVerify?: string | null;
+  createdAt?: string;
+  updatedAt?: string;
+};
+
+/** Convierte un objeto suelto del API al tipo de negocio (ignora campos desconocidos). */
+function mapearNegocioDesdeApi(raw: unknown): NegocioTrustpay | null {
+  if (!raw || typeof raw !== "object") return null;
+  const o = raw as Record<string, unknown>;
+  const id = o.id;
+  const name = o.name;
+  if (typeof id !== "string" || typeof name !== "string") return null;
+
+  const walletAddress =
+    typeof o.walletAddress === "string"
+      ? o.walletAddress
+      : o.walletAddress === null
+        ? null
+        : null;
+
+  return {
+    id,
+    userId: typeof o.userId === "string" ? o.userId : undefined,
+    name,
+    description: typeof o.description === "string" ? o.description : null,
+    category: typeof o.category === "string" ? o.category : "",
+    logoUrl: typeof o.logoUrl === "string" ? o.logoUrl : null,
+    walletAddress,
+    isActive: typeof o.isActive === "boolean" ? o.isActive : undefined,
+    isVerified: typeof o.isVerified === "boolean" ? o.isVerified : undefined,
+    solanaTxRegister:
+      typeof o.solanaTxRegister === "string"
+        ? o.solanaTxRegister
+        : o.solanaTxRegister === null
+          ? null
+          : undefined,
+    solanaTxVerify:
+      typeof o.solanaTxVerify === "string"
+        ? o.solanaTxVerify
+        : o.solanaTxVerify === null
+          ? null
+          : undefined,
+    createdAt: typeof o.createdAt === "string" ? o.createdAt : undefined,
+    updatedAt: typeof o.updatedAt === "string" ? o.updatedAt : undefined,
+  };
+}
+
+/** POST/PATCH pueden devolver el objeto plano o envuelto en `{ data: ... }`. */
+function extraerNegocioDeRespuesta(crudo: unknown): NegocioTrustpay {
+  if (crudo && typeof crudo === "object") {
+    const o = crudo as Record<string, unknown>;
+    if (o.data !== undefined) {
+      const desdeData = mapearNegocioDesdeApi(o.data);
+      if (desdeData) return desdeData;
+    }
+  }
+  const directo = mapearNegocioDesdeApi(crudo);
+  if (directo) return directo;
+  throw new ErrorApiTrustpay("El servidor devolvió un negocio en formato no reconocido.", 500, crudo);
+}
+
+/** Cuerpo para registrar un negocio on-chain vía backend. */
+export type CuerpoCrearNegocioTrustpay = {
+  name: string;
+  description: string | null;
+  category: string;
+  logoUrl: string | null;
+  walletAddress: string;
+};
+
+export type CuerpoActualizarNegocioTrustpay = {
+  name?: string;
+  description?: string | null;
+  category?: string;
+  logoUrl?: string | null;
+};
+
+/** Monto variable: amountLamports y tokenMint en null. Monto fijo: amountLamports como string de lamports. */
+export type CuerpoCrearQrNegocioTrustpay = {
+  label: string;
+  type: string;
+  amountLamports: string | null;
+  tokenMint: string | null;
+};
+
+function normalizarListadoNegocios(
+  crudo: unknown,
+  paginaPedida: number,
+  limitePedido: number
+): {
+  negocios: NegocioTrustpay[];
+  total: number;
+  pagina: number;
+  limite: number;
+} {
+  if (Array.isArray(crudo)) {
+    const negocios = crudo
+      .map(mapearNegocioDesdeApi)
+      .filter((n): n is NegocioTrustpay => n !== null);
+    return {
+      negocios,
+      total: negocios.length,
+      pagina: paginaPedida,
+      limite: limitePedido,
+    };
+  }
+  if (crudo && typeof crudo === "object") {
+    const o = crudo as Record<string, unknown>;
+    const posibleLista = o.data ?? o.businesses ?? o.items ?? o.results;
+    const negocios = Array.isArray(posibleLista)
+      ? posibleLista
+          .map(mapearNegocioDesdeApi)
+          .filter((n): n is NegocioTrustpay => n !== null)
+      : [];
+    const total =
+      typeof o.total === "number"
+        ? o.total
+        : typeof o.totalItems === "number"
+          ? o.totalItems
+          : negocios.length;
+    const pagina = typeof o.page === "number" ? o.page : paginaPedida;
+    const limite = typeof o.limit === "number" ? o.limit : limitePedido;
+    return { negocios, total, pagina, limite };
+  }
+  return { negocios: [], total: 0, pagina: paginaPedida, limite: limitePedido };
+}
+
+export async function crearNegocioTrustpay(token: string, cuerpo: CuerpoCrearNegocioTrustpay) {
+  const crudo = await solicitudJson<unknown>("/businesses", {
+    method: "POST",
+    token,
+    body: JSON.stringify({
+      name: cuerpo.name.trim(),
+      description: cuerpo.description,
+      category: cuerpo.category.trim(),
+      logoUrl: cuerpo.logoUrl,
+      walletAddress: cuerpo.walletAddress.trim(),
+    }),
+  });
+  return extraerNegocioDeRespuesta(crudo);
+}
+
+/** Un negocio por id (si el backend no expone GET, usar listado en el componente). */
+export async function obtenerNegocioTrustpay(token: string, idNegocio: string) {
+  const crudo = await solicitudJson<unknown>(`/businesses/${encodeURIComponent(idNegocio)}`, {
+    method: "GET",
+    token,
+  });
+  return extraerNegocioDeRespuesta(crudo);
+}
+
+export async function listarNegociosTrustpay(token: string, pagina: number, limite: number) {
+  const consulta = new URLSearchParams({
+    page: String(pagina),
+    limit: String(limite),
+  });
+  const crudo = await solicitudJson<unknown>(`/businesses?${consulta.toString()}`, {
+    method: "GET",
+    token,
+  });
+  return normalizarListadoNegocios(crudo, pagina, limite);
+}
+
+export async function actualizarNegocioTrustpay(
+  token: string,
+  idNegocio: string,
+  datos: CuerpoActualizarNegocioTrustpay
+) {
+  const crudo = await solicitudJson<unknown>(`/businesses/${encodeURIComponent(idNegocio)}`, {
+    method: "PATCH",
+    token,
+    body: JSON.stringify(datos),
+  });
+  return extraerNegocioDeRespuesta(crudo);
+}
+
+export async function eliminarNegocioTrustpay(token: string, idNegocio: string) {
+  return solicitudJson<void>(`/businesses/${encodeURIComponent(idNegocio)}`, {
+    method: "DELETE",
+    token,
+  });
+}
+
+/** Respuesta del alta de QR: el backend puede devolver distintas formas; el front normaliza con resolverVistaQr. */
+export async function crearQrNegocioTrustpay(
+  token: string,
+  idNegocio: string,
+  cuerpo: CuerpoCrearQrNegocioTrustpay
+) {
+  return solicitudJson<unknown>(`/businesses/${encodeURIComponent(idNegocio)}/qr-codes`, {
+    method: "POST",
+    token,
+    body: JSON.stringify({
+      label: cuerpo.label.trim(),
+      type: cuerpo.type,
+      amountLamports: cuerpo.amountLamports,
+      tokenMint: cuerpo.tokenMint,
+    }),
+  });
+}
+
+/** Listado paginado GET /businesses/:id/qr-codes (misma forma que el listado de negocios: `data`, `total`, `page`, `limit`). */
+function normalizarListadoQrNegocio(
+  crudo: unknown,
+  paginaPedida: number,
+  limitePedido: number
+): {
+  items: unknown[];
+  total: number;
+  pagina: number;
+  limite: number;
+} {
+  if (Array.isArray(crudo)) {
+    return {
+      items: crudo,
+      total: crudo.length,
+      pagina: paginaPedida,
+      limite: limitePedido,
+    };
+  }
+  if (crudo && typeof crudo === "object") {
+    const o = crudo as Record<string, unknown>;
+    const posibleLista = o.data ?? o.items ?? o.qrCodes ?? o.results;
+    const items = Array.isArray(posibleLista) ? posibleLista : [];
+    const total =
+      typeof o.total === "number"
+        ? o.total
+        : typeof o.totalItems === "number"
+          ? o.totalItems
+          : items.length;
+    const pagina = typeof o.page === "number" ? o.page : paginaPedida;
+    const limite = typeof o.limit === "number" ? o.limit : limitePedido;
+    return { items, total, pagina, limite };
+  }
+  return { items: [], total: 0, pagina: paginaPedida, limite: limitePedido };
+}
+
+export async function listarQrCodesNegocioTrustpay(
+  token: string,
+  idNegocio: string,
+  pagina: number,
+  limite: number
+) {
+  const consulta = new URLSearchParams({
+    page: String(pagina),
+    limit: String(limite),
+  });
+  const crudo = await solicitudJson<unknown>(
+    `/businesses/${encodeURIComponent(idNegocio)}/qr-codes?${consulta.toString()}`,
+    {
+      method: "GET",
+      token,
+    }
+  );
+  return normalizarListadoQrNegocio(crudo, pagina, limite);
+}

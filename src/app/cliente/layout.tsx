@@ -9,6 +9,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { cerrarSesion, obtenerSesionTrustpay } from "../demoAuth";
 import { estiloMascaraIcono } from "../admin/_utilidades/estiloMascaraIcono";
 import estilosAdmin from "../admin/estilos-administracion.module.css";
+import ProveedorSolana from "../solana/ProveedorSolana";
 import estilos from "./estilos-cliente.module.css";
 
 type OpcionCliente = {
@@ -20,10 +21,9 @@ type OpcionCliente = {
 
 const opcionesCliente: OpcionCliente[] = [
   { href: "/cliente", etiqueta: "Panel", iconoSrc: "/iconos/icon-dashboard.svg", esPanel: true },
-  { href: "/cliente/pagos", etiqueta: "Pagos", iconoSrc: "/iconos/icon-money.svg" },
-  { href: "/cliente/api-keys", etiqueta: "Claves API", iconoSrc: "/iconos/icon-llave.svg" },
-  { href: "/cliente/webhooks", etiqueta: "Webhooks", iconoSrc: "/iconos/icon-webhook.svg" },
-  { href: "/cliente/settings", etiqueta: "Configuración", iconoSrc: "/iconos/icon-settings.svg" },
+  { href: "/cliente/negocios", etiqueta: "Negocios", iconoSrc: "/iconos/icon-transacciones.svg" },
+  { href: "/cliente/transacciones", etiqueta: "Transacciones", iconoSrc: "/iconos/icon-transacciones.svg" },
+  { href: "/cliente/settings", etiqueta: "Cuenta", iconoSrc: "/iconos/icon-settings.svg" },
 ];
 
 function inicialesDesdeEmail(email: string) {
@@ -75,6 +75,13 @@ export default function DisposicionDeCliente({ children }: Readonly<{ children: 
 
   useEffect(() => {
     setMenuAbierto(false);
+    // El área principal vuelve arriba al cambiar de sección (el menú lateral no depende del scroll del documento).
+    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+    // Sacamos foco del enlace del menú para que el navegador no haga scroll raro al cerrar el drawer.
+    const activo = document.activeElement;
+    if (activo instanceof HTMLElement && activo.closest("#menu-cliente")) {
+      activo.blur();
+    }
   }, [rutaActual]);
 
   const cerrarSesionYSalir = () => {
@@ -108,6 +115,7 @@ export default function DisposicionDeCliente({ children }: Readonly<{ children: 
   }
 
   return (
+    <ProveedorSolana>
     <div className={`${estilosAdmin.contenedor} ${estilos.temaComercio}`}>
         {menuAbierto ? (
           <button
@@ -123,7 +131,7 @@ export default function DisposicionDeCliente({ children }: Readonly<{ children: 
           className={`${estilosAdmin.barra} ${estilos.barraCliente} ${menuAbierto ? estilos.barraClienteAbierta : ""}`}
           data-purpose="cliente-sidebar"
         >
-          <div className={estilos.columnaBarra}>
+          <div className={estilos.sidebarSuperior}>
             <div className={estilosAdmin.encabezadoMarca}>
               <Image
                 className={estilosAdmin.logoSolana}
@@ -143,45 +151,48 @@ export default function DisposicionDeCliente({ children }: Readonly<{ children: 
               <span className={estilosAdmin.puntoRegion} />
               <span className={estilosAdmin.textoBadge}>Merchant</span>
             </div>
+          </div>
 
-            <nav className={estilosAdmin.navegacion}>
-              {opcionesCliente.map((opcion) => (
-                <Link
-                  key={opcion.href}
-                  href={opcion.href}
-                  className={`${estilosAdmin.enlace} ${esActivo(opcion) ? estilosAdmin.enlacePrincipal : ""}`}
-                >
-                  <span
-                    className={estilosAdmin.mascaraIconoNav}
-                    style={estiloMascaraIcono(opcion.iconoSrc)}
-                    aria-hidden
-                  />
-                  <span className={estilosAdmin.etiquetaEnlace}>{opcion.etiqueta}</span>
-                </Link>
-              ))}
-            </nav>
-
-            <div className={estilos.bloqueUsuario}>
-              <div className={estilos.avatarUsuario}>{iniciales}</div>
-              <div className={estilos.textoUsuario}>
-                <div className={estilos.emailUsuario} title={etiquetaUsuario}>
-                  {etiquetaUsuario}
-                </div>
-              </div>
-              <button
-                type="button"
-                className={estilos.botonSalirIcono}
-                onClick={cerrarSesionYSalir}
-                aria-label="Cerrar sesión"
-                data-purpose="cliente-logout"
+          <nav
+            className={`${estilosAdmin.navegacion} ${estilos.sidebarNavScroll}`}
+            aria-label="Secciones del comercio"
+          >
+            {opcionesCliente.map((opcion) => (
+              <Link
+                key={opcion.href}
+                href={opcion.href}
+                className={`${estilosAdmin.enlace} ${esActivo(opcion) ? estilosAdmin.enlacePrincipal : ""}`}
               >
                 <span
                   className={estilosAdmin.mascaraIconoNav}
-                  style={estiloMascaraIcono("/iconos/icon-cerrar-sesion.svg")}
+                  style={estiloMascaraIcono(opcion.iconoSrc)}
                   aria-hidden
                 />
-              </button>
+                <span className={estilosAdmin.etiquetaEnlace}>{opcion.etiqueta}</span>
+              </Link>
+            ))}
+          </nav>
+
+          <div className={estilos.bloqueUsuario}>
+            <div className={estilos.avatarUsuario}>{iniciales}</div>
+            <div className={estilos.textoUsuario}>
+              <div className={estilos.emailUsuario} title={etiquetaUsuario}>
+                {etiquetaUsuario}
+              </div>
             </div>
+            <button
+              type="button"
+              className={estilos.botonSalirIcono}
+              onClick={cerrarSesionYSalir}
+              aria-label="Cerrar sesión"
+              data-purpose="cliente-logout"
+            >
+              <span
+                className={estilosAdmin.mascaraIconoNav}
+                style={estiloMascaraIcono("/iconos/icon-cerrar-sesion.svg")}
+                aria-hidden
+              />
+            </button>
           </div>
         </aside>
 
@@ -206,5 +217,6 @@ export default function DisposicionDeCliente({ children }: Readonly<{ children: 
           </main>
         </div>
       </div>
+    </ProveedorSolana>
   );
 }

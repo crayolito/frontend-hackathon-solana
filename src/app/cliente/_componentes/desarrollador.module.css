@@ -1,4 +1,4 @@
-/* Tarjetas y tablas compartidas (API Keys, Webhooks, Settings del comercio). */
+/* Tarjetas y tablas compartidas (API Keys, cuenta/settings del comercio). */
 
 .contenedor {
   display: flex;
@@ -63,18 +63,41 @@
 }
 
 .input {
+  box-sizing: border-box;
   width: 100%;
   padding: 10px 14px;
   border-radius: 12px;
-  border: 1px solid #d0d0d8;
+  border: 1px solid #cbd5e1;
   font-size: 0.9rem;
   font-weight: 600;
-  color: var(--texto-primario);
+  /* Fondo y texto explícitos: evita inputs “negros” con tema oscuro del SO o variables heredadas. */
+  background: #ffffff;
+  color: #0f172a;
+  color-scheme: light;
+}
+
+.input::placeholder {
+  color: #94a3b8;
+  font-weight: 500;
 }
 
 .input:focus {
   outline: 2px solid color-mix(in srgb, var(--panel-izquierdo-acento, #6c63ff) 35%, transparent);
   border-color: #6c63ff;
+}
+
+textarea.input {
+  min-height: 4.25rem;
+  resize: vertical;
+  font-family: inherit;
+  line-height: 1.4;
+}
+
+.input:-webkit-autofill,
+.input:-webkit-autofill:hover,
+.input:-webkit-autofill:focus {
+  -webkit-box-shadow: 0 0 0 1000px #ffffff inset;
+  -webkit-text-fill-color: #0f172a;
 }
 
 .grid2 {

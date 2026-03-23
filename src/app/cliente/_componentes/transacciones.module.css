@@ -1,0 +1,163 @@
+/* Listado demo de transacciones: animaciones suaves al montar. */
+
+.contenedor {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  max-width: 960px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.resumenFila {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+@media (min-width: 560px) {
+  .resumenFila {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+.celdaResumen {
+  padding: 14px 12px;
+  border-radius: 12px;
+  background: #fff;
+  border: 1px solid color-mix(in srgb, var(--texto-primario, #171717) 10%, transparent);
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.05);
+}
+
+.celdaResumen dt {
+  margin: 0;
+  font-size: 0.68rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #64748b;
+}
+
+.celdaResumen dd {
+  margin: 6px 0 0;
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: var(--texto-primario, #0f172a);
+}
+
+.lista {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.fila {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  border: 1px solid #e5e7eb;
+  background: #fff;
+  opacity: 0;
+  transform: translateY(8px);
+  animation: filaEntra 0.45s ease forwards;
+}
+
+.fila:nth-child(1) {
+  animation-delay: 0.04s;
+}
+
+.fila:nth-child(2) {
+  animation-delay: 0.1s;
+}
+
+.fila:nth-child(3) {
+  animation-delay: 0.16s;
+}
+
+.fila:nth-child(4) {
+  animation-delay: 0.22s;
+}
+
+.fila:nth-child(5) {
+  animation-delay: 0.28s;
+}
+
+.fila:nth-child(6) {
+  animation-delay: 0.34s;
+}
+
+@keyframes filaEntra {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.fila:hover {
+  border-color: color-mix(in srgb, var(--panel-izquierdo-acento, #0284c7) 35%, #e5e7eb);
+  box-shadow: 0 4px 14px rgba(2, 132, 199, 0.08);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.filaIzq {
+  min-width: 0;
+  flex: 1;
+}
+
+.filaTitulo {
+  margin: 0 0 4px;
+  font-size: 0.92rem;
+  font-weight: 800;
+  color: var(--texto-primario, #0f172a);
+}
+
+.filaMeta {
+  margin: 0;
+  font-size: 0.78rem;
+  color: #64748b;
+  font-family: ui-monospace, "Cascadia Code", monospace;
+}
+
+.filaDer {
+  text-align: right;
+}
+
+.monto {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.badgeOk {
+  display: inline-block;
+  margin-top: 4px;
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: #d1fae5;
+  color: #047857;
+}
+
+.badgePend {
+  display: inline-block;
+  margin-top: 4px;
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: #fef3c7;
+  color: #b45309;
+}

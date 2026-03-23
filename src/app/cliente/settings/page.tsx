@@ -5,8 +5,8 @@ export default function PaginaSettingsCliente() {
   return (
     <>
       <CabeceraAreaCliente
-        titulo="Ajustes de cuenta"
-        subtitulo="Perfil, contraseña y baja de cuenta vinculados al API TrustPay. Conectá Phantom arriba para operar on-chain."
+        titulo="Cuenta"
+        subtitulo="Perfil, marca, wallet, avisos de transacciones y seguridad. Los datos de perfil se sincronizan con el API TrustPay."
       />
       <ContenidoCuentaApiTrustpay />
     </>
