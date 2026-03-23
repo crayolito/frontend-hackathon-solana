@@ -211,11 +211,24 @@ function normalizarListadoAdminUsuarios(
   return { usuarios: [], total: 0, pagina: paginaPedida, limite: limitePedido };
 }
 
-export async function listarUsuariosAdmin(token: string, pagina: number, limite: number) {
+export type FiltrosListadoUsuariosAdmin = {
+  /** Si se indica, el API filtra por rol (p. ej. `merchant` para excluir admins del listado de clientes). */
+  role?: RolTrustpayApi;
+  search?: string;
+};
+
+export async function listarUsuariosAdmin(
+  token: string,
+  pagina: number,
+  limite: number,
+  filtros?: FiltrosListadoUsuariosAdmin
+) {
   const consulta = new URLSearchParams({
     page: String(pagina),
     limit: String(limite),
   });
+  if (filtros?.role) consulta.set("role", filtros.role);
+  if (filtros?.search) consulta.set("search", filtros.search);
   const crudo = await solicitudJson<unknown>(`/admin/users?${consulta.toString()}`, {
     method: "GET",
     token,
@@ -409,6 +422,65 @@ export async function obtenerSeriePagosAdmin(
 export async function obtenerDistribucionMerchantsAdmin(token: string) {
   return solicitudJson<DistribucionMerchantsAdminRespuesta>(
     `/admin/metrics/merchants/distribution`,
+    { method: "GET", token }
+  );
+}
+
+// --- Comercio (merchant): negocios y pagos escrow (JWT) ---
+
+export type NegocioTrustpay = {
+  id: string;
+  name: string;
+  walletAddress: string;
+  description: string | null;
+  isActive: boolean;
+  createdAt: string;
+};
+
+export type RespuestaPaginada<T> = {
+  data: T[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+};
+
+export type PagoEscrowMerchantItem = {
+  id: string;
+  transactionId: string;
+  orderId: string | null;
+  status: string;
+  amount: number;
+  sellerWallet: string;
+  buyerWallet: string | null;
+  escrowPda: string | null;
+  qrImageUrl: string | null;
+  solanaPayUrl: string;
+  paidAt: string | null;
+  shippedAt: string | null;
+  releasedAt: string | null;
+  autoReleaseAt: string | null;
+  expiresAt: string | null;
+  createdAt: string;
+};
+
+export async function listarNegociosUsuario(token: string, page = 1, limit = 50) {
+  const q = new URLSearchParams({ page: String(page), limit: String(limit) });
+  return solicitudJson<RespuestaPaginada<NegocioTrustpay>>(`/businesses?${q}`, {
+    method: "GET",
+    token,
+  });
+}
+
+export async function listarPagosEscrowNegocio(
+  token: string,
+  businessId: string,
+  page = 1,
+  limit = 20
+) {
+  const q = new URLSearchParams({ page: String(page), limit: String(limit) });
+  return solicitudJson<RespuestaPaginada<PagoEscrowMerchantItem>>(
+    `/businesses/${encodeURIComponent(businessId)}/payments?${q}`,
     { method: "GET", token }
   );
 }

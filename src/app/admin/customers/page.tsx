@@ -16,7 +16,7 @@ import estilosLista from "../_componentes/clientes/lista-clientes.module.css";
 
 const LIMITE_POR_PAGINA = 10;
 
-// Listado de usuarios reales vía GET /admin/users (paginación y búsqueda local en la página).
+// Solo comercios (merchant): GET /admin/users?role=merchant — sin cuentas admin.
 export default function PaginaCustomers() {
   const router = useRouter();
   const [consulta, setConsulta] = useState("");
@@ -35,7 +35,9 @@ export default function PaginaCustomers() {
     setCargando(true);
     setError(null);
     try {
-      const { usuarios: lista, total } = await listarUsuariosAdmin(token, pagina, LIMITE_POR_PAGINA);
+      const { usuarios: lista, total } = await listarUsuariosAdmin(token, pagina, LIMITE_POR_PAGINA, {
+        role: "merchant",
+      });
       setUsuarios(lista);
       setTotalRegistros(total);
     } catch (e) {
@@ -92,7 +94,7 @@ export default function PaginaCustomers() {
       <CabeceraDashboard
         alExportar={exportarCsv}
         titulo="Clientes"
-        subtitulo="Usuarios de la plataforma (API admin): rol, cartera y estado de cuenta."
+        subtitulo="Comercios (rol merchant). Las cuentas administrador no aparecen en este listado."
       />
       {error ? (
         <p style={{ marginBottom: 16, color: "#b91c1c", fontWeight: 700 }}>{error}</p>

@@ -1,17 +1,15 @@
 import CabeceraAreaCliente from "../_componentes/CabeceraAreaCliente";
+import ContenidoPagosCliente from "../_componentes/ContenidoPagosCliente";
 
-// Pagos del comercio (placeholder; sin botón exportar).
+// Pagos escrow del negocio (GET /businesses/:id/payments con JWT de merchant).
 export default function PaginaPagosCliente() {
   return (
     <>
       <CabeceraAreaCliente
         titulo="Pagos"
-        subtitulo="Listado de cobros y estados de escrow (contenido demo pendiente de enlazar)."
+        subtitulo="Pagos escrow (Solana Pay / QR) de tus negocios, en tiempo real desde el backend."
       />
-      <p style={{ color: "var(--texto-secundario)", maxWidth: 560 }}>
-        Aquí irá la tabla de pagos del comercio. No incluimos exportación CSV en esta cabecera por
-        requisito de producto.
-      </p>
+      <ContenidoPagosCliente />
     </>
   );
 }
