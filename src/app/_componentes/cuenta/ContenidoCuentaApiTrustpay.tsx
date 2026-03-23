@@ -7,9 +7,7 @@ import {
   ErrorApiTrustpay,
   actualizarUsuarioYo,
   cambiarContrasenaTrustpay,
-  eliminarCuentaUsuarioYo,
   obtenerUsuarioYo,
-  verificarContrasenaTrustpay,
 } from "../../_lib/apiTrustpay";
 import {
   actualizarUsuarioEnSesion,
@@ -61,14 +59,6 @@ export default function ContenidoCuentaApiTrustpay() {
   const [contrasenaNueva, setContrasenaNueva] = useState("");
   const [mensajeContrasena, setMensajeContrasena] = useState<string | null>(null);
   const [guardandoContrasena, setGuardandoContrasena] = useState(false);
-
-  const [contrasenaVerificar, setContrasenaVerificar] = useState("");
-  const [mensajeVerificar, setMensajeVerificar] = useState<string | null>(null);
-  const [verificando, setVerificando] = useState(false);
-
-  const [contrasenaBaja, setContrasenaBaja] = useState("");
-  const [mensajeBaja, setMensajeBaja] = useState<string | null>(null);
-  const [eliminando, setEliminando] = useState(false);
 
   const [logoMarcaUrl, setLogoMarcaUrl] = useState("");
   const [mensajeVerificacionCuenta, setMensajeVerificacionCuenta] = useState<string | null>(null);
@@ -201,45 +191,6 @@ export default function ContenidoCuentaApiTrustpay() {
     }
   }, [contrasenaActual, contrasenaNueva]);
 
-  const enviarVerificacion = useCallback(async () => {
-    const token = obtenerTokenSesion();
-    if (!token) return;
-    setMensajeVerificar(null);
-    setVerificando(true);
-    try {
-      await verificarContrasenaTrustpay(token, contrasenaVerificar);
-      setMensajeVerificar("Contraseña correcta.");
-    } catch (error) {
-      setMensajeVerificar(
-        error instanceof ErrorApiTrustpay
-          ? error.message
-          : "No se pudo verificar."
-      );
-    } finally {
-      setVerificando(false);
-    }
-  }, [contrasenaVerificar]);
-
-  const enviarBaja = useCallback(async () => {
-    const token = obtenerTokenSesion();
-    if (!token) return;
-    setMensajeBaja(null);
-    setEliminando(true);
-    try {
-      await eliminarCuentaUsuarioYo(token, contrasenaBaja);
-      cerrarSesion();
-      router.replace("/");
-    } catch (error) {
-      setMensajeBaja(
-        error instanceof ErrorApiTrustpay
-          ? error.message
-          : "No se pudo eliminar la cuenta."
-      );
-    } finally {
-      setEliminando(false);
-    }
-  }, [contrasenaBaja, router]);
-
   if (cargandoPerfil) {
     return (
       <p className={estilos.subtituloTarjeta} style={{ padding: "12px 0" }}>
@@ -340,7 +291,13 @@ export default function ContenidoCuentaApiTrustpay() {
               </p>
               <span className={estilos.etiqueta}>Phantom (devnet)</span>
               <div style={{ marginTop: 8 }}>
-                <BotonConexionWallet />
+                {usuario.walletAddress ? (
+                  <span className={estilos.badgeGris} style={{ display: "inline-flex", alignItems: "center" }}>
+                    Wallet guardada
+                  </span>
+                ) : (
+                  <BotonConexionWallet />
+                )}
               </div>
             </div>
           </div>
@@ -430,74 +387,7 @@ export default function ContenidoCuentaApiTrustpay() {
         </div>
       </section>
 
-      <section className={estilos.tarjeta}>
-        <div className={estilos.cabeceraTarjeta}>
-          <h2 className={estilos.tituloTarjeta}>Verificar contraseña</h2>
-        </div>
-        <div className={estilos.cuerpoTarjeta}>
-          <label className={estilos.etiqueta} htmlFor="pwd-verificar">
-            Contraseña
-          </label>
-          <input
-            id="pwd-verificar"
-            type="password"
-            className={estilos.input}
-            autoComplete="current-password"
-            value={contrasenaVerificar}
-            onChange={(e) => setContrasenaVerificar(e.target.value)}
-          />
-          {mensajeVerificar ? (
-            <p style={{ marginTop: 14, fontSize: "0.9rem" }}>{mensajeVerificar}</p>
-          ) : null}
-        </div>
-        <div className={estilos.pieTarjeta}>
-          <button
-            type="button"
-            className={estilos.botonSecundario}
-            disabled={verificando}
-            onClick={() => void enviarVerificacion()}
-          >
-            {verificando ? "Comprobando…" : "Verificar"}
-          </button>
-        </div>
-      </section>
-
-      <section className={estilos.tarjeta}>
-        <div className={estilos.cabeceraTarjeta}>
-          <h2 className={estilos.tituloTarjeta}>Eliminar cuenta</h2>
-        </div>
-        <div className={estilos.cuerpoTarjeta}>
-          <p className={estilos.subtituloTarjeta}>
-            Esta acción es permanente. Confirma con tu contraseña.
-          </p>
-          <label className={estilos.etiqueta} htmlFor="pwd-baja">
-            Contraseña
-          </label>
-          <input
-            id="pwd-baja"
-            type="password"
-            className={estilos.input}
-            autoComplete="current-password"
-            value={contrasenaBaja}
-            onChange={(e) => setContrasenaBaja(e.target.value)}
-          />
-          {mensajeBaja ? (
-            <p style={{ marginTop: 14, fontSize: "0.9rem", color: "#b91c1c" }}>
-              {mensajeBaja}
-            </p>
-          ) : null}
-        </div>
-        <div className={estilos.pieTarjeta}>
-          <button
-            type="button"
-            className={estilos.botonPeligro}
-            disabled={eliminando}
-            onClick={() => void enviarBaja()}
-          >
-            {eliminando ? "Eliminando…" : "Eliminar mi cuenta"}
-          </button>
-        </div>
-      </section>
+      {/* Removimos "Verificar contraseña" y "Eliminar cuenta" para evitar fricción en el panel. */}
     </div>
   );
 }

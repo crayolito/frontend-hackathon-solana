@@ -235,12 +235,6 @@ export default function DetalleNegocioCliente({ idNegocio }: Props) {
             {negocio.isActive === false ? <span className={estilosDev.badgeRojo}>Inactivo</span> : null}
           </div>
 
-          {negocio.description ? (
-            <p className={estilosDev.subtituloTarjeta} style={{ marginTop: 0, lineHeight: 1.5 }}>
-              {negocio.description}
-            </p>
-          ) : null}
-
           <div className={estilosDev.grid2} style={{ marginTop: 14 }}>
             {negocio.walletAddress ? (
               <div>
