@@ -12,6 +12,7 @@ import { cerrarSesion, obtenerTokenSesion } from "../../demoAuth";
 import CabeceraDashboard from "../_componentes/dashboard/CabeceraDashboard";
 import TablaListaClientes from "../_componentes/clientes/TablaListaClientes";
 import TarjetasKpiClientes from "../_componentes/clientes/TarjetasKpiClientes";
+import ModalDetalleUsuarioAdmin from "../_componentes/clientes/ModalDetalleUsuarioAdmin";
 import estilosLista from "../_componentes/clientes/lista-clientes.module.css";
 
 const LIMITE_POR_PAGINA = 10;
@@ -25,6 +26,7 @@ export default function PaginaCustomers() {
   const [error, setError] = useState<string | null>(null);
   const [usuarios, setUsuarios] = useState<UsuarioTrustpayRespuesta[]>([]);
   const [totalRegistros, setTotalRegistros] = useState(0);
+  const [idUsuarioModal, setIdUsuarioModal] = useState<string | null>(null);
 
   const cargar = useCallback(async () => {
     const token = obtenerTokenSesion();
@@ -130,7 +132,22 @@ export default function PaginaCustomers() {
           </button>
         </div>
       </div>
-      <TablaListaClientes usuarios={usuariosFiltrados} />
+      <TablaListaClientes
+        usuarios={usuariosFiltrados}
+        onVerDetalle={(idUsuario) => setIdUsuarioModal(idUsuario)}
+      />
+
+      {idUsuarioModal ? (
+        <ModalDetalleUsuarioAdmin
+          abierta={true}
+          idUsuario={idUsuarioModal}
+          alCerrar={() => {
+            setIdUsuarioModal(null);
+            void cargar();
+          }}
+          alActualizarLista={() => void cargar()}
+        />
+      ) : null}
     </>
   );
 }

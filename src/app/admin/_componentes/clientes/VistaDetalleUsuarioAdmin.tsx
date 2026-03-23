@@ -17,6 +17,9 @@ import estilos from "./detalle-cliente.module.css";
 
 type Props = {
   idUsuario: string;
+  modoModal?: boolean;
+  alActualizarLista?: () => void;
+  mostrarConfiguracion?: boolean;
 };
 
 function claseActivo(activo: boolean | undefined) {
@@ -30,7 +33,12 @@ function etiquetaActivo(activo: boolean | undefined) {
 }
 
 // Ficha de usuario con GET /admin/users/:id, PATCH de rol/activo y POST toggle-active.
-export default function VistaDetalleUsuarioAdmin({ idUsuario }: Props) {
+export default function VistaDetalleUsuarioAdmin({
+  idUsuario,
+  modoModal = false,
+  alActualizarLista,
+  mostrarConfiguracion = false,
+}: Props) {
   const router = useRouter();
   const [cargando, setCargando] = useState(true);
   const [usuario, setUsuario] = useState<UsuarioTrustpayRespuesta | null>(null);
@@ -89,6 +97,7 @@ export default function VistaDetalleUsuarioAdmin({ idUsuario }: Props) {
       });
       aplicarUsuario(actualizado);
       setMensaje("Cambios guardados.");
+      alActualizarLista?.();
     } catch (e) {
       if (e instanceof ErrorApiTrustpay && e.codigoEstado === 401) {
         cerrarSesion();
@@ -99,7 +108,7 @@ export default function VistaDetalleUsuarioAdmin({ idUsuario }: Props) {
     } finally {
       setGuardando(false);
     }
-  }, [activoEdit, aplicarUsuario, idUsuario, rolEdit, router]);
+  }, [activoEdit, aplicarUsuario, idUsuario, rolEdit, router, alActualizarLista]);
 
   const ejecutarToggle = useCallback(async () => {
     const token = obtenerTokenSesion();
@@ -114,6 +123,7 @@ export default function VistaDetalleUsuarioAdmin({ idUsuario }: Props) {
         await recargar();
       }
       setMensaje("Estado alternado en el servidor.");
+      alActualizarLista?.();
     } catch (e) {
       if (e instanceof ErrorApiTrustpay && e.codigoEstado === 401) {
         cerrarSesion();
@@ -124,15 +134,21 @@ export default function VistaDetalleUsuarioAdmin({ idUsuario }: Props) {
     } finally {
       setAlternando(false);
     }
-  }, [aplicarUsuario, idUsuario, recargar, router]);
+  }, [aplicarUsuario, idUsuario, recargar, router, alActualizarLista]);
 
   if (cargando && !usuario) {
     return (
       <div>
         <p style={{ fontWeight: 700 }}>Cargando usuario…</p>
-        <Link href="/admin/customers" className={estilos.enlaceVolver} style={{ marginTop: 12, display: "inline-block" }}>
-          ← Volver al listado
-        </Link>
+        {!modoModal ? (
+          <Link
+            href="/admin/customers"
+            className={estilos.enlaceVolver}
+            style={{ marginTop: 12, display: "inline-block" }}
+          >
+            ← Volver al listado
+          </Link>
+        ) : null}
       </div>
     );
   }
@@ -143,20 +159,24 @@ export default function VistaDetalleUsuarioAdmin({ idUsuario }: Props) {
         <p style={{ marginBottom: 16, fontWeight: 700 }}>
           {errorCarga ?? "No encontramos este usuario."}
         </p>
-        <Link href="/admin/customers" className={estilos.enlaceVolver}>
-          ← Volver al listado
-        </Link>
+        {!modoModal ? (
+          <Link href="/admin/customers" className={estilos.enlaceVolver}>
+            ← Volver al listado
+          </Link>
+        ) : null}
       </div>
     );
   }
 
   return (
     <>
-      <div className={estilos.barraVolver}>
-        <Link className={estilos.enlaceVolver} href="/admin/customers">
-          ← Volver a clientes
-        </Link>
-      </div>
+      {!modoModal ? (
+        <div className={estilos.barraVolver}>
+          <Link className={estilos.enlaceVolver} href="/admin/customers">
+            ← Volver a clientes
+          </Link>
+        </div>
+      ) : null}
 
       <section className={estilos.tarjetaFicha} aria-labelledby="titulo-usuario">
         <h1 id="titulo-usuario" className={estilos.tituloFicha}>
@@ -198,56 +218,56 @@ export default function VistaDetalleUsuarioAdmin({ idUsuario }: Props) {
           </div>
         </div>
 
-        <div className={estilos.formularioAdmin}>
-          <p className={estilos.etiquetaCampo}>Gestionar cuenta (admin)</p>
-          <div className={estilos.filaForm}>
-            <label className={estilos.etiquetaSelect} htmlFor="rol-usuario">
-              Rol
-              <select
-                id="rol-usuario"
-                className={estilos.selectRol}
-                value={rolEdit}
-                onChange={(e) => setRolEdit(e.target.value as RolTrustpayApi)}
+        {mostrarConfiguracion ? (
+          <div className={estilos.formularioAdmin}>
+            <p className={estilos.etiquetaCampo}>Gestionar cuenta (admin)</p>
+            <div className={estilos.filaForm}>
+              <label className={estilos.etiquetaSelect} htmlFor="rol-usuario">
+                Rol
+                <select
+                  id="rol-usuario"
+                  className={estilos.selectRol}
+                  value={rolEdit}
+                  onChange={(e) => setRolEdit(e.target.value as RolTrustpayApi)}
+                >
+                  <option value="merchant">merchant</option>
+                  <option value="admin">admin</option>
+                </select>
+              </label>
+              <label className={estilos.checkActivo}>
+                <input type="checkbox" checked={activoEdit} onChange={(e) => setActivoEdit(e.target.checked)} />
+                Cuenta activa
+              </label>
+            </div>
+            <div className={estilos.filaBotonesAccion}>
+              <button
+                type="button"
+                className={estilos.botonGuardar}
+                disabled={guardando}
+                onClick={() => void guardarCambios()}
               >
-                <option value="merchant">merchant</option>
-                <option value="admin">admin</option>
-              </select>
-            </label>
-            <label className={estilos.checkActivo}>
-              <input
-                type="checkbox"
-                checked={activoEdit}
-                onChange={(e) => setActivoEdit(e.target.checked)}
-              />
-              Cuenta activa
-            </label>
+                {guardando ? "Guardando…" : "Guardar cambios"}
+              </button>
+              <button
+                type="button"
+                className={estilos.botonAlternar}
+                disabled={alternando}
+                onClick={() => void ejecutarToggle()}
+              >
+                {alternando ? "Procesando…" : "Alternar estado"}
+              </button>
+            </div>
+            {mensaje ? (
+              <p
+                className={`${estilos.mensajeForm} ${
+                  mensaje.startsWith("No ") || mensaje.includes("Error") ? estilos.mensajeError : ""
+                }`}
+              >
+                {mensaje}
+              </p>
+            ) : null}
           </div>
-          <div className={estilos.filaBotonesAccion}>
-            <button
-              type="button"
-              className={estilos.botonGuardar}
-              disabled={guardando}
-              onClick={() => void guardarCambios()}
-            >
-              {guardando ? "Guardando…" : "Guardar cambios"}
-            </button>
-            <button
-              type="button"
-              className={estilos.botonAlternar}
-              disabled={alternando}
-              onClick={() => void ejecutarToggle()}
-            >
-              {alternando ? "Procesando…" : "Alternar estado"}
-            </button>
-          </div>
-          {mensaje ? (
-            <p
-              className={`${estilos.mensajeForm} ${mensaje.startsWith("No ") || mensaje.includes("Error") ? estilos.mensajeError : ""}`}
-            >
-              {mensaje}
-            </p>
-          ) : null}
-        </div>
+        ) : null}
       </section>
     </>
   );
