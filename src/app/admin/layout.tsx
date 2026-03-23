@@ -24,7 +24,6 @@ const opcionesAdmin: OpcionAdmin[] = [
   { ruta: "/admin/analytics", etiqueta: "Analítica", iconoSrc: "/iconos/icon-analytics.svg" },
   { ruta: "/admin/transactions", etiqueta: "Transacciones", iconoSrc: "/iconos/icon-transacciones.svg" },
   { ruta: "/admin/customers", etiqueta: "Clientes", iconoSrc: "/iconos/icon-usuarios.svg" },
-  { ruta: "/admin/settings", etiqueta: "Configuración", iconoSrc: "/iconos/icon-settings.svg" },
 ];
 
 export default function LayoutDeAdministracion({ children }: Readonly<{ children: ReactNode }>) {
@@ -61,6 +60,13 @@ export default function LayoutDeAdministracion({ children }: Readonly<{ children
     return rutaActual?.startsWith(opcion.ruta) ?? false;
   };
 
+  useEffect(() => {
+    const activo = document.activeElement;
+    if (activo instanceof HTMLElement && activo.closest('[data-purpose="admin-sidebar"]')) {
+      activo.blur();
+    }
+  }, [rutaActual]);
+
   if (!sesionLista) {
     return (
       <div className={estilos.contenedor} style={{ padding: 28, fontWeight: 700 }}>
@@ -72,7 +78,7 @@ export default function LayoutDeAdministracion({ children }: Readonly<{ children
   return (
     <div className={estilos.contenedor}>
       <aside className={estilos.barra} data-purpose="admin-sidebar">
-        <div>
+        <div className={estilos.barraCabecera}>
           <div className={estilos.encabezadoMarca}>
             <Image
               className={estilos.logoSolana}
@@ -87,24 +93,28 @@ export default function LayoutDeAdministracion({ children }: Readonly<{ children
               <div className={estilos.subtitulo}>Panel de administración</div>
             </div>
           </div>
-
-          <nav className={estilos.navegacion}>
-            {opcionesAdmin.map((opcion) => (
-              <Link
-                key={opcion.ruta}
-                href={opcion.ruta}
-                className={`${estilos.enlace} ${esActivo(opcion) ? estilos.enlacePrincipal : ""}`}
-              >
-                <span
-                  className={estilos.mascaraIconoNav}
-                  style={estiloMascaraIcono(opcion.iconoSrc)}
-                  aria-hidden
-                />
-                <span className={estilos.etiquetaEnlace}>{opcion.etiqueta}</span>
-              </Link>
-            ))}
-          </nav>
         </div>
+
+        <nav
+          className={`${estilos.navegacion} ${estilos.barraNavScroll}`}
+          aria-label="Secciones de administración"
+        >
+          {opcionesAdmin.map((opcion) => (
+            <Link
+              key={opcion.ruta}
+              href={opcion.ruta}
+              scroll
+              className={`${estilos.enlace} ${esActivo(opcion) ? estilos.enlacePrincipal : ""}`}
+            >
+              <span
+                className={estilos.mascaraIconoNav}
+                style={estiloMascaraIcono(opcion.iconoSrc)}
+                aria-hidden
+              />
+              <span className={estilos.etiquetaEnlace}>{opcion.etiqueta}</span>
+            </Link>
+          ))}
+        </nav>
 
         <button
           type="button"

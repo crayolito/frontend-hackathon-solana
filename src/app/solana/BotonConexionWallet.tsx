@@ -5,6 +5,7 @@ import { useConnection, useWallet } from "@solana/wallet-adapter-react";
 import { useCallback, useEffect, useMemo } from "react";
 import { flushSync } from "react-dom";
 import { LAMPORTS_PER_SOL } from "@solana/web3.js";
+import { useNotificacion } from "../_componentes/ProveedorNotificaciones";
 import estilosHome from "../home.module.css";
 import { registrarErrorWalletDetallado } from "./registroWalletConsola";
 
@@ -25,6 +26,7 @@ export default function BotonConexionWallet({
 }: Readonly<{ className?: string; compacto?: boolean }> = {}) {
   const { connection } = useConnection();
   const { select, disconnect, connecting, connected, publicKey, wallet, wallets } = useWallet();
+  const { mostrarNotificacion } = useNotificacion();
 
   const entradaPhantom = useMemo(
     () =>
@@ -72,9 +74,13 @@ export default function BotonConexionWallet({
       return;
     }
     if (!entradaPhantom) {
+      mostrarNotificacion(
+        "No encontramos la extensión Phantom en el navegador. Instalala el complemento desde phantom.app, recargá la página y volvé a intentar.",
+        10_000,
+      );
       if (process.env.NODE_ENV === "development") {
         console.warn(
-          "[Wallet] Phantom no está en la lista aún. ¿Extensión instalada? Carteras detectadas:",
+          "[Wallet] Phantom no está en la lista. ¿Extensión instalada? Carteras detectadas:",
           wallets.map((w) => w.adapter.name),
         );
       }
@@ -92,7 +98,7 @@ export default function BotonConexionWallet({
         entradaPhantom.adapter,
       );
     }
-  }, [connected, disconnect, entradaPhantom, select, wallets]);
+  }, [connected, disconnect, entradaPhantom, mostrarNotificacion, select, wallets]);
 
   const tituloPrincipal = compacto
     ? connecting
@@ -114,32 +120,36 @@ export default function BotonConexionWallet({
         : "Phantom · red devnet";
 
   return (
-    <button
-      type="button"
-      className={`${estilosHome.phantomCarteraBtn} ${compacto ? estilosHome.phantomCarteraBtnCompacto : ""} ${connected ? estilosHome.phantomCarteraBtnConectado : ""} ${claseExtra ?? ""}`}
-      onClick={() => void alternar()}
-      disabled={connecting}
-      aria-label={connected ? "Desconectar Phantom" : "Conectar mi billetera con Phantom"}
-      title={connected && publicKey ? publicKey.toBase58() : "Usa Phantom en devnet"}
+    <div
+      className={`${estilosHome.phantomCarteraEnvolver} ${compacto ? estilosHome.phantomCarteraEnvolverCompacto : ""}`}
     >
-      <img
-        className={`${estilosHome.phantomCarteraImg} ${compacto ? estilosHome.phantomCarteraImgCompacto : ""}`}
-        src="/imagenes/logo-phantom.svg"
-        alt=""
-        width={compacto ? 30 : 42}
-        height={compacto ? 30 : 42}
-        decoding="async"
-      />
-      <span className={estilosHome.phantomCarteraTextos}>
-        <span
-          className={`${estilosHome.phantomCarteraTitulo} ${compacto ? estilosHome.phantomCarteraTituloCompacto : ""}`}
-        >
-          {tituloPrincipal}
+      <button
+        type="button"
+        className={`${estilosHome.phantomCarteraBtn} ${compacto ? estilosHome.phantomCarteraBtnCompacto : ""} ${connected ? estilosHome.phantomCarteraBtnConectado : ""} ${claseExtra ?? ""}`}
+        onClick={() => void alternar()}
+        disabled={connecting}
+        aria-label={connected ? "Desconectar Phantom" : "Conectar mi billetera con Phantom"}
+        title={connected && publicKey ? publicKey.toBase58() : "Usa Phantom en devnet"}
+      >
+        <img
+          className={`${estilosHome.phantomCarteraImg} ${compacto ? estilosHome.phantomCarteraImgCompacto : ""}`}
+          src="/imagenes/logo-phantom.svg"
+          alt=""
+          width={compacto ? 30 : 42}
+          height={compacto ? 30 : 42}
+          decoding="async"
+        />
+        <span className={estilosHome.phantomCarteraTextos}>
+          <span
+            className={`${estilosHome.phantomCarteraTitulo} ${compacto ? estilosHome.phantomCarteraTituloCompacto : ""}`}
+          >
+            {tituloPrincipal}
+          </span>
+          <span className={`${estilosHome.phantomCarteraSub} ${compacto ? estilosHome.phantomCarteraSubCompacto : ""}`}>
+            {subtitulo}
+          </span>
         </span>
-        <span className={`${estilosHome.phantomCarteraSub} ${compacto ? estilosHome.phantomCarteraSubCompacto : ""}`}>
-          {subtitulo}
-        </span>
-      </span>
-    </button>
+      </button>
+    </div>
   );
 }

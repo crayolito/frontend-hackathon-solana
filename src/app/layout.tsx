@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { JetBrains_Mono, Space_Grotesk } from "next/font/google";
+import ProveedorNotificaciones from "./_componentes/ProveedorNotificaciones";
 import "./globals.css";
 import ProveedorTemaPorRuta from "./tema/ProveedorTemaPorRuta";
 
@@ -27,7 +28,9 @@ export default function LayoutRaiz({
   return (
     <html lang="es" className={`${fuenteSans.variable} ${fuenteMono.variable}`}>
       <body suppressHydrationWarning>
-        <ProveedorTemaPorRuta>{contenido}</ProveedorTemaPorRuta>
+        <ProveedorTemaPorRuta>
+          <ProveedorNotificaciones>{contenido}</ProveedorNotificaciones>
+        </ProveedorTemaPorRuta>
       </body>
     </html>
   );

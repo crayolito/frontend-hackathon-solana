@@ -107,13 +107,13 @@ export default function ContenidoApiKeysCliente() {
       <section className={estilos.tarjeta}>
         <div className={estilos.cabeceraTarjeta}>
           <div>
-            <h2 className={estilos.tituloTarjeta}>Secreto de webhooks</h2>
+            <h2 className={estilos.tituloTarjeta}>Firma de eventos (demo)</h2>
             <p className={estilos.subtituloTarjeta}>
-              Firma HMAC para validar payloads entrantes en tu servidor.
+              Clave simulada para validar payloads; en producción la entrega el backend.
             </p>
           </div>
-          <Link href="/cliente/webhooks" className={estilos.botonSecundario} style={{ textDecoration: "none" }}>
-            Gestionar endpoints
+          <Link href="/cliente/transacciones" className={estilos.botonSecundario} style={{ textDecoration: "none" }}>
+            Ver movimientos demo
           </Link>
         </div>
         <div className={estilos.cuerpoTarjeta}>
@@ -136,7 +136,7 @@ export default function ContenidoApiKeysCliente() {
               ["Transacciones", "Acceso total"],
               ["Reembolsos", "Acceso total"],
               ["Clientes", "Acceso total"],
-              ["Webhooks", "Solo lectura"],
+              ["Eventos", "Solo lectura"],
             ].map(([nombre, nivel]) => (
               <div
                 key={nombre}

@@ -1,15 +1,14 @@
 "use client";
 
+import { useWallet } from "@solana/wallet-adapter-react";
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import {
   ErrorApiTrustpay,
   actualizarUsuarioYo,
-  // cambiarContrasenaTrustpay,
-  // eliminarCuentaUsuarioYo,
+  cambiarContrasenaTrustpay,
   obtenerUsuarioYo,
-  // verificarContrasenaTrustpay,
 } from "../../_lib/apiTrustpay";
 import {
   actualizarUsuarioEnSesion,
@@ -17,12 +16,41 @@ import {
   obtenerTokenSesion,
   type UsuarioSesion,
 } from "../../demoAuth";
+import BotonConexionWallet from "../../solana/BotonConexionWallet";
 import estilos from "../../cliente/_componentes/desarrollador.module.css";
+import ZonaSubidaLogoCloudinary from "./ZonaSubidaLogoCloudinary";
+
+const CLAVE_LOGO_CUENTA = "trustpay_logo_cuenta_marca";
+
+function normalizarCadenaNoVacia(valor: unknown): string | null {
+  if (typeof valor !== "string") return null;
+  const v = valor.trim();
+  return v.length > 0 ? v : null;
+}
+
+function extraerWalletAddressDesdeApi(datos: Record<string, unknown>): string | null {
+  return (
+    normalizarCadenaNoVacia(datos.walletAddress) ??
+    normalizarCadenaNoVacia(datos.wallet_address) ??
+    null
+  );
+}
+
+function extraerLogoMarcaDesdeApi(datos: Record<string, unknown>): string | null {
+  return (
+    normalizarCadenaNoVacia(datos.logoUrl) ??
+    normalizarCadenaNoVacia(datos.logo_url) ??
+    normalizarCadenaNoVacia(datos.brandLogoUrl) ??
+    normalizarCadenaNoVacia(datos.brand_logo_url) ??
+    null
+  );
+}
 
 // Formularios de perfil (y opcionalmente contraseña / baja) contra el API TrustPay.
 // Solo se muestra la tarjeta «Perfil»; el resto queda comentado a pedido de producto.
 export default function ContenidoCuentaApiTrustpay() {
   const router = useRouter();
+  const { connected, publicKey } = useWallet();
   const [cargandoPerfil, setCargandoPerfil] = useState(true);
   const [usuario, setUsuario] = useState<UsuarioSesion | null>(null);
   const [mensajePerfil, setMensajePerfil] = useState<string | null>(null);
@@ -30,17 +58,12 @@ export default function ContenidoCuentaApiTrustpay() {
   const [nombreCompleto, setNombreCompleto] = useState("");
   const [guardandoPerfil, setGuardandoPerfil] = useState(false);
 
-  // --- Contraseña / verificación / baja (oculto; descomentar junto al JSX de abajo) ---
-  // const [contrasenaActual, setContrasenaActual] = useState("");
-  // const [contrasenaNueva, setContrasenaNueva] = useState("");
-  // const [mensajeContrasena, setMensajeContrasena] = useState<string | null>(null);
-  // const [guardandoContrasena, setGuardandoContrasena] = useState(false);
-  // const [contrasenaVerificar, setContrasenaVerificar] = useState("");
-  // const [mensajeVerificar, setMensajeVerificar] = useState<string | null>(null);
-  // const [verificando, setVerificando] = useState(false);
-  // const [contrasenaBaja, setContrasenaBaja] = useState("");
-  // const [mensajeBaja, setMensajeBaja] = useState<string | null>(null);
-  // const [eliminando, setEliminando] = useState(false);
+  const [contrasenaActual, setContrasenaActual] = useState("");
+  const [contrasenaNueva, setContrasenaNueva] = useState("");
+  const [mensajeContrasena, setMensajeContrasena] = useState<string | null>(null);
+  const [guardandoContrasena, setGuardandoContrasena] = useState(false);
+
+  const [logoMarcaUrl, setLogoMarcaUrl] = useState("");
 
   const sincronizarUsuario = useCallback((u: UsuarioSesion) => {
     setUsuario(u);
@@ -60,17 +83,32 @@ export default function ContenidoCuentaApiTrustpay() {
       try {
         const datos = await obtenerUsuarioYo(token);
         if (cancelado) return;
+        const d = datos as unknown as Record<string, unknown>;
+        const walletAddress = extraerWalletAddressDesdeApi(d);
+        const isVerified = typeof d.isVerified === "boolean" ? d.isVerified : undefined;
+        const isActive = typeof d.isActive === "boolean" ? d.isActive : undefined;
         const u: UsuarioSesion = {
           id: datos.id,
           fullName: datos.fullName,
           email: datos.email,
           role: datos.role,
           country: datos.country,
-          walletAddress: datos.walletAddress,
-          isVerified: datos.isVerified,
-          isActive: datos.isActive,
+          walletAddress,
+          isVerified,
+          isActive,
         };
         sincronizarUsuario(u);
+        try {
+          const logoApi = extraerLogoMarcaDesdeApi(d);
+          if (logoApi) {
+            setLogoMarcaUrl(logoApi);
+          } else {
+            const logoGuardado = localStorage.getItem(CLAVE_LOGO_CUENTA);
+            if (logoGuardado) setLogoMarcaUrl(logoGuardado);
+          }
+        } catch {
+          /* ignore */
+        }
       } catch (error) {
         if (cancelado) return;
         if (error instanceof ErrorApiTrustpay && error.codigoEstado === 401) {
@@ -92,6 +130,21 @@ export default function ContenidoCuentaApiTrustpay() {
       cancelado = true;
     };
   }, [router, sincronizarUsuario]);
+
+  const persistirLogoMarca = useCallback((url: string) => {
+    setLogoMarcaUrl(url);
+    try {
+      if (url) localStorage.setItem(CLAVE_LOGO_CUENTA, url);
+      else localStorage.removeItem(CLAVE_LOGO_CUENTA);
+    } catch {
+      /* ignore */
+    }
+  }, []);
+
+  const acortarDireccion = useCallback((base58: string) => {
+    if (base58.length <= 12) return base58;
+    return `${base58.slice(0, 4)}…${base58.slice(-4)}`;
+  }, []);
 
   const guardarPerfil = useCallback(async () => {
     const token = obtenerTokenSesion();
@@ -145,45 +198,6 @@ export default function ContenidoCuentaApiTrustpay() {
       setGuardandoContrasena(false);
     }
   }, [contrasenaActual, contrasenaNueva]);
-
-  const enviarVerificacion = useCallback(async () => {
-    const token = obtenerTokenSesion();
-    if (!token) return;
-    setMensajeVerificar(null);
-    setVerificando(true);
-    try {
-      await verificarContrasenaTrustpay(token, contrasenaVerificar);
-      setMensajeVerificar("Contraseña correcta.");
-    } catch (error) {
-      setMensajeVerificar(
-        error instanceof ErrorApiTrustpay
-          ? error.message
-          : "No se pudo verificar."
-      );
-    } finally {
-      setVerificando(false);
-    }
-  }, [contrasenaVerificar]);
-
-  const enviarBaja = useCallback(async () => {
-    const token = obtenerTokenSesion();
-    if (!token) return;
-    setMensajeBaja(null);
-    setEliminando(true);
-    try {
-      await eliminarCuentaUsuarioYo(token, contrasenaBaja);
-      cerrarSesion();
-      router.replace("/");
-    } catch (error) {
-      setMensajeBaja(
-        error instanceof ErrorApiTrustpay
-          ? error.message
-          : "No se pudo eliminar la cuenta."
-      );
-    } finally {
-      setEliminando(false);
-    }
-  }, [contrasenaBaja, router]);
   */
 
   if (cargandoPerfil) {
@@ -253,6 +267,86 @@ export default function ContenidoCuentaApiTrustpay() {
       {/*
       <section className={estilos.tarjeta}>
         <div className={estilos.cabeceraTarjeta}>
+          <h2 className={estilos.tituloTarjeta}>Marca y wallets</h2>
+        </div>
+        <div className={estilos.cuerpoTarjeta}>
+          <div className={estilos.grid2}>
+            <div>
+              <p className={estilos.subtituloTarjeta} style={{ marginTop: 0 }}>
+                Subí el logo con Cloudinary; se guarda en este navegador hasta que el API permita adjuntarlo al perfil.
+              </p>
+              <ZonaSubidaLogoCloudinary
+                etiqueta="Logo"
+                url={logoMarcaUrl}
+                alCambiarUrl={persistirLogoMarca}
+                claseBotonSecundario={estilos.botonSecundario}
+              />
+            </div>
+
+            <div>
+              <p className={estilos.subtituloTarjeta} style={{ marginTop: 0 }}>
+                Acá ves tu wallet guardada y, si conectás Phantom, también la wallet "activa" para nuevos negocios.
+              </p>
+              <div style={{ marginBottom: 14 }}>
+                <span className={estilos.etiqueta}>Wallet guardada</span>
+                <p
+                  style={{
+                    margin: "6px 0 0",
+                    fontFamily: "var(--fuente-geist-mono, ui-monospace, monospace)",
+                    fontSize: "0.82rem",
+                    wordBreak: "break-all",
+                    fontWeight: 600,
+                  }}
+                >
+                  {usuario.walletAddress ?? "— Sin wallet guardada —"}
+                </p>
+
+                {usuario.walletAddress ? (
+                  <div style={{ marginTop: 10 }}>
+                    <button
+                      type="button"
+                      className={estilos.botonSecundario}
+                      onClick={async () => {
+                        await navigator.clipboard.writeText(usuario.walletAddress as string);
+                      }}
+                    >
+                      Copiar wallet
+                    </button>
+                  </div>
+                ) : null}
+              </div>
+
+              <div style={{ marginTop: 2 }}>
+                <span className={estilos.etiqueta}>Phantom (devnet)</span>
+                <div style={{ marginTop: 8 }}>
+                  <BotonConexionWallet />
+                </div>
+
+                <p className={estilos.subtituloTarjeta} style={{ marginTop: 10 }}>
+                  Si Phantom está conectada, los negocios nuevos usan esa wallet aunque la wallet guardada sea otra.
+                </p>
+
+                {connected && publicKey ? (
+                  <p
+                    style={{
+                      margin: "0",
+                      fontFamily: "var(--fuente-geist-mono, ui-monospace, monospace)",
+                      fontSize: "0.82rem",
+                      wordBreak: "break-all",
+                      fontWeight: 700,
+                    }}
+                  >
+                    Wallet Phantom activa: {acortarDireccion(publicKey.toBase58())}
+                  </p>
+                ) : null}
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className={estilos.tarjeta}>
+        <div className={estilos.cabeceraTarjeta}>
           <h2 className={estilos.tituloTarjeta}>Cambiar contraseña</h2>
         </div>
         <div className={estilos.cuerpoTarjeta}>
@@ -284,6 +378,9 @@ export default function ContenidoCuentaApiTrustpay() {
               />
             </div>
           </div>
+          <p className={estilos.subtituloTarjeta} style={{ marginTop: 14 }}>
+            Se valida en el backend. Si falla, te mostramos el motivo.
+          </p>
           {mensajeContrasena ? (
             <p style={{ marginTop: 14, fontSize: "0.9rem" }}>{mensajeContrasena}</p>
           ) : null}
@@ -292,79 +389,10 @@ export default function ContenidoCuentaApiTrustpay() {
           <button
             type="button"
             className={estilos.botonPrimario}
-            disabled={guardandoContrasena}
+            disabled={guardandoContrasena || !contrasenaActual.trim() || !contrasenaNueva.trim()}
             onClick={() => void enviarCambioContrasena()}
           >
             {guardandoContrasena ? "Enviando…" : "Actualizar contraseña"}
-          </button>
-        </div>
-      </section>
-
-      <section className={estilos.tarjeta}>
-        <div className={estilos.cabeceraTarjeta}>
-          <h2 className={estilos.tituloTarjeta}>Verificar contraseña</h2>
-        </div>
-        <div className={estilos.cuerpoTarjeta}>
-          <label className={estilos.etiqueta} htmlFor="pwd-verificar">
-            Contraseña
-          </label>
-          <input
-            id="pwd-verificar"
-            type="password"
-            className={estilos.input}
-            autoComplete="current-password"
-            value={contrasenaVerificar}
-            onChange={(e) => setContrasenaVerificar(e.target.value)}
-          />
-          {mensajeVerificar ? (
-            <p style={{ marginTop: 14, fontSize: "0.9rem" }}>{mensajeVerificar}</p>
-          ) : null}
-        </div>
-        <div className={estilos.pieTarjeta}>
-          <button
-            type="button"
-            className={estilos.botonSecundario}
-            disabled={verificando}
-            onClick={() => void enviarVerificacion()}
-          >
-            {verificando ? "Comprobando…" : "Verificar"}
-          </button>
-        </div>
-      </section>
-
-      <section className={estilos.tarjeta}>
-        <div className={estilos.cabeceraTarjeta}>
-          <h2 className={estilos.tituloTarjeta}>Eliminar cuenta</h2>
-        </div>
-        <div className={estilos.cuerpoTarjeta}>
-          <p className={estilos.subtituloTarjeta}>
-            Esta acción es permanente. Confirma con tu contraseña.
-          </p>
-          <label className={estilos.etiqueta} htmlFor="pwd-baja">
-            Contraseña
-          </label>
-          <input
-            id="pwd-baja"
-            type="password"
-            className={estilos.input}
-            autoComplete="current-password"
-            value={contrasenaBaja}
-            onChange={(e) => setContrasenaBaja(e.target.value)}
-          />
-          {mensajeBaja ? (
-            <p style={{ marginTop: 14, fontSize: "0.9rem", color: "#b91c1c" }}>
-              {mensajeBaja}
-            </p>
-          ) : null}
-        </div>
-        <div className={estilos.pieTarjeta}>
-          <button
-            type="button"
-            className={estilos.botonPeligro}
-            disabled={eliminando}
-            onClick={() => void enviarBaja()}
-          >
-            {eliminando ? "Eliminando…" : "Eliminar mi cuenta"}
           </button>
         </div>
       </section>

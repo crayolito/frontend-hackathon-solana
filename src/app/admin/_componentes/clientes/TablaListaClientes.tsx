@@ -1,11 +1,10 @@
-import Link from "next/link";
-
 import type { UsuarioTrustpayRespuesta } from "../../../_lib/apiTrustpay";
 import { recortarCartera } from "../../_datos/datosCuentasAdminDemo";
 import estilos from "./lista-clientes.module.css";
 
 type Props = {
   usuarios: UsuarioTrustpayRespuesta[];
+  onVerDetalle: (idUsuario: string) => void;
 };
 
 function claseActivo(activo: boolean | undefined) {
@@ -19,7 +18,7 @@ function etiquetaActivo(activo: boolean | undefined) {
 }
 
 // Tabla de usuarios del API admin: enlaces al detalle para editar rol y estado.
-export default function TablaListaClientes({ usuarios }: Props) {
+export default function TablaListaClientes({ usuarios, onVerDetalle }: Props) {
   return (
     <div className={estilos.tarjetaTabla}>
       {usuarios.length === 0 ? (
@@ -57,9 +56,13 @@ export default function TablaListaClientes({ usuarios }: Props) {
                     </span>
                   </td>
                   <td>
-                    <Link className={estilos.enlaceDetalle} href={`/admin/customers/${u.id}`}>
+                    <button
+                      type="button"
+                      className={estilos.enlaceDetalle}
+                      onClick={() => onVerDetalle(u.id)}
+                    >
                       Ver detalle
-                    </Link>
+                    </button>
                   </td>
                 </tr>
               ))}

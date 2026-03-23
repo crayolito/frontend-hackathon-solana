@@ -63,6 +63,32 @@
   gap: 10px;
 }
 
+/* Contenedor del botón Phantom + avisos (ej. extensión no instalada). */
+.phantomCarteraEnvolver {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
+  max-width: min(280px, 46vw);
+}
+
+.phantomCarteraEnvolverCompacto {
+  max-width: 100%;
+}
+
+.phantomCarteraAvisoExtension {
+  margin: 0;
+  padding: 8px 10px;
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.4;
+  color: #92400e;
+  background: #fffbeb;
+  border: 1px solid #fcd34d;
+  box-sizing: border-box;
+}
+
 .phantomCarteraBtn {
   display: flex;
   align-items: center;

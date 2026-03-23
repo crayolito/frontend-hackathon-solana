@@ -5,8 +5,8 @@ export default function PaginaSettingsCliente() {
   return (
     <>
       <CabeceraAreaCliente
-        titulo="Ajustes de cuenta"
-        subtitulo="Perfil vinculado al API TrustPay (nombre completo)."
+        titulo="Cuenta"
+        subtitulo="Perfil, marca, wallet y seguridad. Los datos de perfil se sincronizan con el API TrustPay."
       />
       <ContenidoCuentaApiTrustpay />
     </>

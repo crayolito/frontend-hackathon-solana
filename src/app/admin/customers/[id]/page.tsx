@@ -13,5 +13,5 @@ export default function PaginaDetalleCliente() {
     return <p style={{ fontWeight: 700 }}>ID no válido.</p>;
   }
 
-  return <VistaDetalleUsuarioAdmin idUsuario={id} />;
+  return <VistaDetalleUsuarioAdmin idUsuario={id} mostrarConfiguracion />;
 }

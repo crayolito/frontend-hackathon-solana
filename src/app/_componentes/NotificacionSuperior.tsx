@@ -2,18 +2,19 @@
 
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 
-import estilos from "../estilos-cliente.module.css";
+import estilos from "./notificacion.module.css";
 
 type Props = Readonly<{
   mensaje: string;
-  /** Tiempo visible en ms; con hover el reloj se congela (sin texto extra). */
   duracionMs?: number;
+  alTerminar?: () => void;
 }>;
 
-// Toast superior: la barra refleja el tiempo real restante (Date.now + rAF). Pausa silenciosa al hover.
-export default function NotificacionSuperiorCliente({
+// Toast superior derecha: cuenta atrás real; al pasar el mouse se pausa el tiempo.
+export default function NotificacionSuperior({
   mensaje,
-  duracionMs = 12000,
+  duracionMs = 12_000,
+  alTerminar,
 }: Props) {
   const [visible, setVisible] = useState(true);
   const [pausado, setPausado] = useState(false);
@@ -21,13 +22,18 @@ export default function NotificacionSuperiorCliente({
 
   const deadlineRef = useRef(Date.now() + duracionMs);
   const pausaRestanteRef = useRef<number | null>(null);
+  const alTerminarRef = useRef(alTerminar);
+  const yaNotificoFinRef = useRef(false);
+
+  alTerminarRef.current = alTerminar;
 
   useLayoutEffect(() => {
     deadlineRef.current = Date.now() + duracionMs;
     pausaRestanteRef.current = null;
+    yaNotificoFinRef.current = false;
     setRestanteMs(duracionMs);
     setVisible(true);
-  }, [duracionMs]);
+  }, [duracionMs, mensaje]);
 
   useEffect(() => {
     if (!visible) return;
@@ -44,6 +50,10 @@ export default function NotificacionSuperiorCliente({
       setRestanteMs(r);
 
       if (r <= 0) {
+        if (!yaNotificoFinRef.current) {
+          yaNotificoFinRef.current = true;
+          alTerminarRef.current?.();
+        }
         setVisible(false);
         return;
       }
