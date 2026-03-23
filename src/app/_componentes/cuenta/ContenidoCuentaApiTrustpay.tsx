@@ -6,10 +6,10 @@ import { useRouter } from "next/navigation";
 import {
   ErrorApiTrustpay,
   actualizarUsuarioYo,
-  cambiarContrasenaTrustpay,
-  eliminarCuentaUsuarioYo,
+  // cambiarContrasenaTrustpay,
+  // eliminarCuentaUsuarioYo,
   obtenerUsuarioYo,
-  verificarContrasenaTrustpay,
+  // verificarContrasenaTrustpay,
 } from "../../_lib/apiTrustpay";
 import {
   actualizarUsuarioEnSesion,
@@ -19,7 +19,8 @@ import {
 } from "../../demoAuth";
 import estilos from "../../cliente/_componentes/desarrollador.module.css";
 
-// Formularios de perfil, contraseña y baja de cuenta contra el API TrustPay (admin o merchant).
+// Formularios de perfil (y opcionalmente contraseña / baja) contra el API TrustPay.
+// Solo se muestra la tarjeta «Perfil»; el resto queda comentado a pedido de producto.
 export default function ContenidoCuentaApiTrustpay() {
   const router = useRouter();
   const [cargandoPerfil, setCargandoPerfil] = useState(true);
@@ -29,18 +30,17 @@ export default function ContenidoCuentaApiTrustpay() {
   const [nombreCompleto, setNombreCompleto] = useState("");
   const [guardandoPerfil, setGuardandoPerfil] = useState(false);
 
-  const [contrasenaActual, setContrasenaActual] = useState("");
-  const [contrasenaNueva, setContrasenaNueva] = useState("");
-  const [mensajeContrasena, setMensajeContrasena] = useState<string | null>(null);
-  const [guardandoContrasena, setGuardandoContrasena] = useState(false);
-
-  const [contrasenaVerificar, setContrasenaVerificar] = useState("");
-  const [mensajeVerificar, setMensajeVerificar] = useState<string | null>(null);
-  const [verificando, setVerificando] = useState(false);
-
-  const [contrasenaBaja, setContrasenaBaja] = useState("");
-  const [mensajeBaja, setMensajeBaja] = useState<string | null>(null);
-  const [eliminando, setEliminando] = useState(false);
+  // --- Contraseña / verificación / baja (oculto; descomentar junto al JSX de abajo) ---
+  // const [contrasenaActual, setContrasenaActual] = useState("");
+  // const [contrasenaNueva, setContrasenaNueva] = useState("");
+  // const [mensajeContrasena, setMensajeContrasena] = useState<string | null>(null);
+  // const [guardandoContrasena, setGuardandoContrasena] = useState(false);
+  // const [contrasenaVerificar, setContrasenaVerificar] = useState("");
+  // const [mensajeVerificar, setMensajeVerificar] = useState<string | null>(null);
+  // const [verificando, setVerificando] = useState(false);
+  // const [contrasenaBaja, setContrasenaBaja] = useState("");
+  // const [mensajeBaja, setMensajeBaja] = useState<string | null>(null);
+  // const [eliminando, setEliminando] = useState(false);
 
   const sincronizarUsuario = useCallback((u: UsuarioSesion) => {
     setUsuario(u);
@@ -124,6 +124,7 @@ export default function ContenidoCuentaApiTrustpay() {
     }
   }, [nombreCompleto, sincronizarUsuario]);
 
+  /*
   const enviarCambioContrasena = useCallback(async () => {
     const token = obtenerTokenSesion();
     if (!token) return;
@@ -183,6 +184,7 @@ export default function ContenidoCuentaApiTrustpay() {
       setEliminando(false);
     }
   }, [contrasenaBaja, router]);
+  */
 
   if (cargandoPerfil) {
     return (
@@ -248,6 +250,7 @@ export default function ContenidoCuentaApiTrustpay() {
         </div>
       </section>
 
+      {/*
       <section className={estilos.tarjeta}>
         <div className={estilos.cabeceraTarjeta}>
           <h2 className={estilos.tituloTarjeta}>Cambiar contraseña</h2>
@@ -365,6 +368,7 @@ export default function ContenidoCuentaApiTrustpay() {
           </button>
         </div>
       </section>
+      */}
     </div>
   );
 }
