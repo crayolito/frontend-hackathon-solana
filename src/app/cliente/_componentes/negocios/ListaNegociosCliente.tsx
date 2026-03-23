@@ -16,17 +16,13 @@ import CabeceraAreaCliente from "../CabeceraAreaCliente";
 import { useNotificacion } from "../../../_componentes/ProveedorNotificaciones";
 import estilosDev from "../desarrollador.module.css";
 import estilos from "./negocios.module.css";
-import { MAX_NEGOCIOS_POR_COMERCIO } from "./constantesNegocios";
+import { CATEGORIAS_NEGOCIO, etiquetaCategoriaNegocio } from "./categoriasNegocio";
+import {
+  MAX_NEGOCIOS_POR_COMERCIO,
+  URL_IMAGEN_NEGOCIO_FALLBACK_LOCAL,
+  urlVisualNegocio,
+} from "./constantesNegocios";
 import { resolverDireccionWalletNegocio } from "./resolverWalletNegocio";
-
-const CATEGORIAS = [
-  { valor: "retail", etiqueta: "Retail" },
-  { valor: "food", etiqueta: "Comida y bebidas" },
-  { valor: "services", etiqueta: "Servicios" },
-  { valor: "ecommerce", etiqueta: "E-commerce" },
-  { valor: "other", etiqueta: "Otro" },
-];
-const LOGO_NEGOCIO_DEFAULT_SRC = "/imagenes/negocio-default.svg";
 
 function mensajeAmigableErrorApi(mensaje: string) {
   if (/simulation|blockchain|on-chain|program error|custom program/i.test(mensaje)) {
@@ -140,7 +136,7 @@ export default function ListaNegociosCliente() {
     <div className={estilos.contenedor}>
       <CabeceraAreaCliente
         titulo="Negocios"
-        subtitulo={`Por cuenta de comercio podés registrar hasta ${MAX_NEGOCIOS_POR_COMERCIO} negocios en TrustPay (sucursales, rubros o marcas; ej. una misma razón social con varios locales). Cada uno tiene sus QRs de cobro en Solana.`}
+        subtitulo={`Hasta ${MAX_NEGOCIOS_POR_COMERCIO} locales o marcas por cuenta, con QRs de cobro en Solana.`}
       />
 
       <section className={estilosDev.tarjeta}>
@@ -180,32 +176,33 @@ export default function ListaNegociosCliente() {
           <div className={estilos.gridNegocios}>
             {negocios.map((n) => (
               <Link key={n.id} href={`/cliente/negocios/${n.id}`} className={estilos.tarjetaNegocio}>
-                <div className={estilos.wrapLogoTarjeta} aria-hidden="true">
+                <div className={estilos.tarjetaNegocioImagen} aria-hidden="true">
                   <img
-                    className={estilos.logoTarjeta}
-                    src={n.logoUrl ?? LOGO_NEGOCIO_DEFAULT_SRC}
+                    className={estilos.imagenCoverTarjetaNegocio}
+                    src={urlVisualNegocio(n.logoUrl)}
                     alt=""
+                    loading="lazy"
+                    onError={(ev) => {
+                      const el = ev.currentTarget;
+                      el.src = URL_IMAGEN_NEGOCIO_FALLBACK_LOCAL;
+                      el.style.objectFit = "contain";
+                      el.style.padding = "14px";
+                      el.style.background = "#f8fafc";
+                    }}
                   />
                 </div>
-                <h3 className={estilos.nombreNegocio}>{n.name}</h3>
-                <p className={estilos.metaNegocio}>{n.category}</p>
-                <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 8 }}>
-                  {n.isVerified === true ? (
-                    <span className={estilosDev.badgeVerde}>Verificado</span>
-                  ) : null}
-                  {n.isActive === false ? (
-                    <span className={estilosDev.badgeRojo}>Inactivo</span>
-                  ) : null}
+                <div className={estilos.tarjetaNegocioCuerpo}>
+                  <h3 className={estilos.nombreNegocio}>{n.name}</h3>
+                  <p className={estilos.metaNegocio}>{etiquetaCategoriaNegocio(n.category)}</p>
+                  <div className={estilos.filaBadgesNegocio}>
+                    {n.isVerified === true ? (
+                      <span className={estilosDev.badgeVerde}>Verificado</span>
+                    ) : null}
+                    {n.isActive === false ? (
+                      <span className={estilosDev.badgeRojo}>Inactivo</span>
+                    ) : null}
+                  </div>
                 </div>
-                {n.solanaTxRegister ? (
-                  <p
-                    className={estilos.metaNegocio}
-                    style={{ marginTop: 8, marginBottom: 0, fontSize: "0.72rem" }}
-                    title={n.solanaTxRegister}
-                  >
-                    Registro: {n.solanaTxRegister.slice(0, 16)}…
-                  </p>
-                ) : null}
               </Link>
             ))}
           </div>
@@ -260,7 +257,7 @@ export default function ListaNegociosCliente() {
                   value={categoria}
                   onChange={(e) => setCategoria(e.target.value)}
                 >
-                  {CATEGORIAS.map((c) => (
+                  {CATEGORIAS_NEGOCIO.map((c) => (
                     <option key={c.valor} value={c.valor}>
                       {c.etiqueta}
                     </option>

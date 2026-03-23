@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState, type FormEvent } from "react";
 
+import ZonaSubidaLogoCloudinary from "../../../_componentes/cuenta/ZonaSubidaLogoCloudinary";
 import {
   actualizarNegocioTrustpay,
   eliminarNegocioTrustpay,
@@ -18,6 +19,8 @@ import { obtenerTokenSesion } from "../../../demoAuth";
 import estilosDev from "../desarrollador.module.css";
 import { useNotificacion } from "../../../_componentes/ProveedorNotificaciones";
 import estilos from "./negocios.module.css";
+import { CATEGORIAS_NEGOCIO, etiquetaCategoriaNegocio } from "./categoriasNegocio";
+import { URL_IMAGEN_NEGOCIO_FALLBACK_LOCAL, urlVisualNegocio } from "./constantesNegocios";
 import { leerQrsLocalesNegocio } from "./almacenamientoQrLocal";
 import FormularioCrearQr from "./FormularioCrearQr";
 import VistaQrCodigo from "./VistaQrCodigo";
@@ -63,10 +66,10 @@ export default function DetalleNegocioCliente({ idNegocio }: Props) {
   const [negocio, setNegocio] = useState<NegocioTrustpay | null | undefined>(undefined);
   const [cargando, setCargando] = useState(true);
 
-  const LOGO_NEGOCIO_DEFAULT_SRC = "/imagenes/negocio-default.svg";
-
   const [nombreEdit, setNombreEdit] = useState("");
   const [descripcionEdit, setDescripcionEdit] = useState("");
+  const [categoriaEdit, setCategoriaEdit] = useState("retail");
+  const [logoUrlEdit, setLogoUrlEdit] = useState("");
   const [guardandoNombre, setGuardandoNombre] = useState(false);
 
   const [eliminando, setEliminando] = useState(false);
@@ -104,6 +107,8 @@ export default function DetalleNegocioCliente({ idNegocio }: Props) {
         setNegocio(uno);
         setNombreEdit(uno.name);
         setDescripcionEdit(uno.description ?? "");
+        setCategoriaEdit(uno.category?.trim() ? uno.category : "retail");
+        setLogoUrlEdit(uno.logoUrl?.trim() ?? "");
       } catch (err) {
         if (err instanceof ErrorApiTrustpay && err.codigoEstado === 404) {
           const { negocios } = await listarNegociosTrustpay(token, 1, 100);
@@ -112,6 +117,8 @@ export default function DetalleNegocioCliente({ idNegocio }: Props) {
           if (encontrado) {
             setNombreEdit(encontrado.name);
             setDescripcionEdit(encontrado.description ?? "");
+            setCategoriaEdit(encontrado.category?.trim() ? encontrado.category : "retail");
+            setLogoUrlEdit(encontrado.logoUrl?.trim() ?? "");
           }
         } else {
           throw err;
@@ -148,13 +155,18 @@ export default function DetalleNegocioCliente({ idNegocio }: Props) {
     setGuardandoNombre(true);
     try {
       const desc = descripcionEdit.trim();
+      const logo = logoUrlEdit.trim();
       const actualizado = await actualizarNegocioTrustpay(token, idNegocio, {
         name: nombreEdit.trim(),
         description: desc.length > 0 ? desc : null,
+        category: categoriaEdit,
+        logoUrl: logo.length > 0 ? logo : null,
       });
       setNegocio(actualizado);
       setNombreEdit(actualizado.name);
       setDescripcionEdit(actualizado.description ?? "");
+      setCategoriaEdit(actualizado.category?.trim() ? actualizado.category : "retail");
+      setLogoUrlEdit(actualizado.logoUrl?.trim() ?? "");
     } catch (e) {
       if (e instanceof ErrorApiTrustpay) {
         mostrarNotificacion(mensajeAmigableErrorApi(e.message), 16_000);
@@ -194,7 +206,7 @@ export default function DetalleNegocioCliente({ idNegocio }: Props) {
     try {
       await verificarNegocioTrustpay(token, idNegocio);
       setModalVerificarNegocioAbierto(false);
-      mostrarNotificacion("Negocio verificado (si el backend lo aprobó).", 14_000);
+      mostrarNotificacion("Negocio marcado como verificado.", 10_000);
       await recargarNegocio();
     } catch (e) {
       if (e instanceof ErrorApiTrustpay) {
@@ -238,11 +250,13 @@ export default function DetalleNegocioCliente({ idNegocio }: Props) {
             <div className={estilos.wrapLogoDetalleNegocio} aria-hidden="true">
               <img
                 className={estilos.logoDetalleNegocio}
-                src={negocio.logoUrl ?? LOGO_NEGOCIO_DEFAULT_SRC}
+                src={urlVisualNegocio(negocio.logoUrl)}
                 alt={negocio.name}
                 loading="eager"
                 onError={(ev) => {
-                  ev.currentTarget.src = LOGO_NEGOCIO_DEFAULT_SRC;
+                  ev.currentTarget.src = URL_IMAGEN_NEGOCIO_FALLBACK_LOCAL;
+                  ev.currentTarget.style.objectFit = "contain";
+                  ev.currentTarget.style.padding = "10px";
                 }}
               />
             </div>
@@ -250,12 +264,11 @@ export default function DetalleNegocioCliente({ idNegocio }: Props) {
               <h2 className={estilosDev.tituloTarjeta} style={{ margin: 0 }}>
                 {negocio.name}
               </h2>
-              {negocio.description ? (
-                <p className={estilos.descripcionDetalleNegocio}>{negocio.description}</p>
-              ) : null}
 
               <div style={{ display: "flex", flexWrap: "wrap", gap: 10, marginTop: 10 }}>
-                <span className={estilosDev.badgeGris}>{negocio.category || "Categoría"}</span>
+                <span className={estilosDev.badgeGris}>
+                  {etiquetaCategoriaNegocio(negocio.category)}
+                </span>
                 {negocio.isVerified === true ? <span className={estilosDev.badgeVerde}>Verificado</span> : null}
                 {negocio.isActive === false ? <span className={estilosDev.badgeRojo}>Inactivo</span> : null}
               </div>
@@ -319,6 +332,9 @@ export default function DetalleNegocioCliente({ idNegocio }: Props) {
           ) : null}
 
           <form onSubmit={guardarNombre} style={{ marginTop: 18 }}>
+            <p className={estilosDev.subtituloTarjeta} style={{ marginTop: 0, marginBottom: 14 }}>
+              Mismos campos que al registrar: nombre, categoría, descripción y logo.
+            </p>
             <label className={estilosDev.etiqueta} htmlFor="edit-nombre">
               Nombre del negocio
             </label>
@@ -332,6 +348,23 @@ export default function DetalleNegocioCliente({ idNegocio }: Props) {
               />
             </div>
             <div style={{ marginTop: 14 }}>
+              <label className={estilosDev.etiqueta} htmlFor="edit-cat">
+                Categoría
+              </label>
+              <select
+                id="edit-cat"
+                className={estilos.select}
+                value={categoriaEdit}
+                onChange={(e) => setCategoriaEdit(e.target.value)}
+              >
+                {CATEGORIAS_NEGOCIO.map((c) => (
+                  <option key={c.valor} value={c.valor}>
+                    {c.etiqueta}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div style={{ marginTop: 14 }}>
               <label className={estilosDev.etiqueta} htmlFor="edit-desc">
                 Descripción
               </label>
@@ -342,6 +375,15 @@ export default function DetalleNegocioCliente({ idNegocio }: Props) {
                 value={descripcionEdit}
                 onChange={(e) => setDescripcionEdit(e.target.value)}
                 placeholder="Opcional"
+              />
+            </div>
+            <div style={{ marginTop: 14 }}>
+              <ZonaSubidaLogoCloudinary
+                etiqueta="Logo del negocio (opcional)"
+                textoPlaceholder={"Clic o arrastrá\nimagen aquí"}
+                url={logoUrlEdit}
+                alCambiarUrl={setLogoUrlEdit}
+                claseBotonSecundario={estilosDev.botonSecundario}
               />
             </div>
             <div style={{ marginTop: 12 }}>
@@ -372,7 +414,8 @@ export default function DetalleNegocioCliente({ idNegocio }: Props) {
               Verificar negocio
             </h2>
             <p className={estilos.hintModal} style={{ marginTop: 0 }}>
-              Confirmás y el backend intentará marcar este negocio como verificado. Podés cancelar si todavía no estás listo.
+              Se envía <code className={estilosDev.mono}>PATCH</code> con{" "}
+              <code className={estilosDev.mono}>isVerified: true</code> al mismo recurso del negocio.
             </p>
 
             <div className={estilos.filaBotones}>

@@ -624,17 +624,25 @@ export async function obtenerNegocioTrustpay(token: string, idNegocio: string) {
 export async function actualizarNegocioTrustpay(
   token: string,
   idNegocio: string,
-  datos: { name: string; description?: string | null; category?: string | null; logoUrl?: string | null }
+  datos: {
+    name: string;
+    description?: string | null;
+    category?: string | null;
+    logoUrl?: string | null;
+    walletAddress?: string;
+  }
 ) {
+  const cuerpo: Record<string, unknown> = {
+    name: datos.name.trim(),
+    description: datos.description ?? null,
+  };
+  if (datos.category !== undefined) cuerpo.category = datos.category;
+  if (datos.logoUrl !== undefined) cuerpo.logoUrl = datos.logoUrl;
+  if (datos.walletAddress !== undefined) cuerpo.walletAddress = datos.walletAddress.trim();
   return solicitudJson<NegocioTrustpay>(`/businesses/${encodeURIComponent(idNegocio)}`, {
     method: "PATCH",
     token,
-    body: JSON.stringify({
-      name: datos.name.trim(),
-      description: datos.description ?? null,
-      category: datos.category ?? undefined,
-      logoUrl: datos.logoUrl ?? undefined,
-    }),
+    body: JSON.stringify(cuerpo),
   });
 }
 
@@ -645,10 +653,12 @@ export async function eliminarNegocioTrustpay(token: string, idNegocio: string) 
   });
 }
 
+/** Marca el negocio como verificado vía PATCH (mismo recurso que actualizar). */
 export async function verificarNegocioTrustpay(token: string, idNegocio: string) {
-  return solicitudJson<NegocioTrustpay | void>(`/businesses/${encodeURIComponent(idNegocio)}/verify`, {
-    method: "POST",
+  return solicitudJson<NegocioTrustpay>(`/businesses/${encodeURIComponent(idNegocio)}`, {
+    method: "PATCH",
     token,
+    body: JSON.stringify({ isVerified: true }),
   });
 }
 

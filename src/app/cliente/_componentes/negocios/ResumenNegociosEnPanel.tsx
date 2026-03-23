@@ -7,7 +7,11 @@ import { ErrorApiTrustpay, listarNegociosTrustpay } from "../../../_lib/apiTrust
 import { obtenerTokenSesion } from "../../../demoAuth";
 import estilosDev from "../desarrollador.module.css";
 import { useNotificacion } from "../../../_componentes/ProveedorNotificaciones";
-import { MAX_NEGOCIOS_POR_COMERCIO } from "./constantesNegocios";
+import {
+  MAX_NEGOCIOS_POR_COMERCIO,
+  URL_IMAGEN_NEGOCIO_DEFECTO,
+  URL_IMAGEN_NEGOCIO_FALLBACK_LOCAL,
+} from "./constantesNegocios";
 
 // Bloque en el panel principal: enlace a negocios y conteo desde el API.
 export default function ResumenNegociosEnPanel() {
@@ -57,16 +61,22 @@ export default function ResumenNegociosEnPanel() {
       <div className={estilosDev.cuerpoTarjeta}>
         <div style={{ display: "flex", gap: 14, alignItems: "center", flexWrap: "wrap" }}>
           <img
-            src="/imagenes/negocio-default.svg"
+            src={URL_IMAGEN_NEGOCIO_DEFECTO}
             alt=""
             width={54}
             height={54}
             style={{
               borderRadius: 14,
               border: "1px solid #e2e8f0",
-              background: "#f8fafc",
-              padding: 8,
+              objectFit: "cover",
               boxSizing: "border-box",
+            }}
+            onError={(ev) => {
+              const el = ev.currentTarget;
+              el.src = URL_IMAGEN_NEGOCIO_FALLBACK_LOCAL;
+              el.style.objectFit = "contain";
+              el.style.padding = 8;
+              el.style.background = "#f8fafc";
             }}
           />
           <div style={{ flex: "1 1 240px" }}>
