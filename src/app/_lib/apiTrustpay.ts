@@ -461,7 +461,11 @@ export type NegocioTrustpay = {
   name: string;
   walletAddress: string;
   description: string | null;
+  category?: string | null;
+  logoUrl?: string | null;
+  isVerified?: boolean;
   isActive: boolean;
+  solanaTxRegister?: string | null;
   createdAt: string;
 };
 
@@ -511,4 +515,155 @@ export async function listarPagosEscrowNegocio(
     `/businesses/${encodeURIComponent(businessId)}/payments?${q}`,
     { method: "GET", token }
   );
+}
+
+// --- Compatibilidad con módulos legacy de "negocios" ---
+
+function normalizarListadoNegocios(
+  crudo: unknown,
+  page: number,
+  limit: number
+): { negocios: NegocioTrustpay[]; total: number; page: number; limit: number; totalPages: number } {
+  if (Array.isArray(crudo)) {
+    const negocios = crudo as NegocioTrustpay[];
+    return {
+      negocios,
+      total: negocios.length,
+      page,
+      limit,
+      totalPages: Math.max(1, Math.ceil(negocios.length / Math.max(1, limit))),
+    };
+  }
+  if (crudo && typeof crudo === "object") {
+    const o = crudo as Record<string, unknown>;
+    const posibleLista = o.data ?? o.items ?? o.businesses ?? o.negocios;
+    const negocios = Array.isArray(posibleLista) ? (posibleLista as NegocioTrustpay[]) : [];
+    const total = typeof o.total === "number" ? o.total : negocios.length;
+    const outPage = typeof o.page === "number" ? o.page : page;
+    const outLimit = typeof o.limit === "number" ? o.limit : limit;
+    const totalPages =
+      typeof o.totalPages === "number"
+        ? o.totalPages
+        : Math.max(1, Math.ceil(total / Math.max(1, outLimit)));
+    return { negocios, total, page: outPage, limit: outLimit, totalPages };
+  }
+  return { negocios: [], total: 0, page, limit, totalPages: 1 };
+}
+
+export async function listarNegociosTrustpay(token: string, page = 1, limit = 50) {
+  const q = new URLSearchParams({ page: String(page), limit: String(limit) });
+  const crudo = await solicitudJson<unknown>(`/businesses?${q}`, {
+    method: "GET",
+    token,
+  });
+  return normalizarListadoNegocios(crudo, page, limit);
+}
+
+export async function crearNegocioTrustpay(
+  token: string,
+  datos: {
+    name: string;
+    description?: string | null;
+    category?: string | null;
+    logoUrl?: string | null;
+    walletAddress: string;
+  }
+) {
+  return solicitudJson<NegocioTrustpay>("/businesses", {
+    method: "POST",
+    token,
+    body: JSON.stringify({
+      name: datos.name.trim(),
+      description: datos.description ?? null,
+      category: datos.category ?? null,
+      logoUrl: datos.logoUrl ?? null,
+      walletAddress: datos.walletAddress.trim(),
+    }),
+  });
+}
+
+export async function obtenerNegocioTrustpay(token: string, idNegocio: string) {
+  return solicitudJson<NegocioTrustpay>(`/businesses/${encodeURIComponent(idNegocio)}`, {
+    method: "GET",
+    token,
+  });
+}
+
+export async function actualizarNegocioTrustpay(
+  token: string,
+  idNegocio: string,
+  datos: { name: string; description?: string | null; category?: string | null; logoUrl?: string | null }
+) {
+  return solicitudJson<NegocioTrustpay>(`/businesses/${encodeURIComponent(idNegocio)}`, {
+    method: "PATCH",
+    token,
+    body: JSON.stringify({
+      name: datos.name.trim(),
+      description: datos.description ?? null,
+      category: datos.category ?? undefined,
+      logoUrl: datos.logoUrl ?? undefined,
+    }),
+  });
+}
+
+export async function eliminarNegocioTrustpay(token: string, idNegocio: string) {
+  return solicitudJson<void>(`/businesses/${encodeURIComponent(idNegocio)}`, {
+    method: "DELETE",
+    token,
+  });
+}
+
+export async function verificarNegocioTrustpay(token: string, idNegocio: string) {
+  return solicitudJson<NegocioTrustpay | void>(`/businesses/${encodeURIComponent(idNegocio)}/verify`, {
+    method: "POST",
+    token,
+  });
+}
+
+export async function crearQrNegocioTrustpay(
+  token: string,
+  idNegocio: string,
+  datos: {
+    label: string;
+    type?: string;
+    amountLamports?: string | null;
+    tokenMint?: string | null;
+  }
+) {
+  return solicitudJson<unknown>(`/businesses/${encodeURIComponent(idNegocio)}/qr-codes`, {
+    method: "POST",
+    token,
+    body: JSON.stringify({
+      label: datos.label.trim(),
+      type: datos.type ?? "branch",
+      amountLamports: datos.amountLamports ?? null,
+      tokenMint: datos.tokenMint ?? null,
+    }),
+  });
+}
+
+export async function listarQrCodesNegocioTrustpay(
+  token: string,
+  idNegocio: string,
+  page = 1,
+  limit = 20
+) {
+  const q = new URLSearchParams({ page: String(page), limit: String(limit) });
+  const crudo = await solicitudJson<unknown>(
+    `/businesses/${encodeURIComponent(idNegocio)}/qr-codes?${q.toString()}`,
+    { method: "GET", token }
+  );
+  if (crudo && typeof crudo === "object") {
+    const o = crudo as Record<string, unknown>;
+    const items = Array.isArray(o.items) ? o.items : Array.isArray(o.data) ? o.data : [];
+    const total = typeof o.total === "number" ? o.total : items.length;
+    const outPage = typeof o.page === "number" ? o.page : page;
+    const outLimit = typeof o.limit === "number" ? o.limit : limit;
+    const totalPages =
+      typeof o.totalPages === "number"
+        ? o.totalPages
+        : Math.max(1, Math.ceil(total / Math.max(1, outLimit)));
+    return { items, total, page: outPage, limit: outLimit, totalPages };
+  }
+  return { items: [], total: 0, page, limit, totalPages: 1 };
 }
