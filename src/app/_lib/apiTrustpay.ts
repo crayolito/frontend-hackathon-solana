@@ -274,15 +274,36 @@ export async function obtenerUsuarioAdminPorId(token: string, idUsuario: string)
 export async function actualizarUsuarioAdmin(
   token: string,
   idUsuario: string,
-  datos: { role: RolTrustpayApi; isActive: boolean }
+  datos: {
+    role: RolTrustpayApi;
+    isActive: boolean;
+    email?: string;
+    country?: string;
+    walletAddress?: string | null;
+  }
 ) {
+  const cuerpo: {
+    role: RolTrustpayApi;
+    isActive: boolean;
+    email?: string;
+    country?: string;
+    walletAddress?: string | null;
+  } = {
+    role: datos.role,
+    isActive: datos.isActive,
+  };
+  if (typeof datos.email === "string") cuerpo.email = datos.email.trim();
+  if (typeof datos.country === "string") cuerpo.country = datos.country.trim();
+  if (datos.walletAddress !== undefined) {
+    const limpia =
+      typeof datos.walletAddress === "string" ? datos.walletAddress.trim() : datos.walletAddress;
+    cuerpo.walletAddress = limpia && limpia.length > 0 ? limpia : null;
+  }
+
   return solicitudJson<UsuarioTrustpayRespuesta>(`/admin/users/${encodeURIComponent(idUsuario)}`, {
     method: "PATCH",
     token,
-    body: JSON.stringify({
-      role: datos.role,
-      isActive: datos.isActive,
-    }),
+    body: JSON.stringify(cuerpo),
   });
 }
 
@@ -290,6 +311,17 @@ export async function actualizarUsuarioAdmin(
 export async function alternarActivoUsuarioAdmin(token: string, idUsuario: string) {
   return solicitudJson<UsuarioTrustpayRespuesta | void>(
     `/admin/users/${encodeURIComponent(idUsuario)}/toggle-active`,
+    {
+      method: "POST",
+      token,
+    }
+  );
+}
+
+/** Marca un usuario como verificado en backend admin. */
+export async function verificarUsuarioAdmin(token: string, idUsuario: string) {
+  return solicitudJson<UsuarioTrustpayRespuesta | void>(
+    `/admin/users/${encodeURIComponent(idUsuario)}/verify`,
     {
       method: "POST",
       token,

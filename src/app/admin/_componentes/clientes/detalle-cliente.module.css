@@ -42,6 +42,10 @@
   font-size: 0.9rem;
   color: #475569;
   font-weight: 600;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
 }
 
 .gridDatos {
@@ -140,6 +144,31 @@
   color: #5b21b6;
 }
 
+.metaRolEditable {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #334155;
+}
+
+.botonVerificar {
+  border: 1px solid #86efac;
+  background: #f0fdf4;
+  color: #166534;
+  border-radius: 999px;
+  padding: 5px 10px;
+  font-size: 0.75rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.botonVerificar:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
 /* Formulario admin: rol y cuenta activa (PATCH + toggle-active). */
 
 .formularioAdmin {
@@ -180,6 +209,19 @@
   color: color-mix(in srgb, var(--texto) 48%, transparent);
 }
 
+.etiquetaInput {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--texto) 48%, transparent);
+  min-width: 220px;
+  flex: 1 1 220px;
+}
+
 .selectRol {
   padding: 10px 14px;
   border-radius: 10px;
@@ -192,6 +234,20 @@
 }
 
 .selectRol:focus-visible {
+  outline: 2px solid #6c63ff;
+  outline-offset: 2px;
+}
+
+.inputTexto {
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1px solid #d0d0d8;
+  font-weight: 600;
+  background: #fff;
+  color: #0f172a;
+}
+
+.inputTexto:focus-visible {
   outline: 2px solid #6c63ff;
   outline-offset: 2px;
 }

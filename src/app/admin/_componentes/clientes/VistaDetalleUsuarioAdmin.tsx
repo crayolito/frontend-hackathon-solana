@@ -9,6 +9,7 @@ import {
   actualizarUsuarioAdmin,
   alternarActivoUsuarioAdmin,
   obtenerUsuarioAdminPorId,
+  verificarUsuarioAdmin,
   type RolTrustpayApi,
   type UsuarioTrustpayRespuesta,
 } from "../../../_lib/apiTrustpay";
@@ -58,14 +59,21 @@ export default function VistaDetalleUsuarioAdmin({
   const [errorCarga, setErrorCarga] = useState<string | null>(null);
 
   const [rolEdit, setRolEdit] = useState<RolTrustpayApi>("merchant");
+  const [correoEdit, setCorreoEdit] = useState("");
+  const [paisEdit, setPaisEdit] = useState("");
+  const [carteraEdit, setCarteraEdit] = useState("");
   const [activoEdit, setActivoEdit] = useState(true);
   const [guardando, setGuardando] = useState(false);
   const [alternando, setAlternando] = useState(false);
+  const [verificando, setVerificando] = useState(false);
   const [mensaje, setMensaje] = useState<string | null>(null);
 
   const aplicarUsuario = useCallback((u: UsuarioTrustpayRespuesta) => {
     setUsuario(u);
     setRolEdit(u.role);
+    setCorreoEdit(u.email ?? "");
+    setPaisEdit(u.country ?? "");
+    setCarteraEdit(u.walletAddress ?? "");
     setActivoEdit(u.isActive !== false);
   }, []);
 
@@ -107,6 +115,9 @@ export default function VistaDetalleUsuarioAdmin({
       const actualizado = await actualizarUsuarioAdmin(token, idUsuario, {
         role: rolEdit,
         isActive: activoEdit,
+        email: correoEdit,
+        country: paisEdit,
+        walletAddress: carteraEdit,
       });
       aplicarUsuario(actualizado);
       setMensaje("Cambios guardados.");
@@ -121,7 +132,17 @@ export default function VistaDetalleUsuarioAdmin({
     } finally {
       setGuardando(false);
     }
-  }, [activoEdit, aplicarUsuario, idUsuario, rolEdit, router, alActualizarLista]);
+  }, [
+    activoEdit,
+    aplicarUsuario,
+    carteraEdit,
+    correoEdit,
+    idUsuario,
+    paisEdit,
+    rolEdit,
+    router,
+    alActualizarLista,
+  ]);
 
   const ejecutarToggle = useCallback(async () => {
     const token = obtenerTokenSesion();
@@ -146,6 +167,32 @@ export default function VistaDetalleUsuarioAdmin({
       setMensaje(e instanceof ErrorApiTrustpay ? e.message : "No se pudo alternar el estado.");
     } finally {
       setAlternando(false);
+    }
+  }, [aplicarUsuario, idUsuario, recargar, router, alActualizarLista]);
+
+  const ejecutarVerificar = useCallback(async () => {
+    const token = obtenerTokenSesion();
+    if (!token || !idUsuario) return;
+    setMensaje(null);
+    setVerificando(true);
+    try {
+      const respuesta = await verificarUsuarioAdmin(token, idUsuario);
+      if (respuesta && typeof respuesta === "object" && "id" in respuesta) {
+        aplicarUsuario(respuesta);
+      } else {
+        await recargar();
+      }
+      setMensaje("Usuario verificado correctamente.");
+      alActualizarLista?.();
+    } catch (e) {
+      if (e instanceof ErrorApiTrustpay && e.codigoEstado === 401) {
+        cerrarSesion();
+        router.replace("/");
+        return;
+      }
+      setMensaje(e instanceof ErrorApiTrustpay ? e.message : "No se pudo verificar el usuario.");
+    } finally {
+      setVerificando(false);
     }
   }, [aplicarUsuario, idUsuario, recargar, router, alActualizarLista]);
 
@@ -200,11 +247,39 @@ export default function VistaDetalleUsuarioAdmin({
             {etiquetaActivo(usuario.isActive)}
           </span>
           {" · "}
-          <span className={`${estilos.pillEstado} ${estilos.pillRol}`}>Rol: {etiquetaRol(usuario.role)}</span>
+          {mostrarConfiguracion ? (
+            <label className={estilos.metaRolEditable} htmlFor="rol-usuario-meta">
+              Rol:
+              <select
+                id="rol-usuario-meta"
+                className={estilos.selectRol}
+                value={rolEdit}
+                onChange={(e) => setRolEdit(e.target.value as RolTrustpayApi)}
+              >
+                <option value="merchant">merchant</option>
+                <option value="admin">admin</option>
+              </select>
+            </label>
+          ) : (
+            <span className={`${estilos.pillEstado} ${estilos.pillRol}`}>Rol: {etiquetaRol(usuario.role)}</span>
+          )}
           {" · "}
           <span className={`${estilos.pillEstado} ${usuario.isVerified ? estilos.estadoActivo : estilos.estadoPendiente}`}>
             {etiquetaVerificado(usuario.isVerified)}
           </span>
+          {mostrarConfiguracion && usuario.isVerified !== true ? (
+            <>
+              {" · "}
+              <button
+                type="button"
+                className={estilos.botonVerificar}
+                disabled={verificando}
+                onClick={() => void ejecutarVerificar()}
+              >
+                {verificando ? "Verificando…" : "Verificar usuario"}
+              </button>
+            </>
+          ) : null}
         </p>
 
         <div className={estilos.gridDatos}>
@@ -242,17 +317,36 @@ export default function VistaDetalleUsuarioAdmin({
               Desde aquí puedes actualizar rol y estado de la cuenta del usuario.
             </p>
             <div className={estilos.filaForm}>
-              <label className={estilos.etiquetaSelect} htmlFor="rol-usuario">
-                Rol del usuario
-                <select
-                  id="rol-usuario"
-                  className={estilos.selectRol}
-                  value={rolEdit}
-                  onChange={(e) => setRolEdit(e.target.value as RolTrustpayApi)}
-                >
-                  <option value="merchant">merchant</option>
-                  <option value="admin">admin</option>
-                </select>
+              <label className={estilos.etiquetaInput} htmlFor="correo-usuario">
+                Correo
+                <input
+                  id="correo-usuario"
+                  className={estilos.inputTexto}
+                  type="email"
+                  value={correoEdit}
+                  onChange={(e) => setCorreoEdit(e.target.value)}
+                  placeholder="correo@dominio.com"
+                />
+              </label>
+              <label className={estilos.etiquetaInput} htmlFor="pais-usuario">
+                País
+                <input
+                  id="pais-usuario"
+                  className={estilos.inputTexto}
+                  value={paisEdit}
+                  onChange={(e) => setPaisEdit(e.target.value)}
+                  placeholder="País"
+                />
+              </label>
+              <label className={estilos.etiquetaInput} htmlFor="cartera-usuario">
+                Cartera Solana
+                <input
+                  id="cartera-usuario"
+                  className={estilos.inputTexto}
+                  value={carteraEdit}
+                  onChange={(e) => setCarteraEdit(e.target.value)}
+                  placeholder="Wallet (opcional)"
+                />
               </label>
               <label className={estilos.checkActivo}>
                 <input type="checkbox" checked={activoEdit} onChange={(e) => setActivoEdit(e.target.checked)} />
