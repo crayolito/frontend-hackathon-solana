@@ -5,11 +5,7 @@ const URL_POR_DEFECTO = "https://trustpay-backend.fly.dev";
 
 export function obtenerUrlBaseTrustpay() {
   const desdeEntorno = process.env.NEXT_PUBLIC_TRUSTPAY_API_URL?.trim();
-  const base = desdeEntorno && desdeEntorno.length > 0 ? desdeEntorno : URL_POR_DEFECTO;
-
-  // Normalizamos para evitar errores si el entorno trae un sufijo `/eos`
-  // o barras finales (por ejemplo: `.../eos/`).
-  return base.replace(/\/+$/u, "").replace(/\/eos$/iu, "");
+  return desdeEntorno && desdeEntorno.length > 0 ? desdeEntorno : URL_POR_DEFECTO;
 }
 
 export type RolTrustpayApi = "admin" | "merchant";
@@ -65,6 +61,18 @@ async function parsearError(respuesta: Response): Promise<never> {
   throw new ErrorApiTrustpay(mensaje, respuesta.status, cuerpo);
 }
 
+function mensajeErrorRed(base: string, causa: unknown): string {
+  const texto =
+    causa instanceof Error ? causa.message : typeof causa === "string" ? causa : "";
+  const esConexion =
+    /failed to fetch|networkerror|load failed|connection refused|aborted/i.test(texto) ||
+    texto === "";
+  if (esConexion) {
+    return `No se pudo conectar con el API (${base}). ¿Está el backend en marcha en ese puerto? (p. ej. npm run start:dev en la carpeta del servidor).`;
+  }
+  return `Error de red: ${texto || "desconocido"}`;
+}
+
 async function solicitudJson<T>(
   ruta: string,
   opciones: RequestInit & { token?: string }
@@ -78,10 +86,15 @@ async function solicitudJson<T>(
     encabezados.set("Authorization", `Bearer ${opciones.token}`);
   }
 
-  const respuesta = await fetch(`${base}${ruta}`, {
-    ...opciones,
-    headers: encabezados,
-  });
+  let respuesta: Response;
+  try {
+    respuesta = await fetch(`${base}${ruta}`, {
+      ...opciones,
+      headers: encabezados,
+    });
+  } catch (causa) {
+    throw new ErrorApiTrustpay(mensajeErrorRed(base, causa), 0, causa);
+  }
 
   if (!respuesta.ok) {
     await parsearError(respuesta);
@@ -96,10 +109,21 @@ async function solicitudJson<T>(
   return JSON.parse(texto) as T;
 }
 
-export async function iniciarSesionTrustpay(correo: string, contrasena: string) {
+/** Si enviás `walletAddress`, debe coincidir con la de la cuenta (merchants). Los admin pueden omitirla. */
+export async function iniciarSesionTrustpay(
+  correo: string,
+  contrasena: string,
+  walletAddress?: string
+) {
+  const cuerpo: { email: string; password: string; walletAddress?: string } = {
+    email: correo.trim(),
+    password: contrasena,
+  };
+  const w = walletAddress?.trim();
+  if (w) cuerpo.walletAddress = w;
   return solicitudJson<RespuestaLoginRegistro>("/auth/login", {
     method: "POST",
-    body: JSON.stringify({ email: correo.trim(), password: contrasena }),
+    body: JSON.stringify(cuerpo),
   });
 }
 
@@ -215,11 +239,24 @@ function normalizarListadoAdminUsuarios(
   return { usuarios: [], total: 0, pagina: paginaPedida, limite: limitePedido };
 }
 
-export async function listarUsuariosAdmin(token: string, pagina: number, limite: number) {
+export type FiltrosListadoUsuariosAdmin = {
+  /** Si se indica, el API filtra por rol (p. ej. `merchant` para excluir admins del listado de clientes). */
+  role?: RolTrustpayApi;
+  search?: string;
+};
+
+export async function listarUsuariosAdmin(
+  token: string,
+  pagina: number,
+  limite: number,
+  filtros?: FiltrosListadoUsuariosAdmin
+) {
   const consulta = new URLSearchParams({
     page: String(pagina),
     limit: String(limite),
   });
+  if (filtros?.role) consulta.set("role", filtros.role);
+  if (filtros?.search) consulta.set("search", filtros.search);
   const crudo = await solicitudJson<unknown>(`/admin/users?${consulta.toString()}`, {
     method: "GET",
     token,
@@ -260,299 +297,218 @@ export async function alternarActivoUsuarioAdmin(token: string, idUsuario: strin
   );
 }
 
-// --- Comercio: negocios y códigos QR (Bearer merchant).
+// --- Métricas escrow + comisión (admin) ---
 
-/** Coincide con el JSON del backend (POST/GET/PATCH y cada ítem de `data` en el listado paginado). */
-export type NegocioTrustpay = {
-  id: string;
-  userId?: string;
-  name: string;
-  description: string | null;
-  category: string;
-  logoUrl: string | null;
-  walletAddress: string | null;
-  isActive?: boolean;
-  isVerified?: boolean;
-  solanaTxRegister?: string | null;
-  solanaTxVerify?: string | null;
-  createdAt?: string;
-  updatedAt?: string;
+export type ComisionAdminRespuesta = {
+  commissionBps: number;
+  updatedAt: string;
 };
 
-/** Convierte un objeto suelto del API al tipo de negocio (ignora campos desconocidos). */
-function mapearNegocioDesdeApi(raw: unknown): NegocioTrustpay | null {
-  if (!raw || typeof raw !== "object") return null;
-  const o = raw as Record<string, unknown>;
-  const id = o.id;
-  const name = o.name;
-  if (typeof id !== "string" || typeof name !== "string") return null;
+export type FilaMetricaMerchant = {
+  userId: string;
+  email: string;
+  totalPayments: number;
+  volumeLamports: string;
+  volumeSol: string;
+  estimatedCommissionLamports: string;
+  estimatedCommissionSol: string;
+  businessCount: number;
+};
 
-  const walletAddress =
-    typeof o.walletAddress === "string"
-      ? o.walletAddress
-      : o.walletAddress === null
-        ? null
-        : null;
+export type MetricasMerchantsPaginado = {
+  commissionBps: number;
+  data: FilaMetricaMerchant[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+};
+
+export async function obtenerComisionAdmin(token: string) {
+  return solicitudJson<ComisionAdminRespuesta>("/admin/settings/commission", {
+    method: "GET",
+    token,
+  });
+}
+
+export async function actualizarComisionAdmin(token: string, commissionBps: number) {
+  return solicitudJson<ComisionAdminRespuesta>("/admin/settings/commission", {
+    method: "PATCH",
+    token,
+    body: JSON.stringify({ commissionBps }),
+  });
+}
+
+export type ConsultaMetricasMerchants = {
+  page?: number;
+  limit?: number;
+  sort?: "count" | "volume";
+  from?: string;
+  to?: string;
+};
+
+export async function obtenerMetricasMerchantsAdmin(
+  token: string,
+  consulta: ConsultaMetricasMerchants = {}
+) {
+  const q = new URLSearchParams();
+  if (consulta.page != null) q.set("page", String(consulta.page));
+  if (consulta.limit != null) q.set("limit", String(consulta.limit));
+  if (consulta.sort) q.set("sort", consulta.sort);
+  if (consulta.from) q.set("from", consulta.from);
+  if (consulta.to) q.set("to", consulta.to);
+  const sufijo = q.toString() ? `?${q.toString()}` : "";
+  return solicitudJson<MetricasMerchantsPaginado>(
+    `/admin/metrics/merchants/payments${sufijo}`,
+    { method: "GET", token }
+  );
+}
+
+const LAMPORTS_PER_SOL_BIG = BigInt("1000000000");
+
+/** Suma volumen y comisión recorriendo todas las páginas (máx. 100 por página en API). */
+export async function agregarMetricasMerchantsTodasLasPaginas(token: string) {
+  const limit = 100;
+  let page = 1;
+  let commissionBps = 0;
+  let totalMerchants = 0;
+  let totalPagos = 0;
+  let volumenLamports = BigInt(0);
+  let comisionLamports = BigInt(0);
+  let totalPages = 1;
+
+  while (page <= totalPages) {
+    const r = await obtenerMetricasMerchantsAdmin(token, { page, limit, sort: "volume" });
+    commissionBps = r.commissionBps;
+    totalMerchants = r.total;
+    totalPages = r.totalPages;
+    for (const row of r.data) {
+      totalPagos += row.totalPayments;
+      volumenLamports += BigInt(row.volumeLamports || "0");
+      comisionLamports += BigInt(row.estimatedCommissionLamports || "0");
+    }
+    page += 1;
+  }
 
   return {
-    id,
-    userId: typeof o.userId === "string" ? o.userId : undefined,
-    name,
-    description: typeof o.description === "string" ? o.description : null,
-    category: typeof o.category === "string" ? o.category : "",
-    logoUrl: typeof o.logoUrl === "string" ? o.logoUrl : null,
-    walletAddress,
-    isActive: typeof o.isActive === "boolean" ? o.isActive : undefined,
-    isVerified: typeof o.isVerified === "boolean" ? o.isVerified : undefined,
-    solanaTxRegister:
-      typeof o.solanaTxRegister === "string"
-        ? o.solanaTxRegister
-        : o.solanaTxRegister === null
-          ? null
-          : undefined,
-    solanaTxVerify:
-      typeof o.solanaTxVerify === "string"
-        ? o.solanaTxVerify
-        : o.solanaTxVerify === null
-          ? null
-          : undefined,
-    createdAt: typeof o.createdAt === "string" ? o.createdAt : undefined,
-    updatedAt: typeof o.updatedAt === "string" ? o.updatedAt : undefined,
+    commissionBps,
+    totalMerchants,
+    totalPagos,
+    volumenLamports,
+    volumenSol: formatearLamportsASol(volumenLamports),
+    comisionLamports,
+    comisionSol: formatearLamportsASol(comisionLamports),
   };
 }
 
-/** POST/PATCH pueden devolver el objeto plano o envuelto en `{ data: ... }`. */
-function extraerNegocioDeRespuesta(crudo: unknown): NegocioTrustpay {
-  if (crudo && typeof crudo === "object") {
-    const o = crudo as Record<string, unknown>;
-    if (o.data !== undefined) {
-      const desdeData = mapearNegocioDesdeApi(o.data);
-      if (desdeData) return desdeData;
-    }
-  }
-  const directo = mapearNegocioDesdeApi(crudo);
-  if (directo) return directo;
-  throw new ErrorApiTrustpay("El servidor devolvió un negocio en formato no reconocido.", 500, crudo);
+export function formatearLamportsASol(lamports: bigint): string {
+  const whole = lamports / LAMPORTS_PER_SOL_BIG;
+  const frac = lamports % LAMPORTS_PER_SOL_BIG;
+  if (frac === BigInt(0)) return whole.toString();
+  const fracStr = frac.toString().padStart(9, "0").replace(/0+$/, "");
+  return `${whole}.${fracStr}`;
 }
 
-/** Cuerpo para registrar un negocio on-chain vía backend. */
-export type CuerpoCrearNegocioTrustpay = {
-  name: string;
-  description: string | null;
-  category: string;
-  logoUrl: string | null;
-  walletAddress: string;
+// --- Series temporales + distribución (admin) ---
+
+export type PuntoSeriePagos = {
+  bucketStart: string;
+  paymentCount: number;
+  volumeLamports: string;
+  volumeSol: string;
 };
 
-export type CuerpoActualizarNegocioTrustpay = {
-  name?: string;
-  description?: string | null;
-  category?: string;
-  logoUrl?: string | null;
+export type SeriePagosAdminRespuesta = {
+  groupBy: "day" | "week";
+  buckets: number;
+  range: { from: string; to: string };
+  data: PuntoSeriePagos[];
 };
 
-/** Monto variable: amountLamports y tokenMint en null. Monto fijo: amountLamports como string de lamports. */
-export type CuerpoCrearQrNegocioTrustpay = {
-  label: string;
-  type: string;
-  amountLamports: string | null;
-  tokenMint: string | null;
+export type DistribucionMerchantsAdminRespuesta = {
+  totalMerchants: number;
+  nuevos: number;
+  bajoVolumen: number;
+  medio: number;
+  altoValor: number;
 };
 
-function normalizarListadoNegocios(
-  crudo: unknown,
-  paginaPedida: number,
-  limitePedido: number
-): {
-  negocios: NegocioTrustpay[];
-  total: number;
-  pagina: number;
-  limite: number;
-} {
-  if (Array.isArray(crudo)) {
-    const negocios = crudo
-      .map(mapearNegocioDesdeApi)
-      .filter((n): n is NegocioTrustpay => n !== null);
-    return {
-      negocios,
-      total: negocios.length,
-      pagina: paginaPedida,
-      limite: limitePedido,
-    };
-  }
-  if (crudo && typeof crudo === "object") {
-    const o = crudo as Record<string, unknown>;
-    const posibleLista = o.data ?? o.businesses ?? o.items ?? o.results;
-    const negocios = Array.isArray(posibleLista)
-      ? posibleLista
-          .map(mapearNegocioDesdeApi)
-          .filter((n): n is NegocioTrustpay => n !== null)
-      : [];
-    const total =
-      typeof o.total === "number"
-        ? o.total
-        : typeof o.totalItems === "number"
-          ? o.totalItems
-          : negocios.length;
-    const pagina = typeof o.page === "number" ? o.page : paginaPedida;
-    const limite = typeof o.limit === "number" ? o.limit : limitePedido;
-    return { negocios, total, pagina, limite };
-  }
-  return { negocios: [], total: 0, pagina: paginaPedida, limite: limitePedido };
-}
-
-export async function crearNegocioTrustpay(token: string, cuerpo: CuerpoCrearNegocioTrustpay) {
-  const crudo = await solicitudJson<unknown>("/businesses", {
-    method: "POST",
-    token,
-    body: JSON.stringify({
-      name: cuerpo.name.trim(),
-      description: cuerpo.description,
-      category: cuerpo.category.trim(),
-      logoUrl: cuerpo.logoUrl,
-      walletAddress: cuerpo.walletAddress.trim(),
-    }),
-  });
-  return extraerNegocioDeRespuesta(crudo);
-}
-
-/** Un negocio por id (si el backend no expone GET, usar listado en el componente). */
-export async function obtenerNegocioTrustpay(token: string, idNegocio: string) {
-  const crudo = await solicitudJson<unknown>(`/businesses/${encodeURIComponent(idNegocio)}`, {
-    method: "GET",
-    token,
-  });
-  return extraerNegocioDeRespuesta(crudo);
-}
-
-export async function listarNegociosTrustpay(token: string, pagina: number, limite: number) {
-  const consulta = new URLSearchParams({
-    page: String(pagina),
-    limit: String(limite),
-  });
-  const crudo = await solicitudJson<unknown>(`/businesses?${consulta.toString()}`, {
-    method: "GET",
-    token,
-  });
-  return normalizarListadoNegocios(crudo, pagina, limite);
-}
-
-export async function actualizarNegocioTrustpay(
+export async function obtenerSeriePagosAdmin(
   token: string,
-  idNegocio: string,
-  datos: CuerpoActualizarNegocioTrustpay
+  consulta: { groupBy?: "day" | "week"; buckets?: number } = {}
 ) {
-  const crudo = await solicitudJson<unknown>(`/businesses/${encodeURIComponent(idNegocio)}`, {
-    method: "PATCH",
-    token,
-    body: JSON.stringify(datos),
-  });
-  return extraerNegocioDeRespuesta(crudo);
-}
-
-export async function eliminarNegocioTrustpay(token: string, idNegocio: string) {
-  return solicitudJson<void>(`/businesses/${encodeURIComponent(idNegocio)}`, {
-    method: "DELETE",
-    token,
-  });
-}
-
-/**
- * Verifica un negocio (backend).
- * Como el path exacto puede variar según la implementación, probamos:
- * 1) `POST /businesses/:id/verify`
- * 2) fallback: `PATCH /businesses/:id` con `{ isVerified: true }`
- */
-export async function verificarNegocioTrustpay(token: string, idNegocio: string) {
-  try {
-    const crudo = await solicitudJson<unknown>(`/businesses/${encodeURIComponent(idNegocio)}/verify`, {
-      method: "POST",
-      token,
-    });
-    return extraerNegocioDeRespuesta(crudo);
-  } catch (e) {
-    if (e instanceof ErrorApiTrustpay && e.codigoEstado === 404) {
-      const crudoFallback = await solicitudJson<unknown>(`/businesses/${encodeURIComponent(idNegocio)}`, {
-        method: "PATCH",
-        token,
-        body: JSON.stringify({ isVerified: true }),
-      });
-      return extraerNegocioDeRespuesta(crudoFallback);
-    }
-    throw e;
-  }
-}
-
-/** Respuesta del alta de QR: el backend puede devolver distintas formas; el front normaliza con resolverVistaQr. */
-export async function crearQrNegocioTrustpay(
-  token: string,
-  idNegocio: string,
-  cuerpo: CuerpoCrearQrNegocioTrustpay
-) {
-  return solicitudJson<unknown>(`/businesses/${encodeURIComponent(idNegocio)}/qr-codes`, {
-    method: "POST",
-    token,
-    body: JSON.stringify({
-      label: cuerpo.label.trim(),
-      type: cuerpo.type,
-      amountLamports: cuerpo.amountLamports,
-      tokenMint: cuerpo.tokenMint,
-    }),
-  });
-}
-
-/** Listado paginado GET /businesses/:id/qr-codes (misma forma que el listado de negocios: `data`, `total`, `page`, `limit`). */
-function normalizarListadoQrNegocio(
-  crudo: unknown,
-  paginaPedida: number,
-  limitePedido: number
-): {
-  items: unknown[];
-  total: number;
-  pagina: number;
-  limite: number;
-} {
-  if (Array.isArray(crudo)) {
-    return {
-      items: crudo,
-      total: crudo.length,
-      pagina: paginaPedida,
-      limite: limitePedido,
-    };
-  }
-  if (crudo && typeof crudo === "object") {
-    const o = crudo as Record<string, unknown>;
-    const posibleLista = o.data ?? o.items ?? o.qrCodes ?? o.results;
-    const items = Array.isArray(posibleLista) ? posibleLista : [];
-    const total =
-      typeof o.total === "number"
-        ? o.total
-        : typeof o.totalItems === "number"
-          ? o.totalItems
-          : items.length;
-    const pagina = typeof o.page === "number" ? o.page : paginaPedida;
-    const limite = typeof o.limit === "number" ? o.limit : limitePedido;
-    return { items, total, pagina, limite };
-  }
-  return { items: [], total: 0, pagina: paginaPedida, limite: limitePedido };
-}
-
-export async function listarQrCodesNegocioTrustpay(
-  token: string,
-  idNegocio: string,
-  pagina: number,
-  limite: number
-) {
-  const consulta = new URLSearchParams({
-    page: String(pagina),
-    limit: String(limite),
-  });
-  const crudo = await solicitudJson<unknown>(
-    `/businesses/${encodeURIComponent(idNegocio)}/qr-codes?${consulta.toString()}`,
-    {
-      method: "GET",
-      token,
-    }
+  const q = new URLSearchParams();
+  if (consulta.groupBy) q.set("groupBy", consulta.groupBy);
+  if (consulta.buckets != null) q.set("buckets", String(consulta.buckets));
+  const sufijo = q.toString() ? `?${q.toString()}` : "";
+  return solicitudJson<SeriePagosAdminRespuesta>(
+    `/admin/metrics/payments/timeseries${sufijo}`,
+    { method: "GET", token }
   );
-  return normalizarListadoQrNegocio(crudo, pagina, limite);
+}
+
+export async function obtenerDistribucionMerchantsAdmin(token: string) {
+  return solicitudJson<DistribucionMerchantsAdminRespuesta>(
+    `/admin/metrics/merchants/distribution`,
+    { method: "GET", token }
+  );
+}
+
+// --- Comercio (merchant): negocios y pagos escrow (JWT) ---
+
+export type NegocioTrustpay = {
+  id: string;
+  name: string;
+  walletAddress: string;
+  description: string | null;
+  isActive: boolean;
+  createdAt: string;
+};
+
+export type RespuestaPaginada<T> = {
+  data: T[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+};
+
+export type PagoEscrowMerchantItem = {
+  id: string;
+  transactionId: string;
+  orderId: string | null;
+  status: string;
+  amount: number;
+  sellerWallet: string;
+  buyerWallet: string | null;
+  escrowPda: string | null;
+  qrImageUrl: string | null;
+  solanaPayUrl: string;
+  paidAt: string | null;
+  shippedAt: string | null;
+  releasedAt: string | null;
+  autoReleaseAt: string | null;
+  expiresAt: string | null;
+  createdAt: string;
+};
+
+export async function listarNegociosUsuario(token: string, page = 1, limit = 50) {
+  const q = new URLSearchParams({ page: String(page), limit: String(limit) });
+  return solicitudJson<RespuestaPaginada<NegocioTrustpay>>(`/businesses?${q}`, {
+    method: "GET",
+    token,
+  });
+}
+
+export async function listarPagosEscrowNegocio(
+  token: string,
+  businessId: string,
+  page = 1,
+  limit = 20
+) {
+  const q = new URLSearchParams({ page: String(page), limit: String(limit) });
+  return solicitudJson<RespuestaPaginada<PagoEscrowMerchantItem>>(
+    `/businesses/${encodeURIComponent(businessId)}/payments?${q}`,
+    { method: "GET", token }
+  );
 }

@@ -1,18 +1,13 @@
 "use client";
 
-import {
-  semanasIngresosDemo,
-  sociosRentabilidadDemo,
-} from "./_datos/datosDashboardDemo";
 import CabeceraDashboard from "./_componentes/dashboard/CabeceraDashboard";
 import GraficoBarrasIngresos from "./_componentes/dashboard/GraficoBarrasIngresos";
 import GraficoVolumenTransacciones from "./_componentes/dashboard/GraficoVolumenTransacciones";
 import SeccionRentabilidadDashboard from "./_componentes/dashboard/SeccionRentabilidadDashboard";
-import TablaAccionesCriticas from "./_componentes/dashboard/TablaAccionesCriticas";
 import TarjetasKpiDashboard from "./_componentes/dashboard/TarjetasKpiDashboard";
 import estilosLayout from "./_componentes/layout-dashboard.module.css";
 
-// Pagina principal del admin: ensambla bloques del dashboard (componentes + datos demo).
+// Pagina principal del admin: KPIs y gráficos conectados al API (series + métricas escrow).
 export default function PaginaAdmin() {
   const exportarDatos = () => {
     const lineas = [
@@ -33,11 +28,10 @@ export default function PaginaAdmin() {
       <CabeceraDashboard alExportar={exportarDatos} />
       <TarjetasKpiDashboard />
       <div className={estilosLayout.filaGraficos}>
-        <GraficoBarrasIngresos semanas={semanasIngresosDemo} />
+        <GraficoBarrasIngresos />
         <GraficoVolumenTransacciones />
       </div>
-      <SeccionRentabilidadDashboard socios={sociosRentabilidadDemo} />
-      <TablaAccionesCriticas />
+      <SeccionRentabilidadDashboard />
     </>
   );
 }

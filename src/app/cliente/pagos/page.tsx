@@ -1,6 +1,15 @@
-import { redirect } from "next/navigation";
+import CabeceraAreaCliente from "../_componentes/CabeceraAreaCliente";
+import ContenidoPagosCliente from "../_componentes/ContenidoPagosCliente";
 
-// Los cobros por API/pagos no están en el alcance actual; la cuenta unifica la configuración.
+// Pagos escrow del negocio (GET /businesses/:id/payments con JWT de merchant).
 export default function PaginaPagosCliente() {
-  redirect("/cliente/settings");
+  return (
+    <>
+      <CabeceraAreaCliente
+        titulo="Pagos"
+        subtitulo="Pagos escrow (Solana Pay / QR) de tus negocios, en tiempo real desde el backend."
+      />
+      <ContenidoPagosCliente />
+    </>
+  );
 }

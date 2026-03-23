@@ -1,0 +1,181 @@
+/* Tabla de pagos escrow (área comercio). */
+
+.barraFiltros {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.etiquetaFiltro {
+  font-size: 0.8rem;
+  font-weight: 800;
+  color: color-mix(in srgb, var(--texto) 55%, transparent);
+}
+
+.selectNegocio {
+  min-width: min(100%, 280px);
+  padding: 10px 14px;
+  border-radius: 12px;
+  border: 1px solid color-mix(in srgb, var(--texto) 12%, transparent);
+  background: #fff;
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: var(--texto-primario);
+}
+
+.tarjetaTabla {
+  background: #fff;
+  border-radius: 18px;
+  border: 1px solid color-mix(in srgb, var(--texto) 8%, transparent);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+}
+
+.envoltorioTabla {
+  overflow-x: auto;
+}
+
+.tabla {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 0.875rem;
+}
+
+.tabla thead {
+  background: #f9fafb;
+  color: color-mix(in srgb, var(--texto) 48%, transparent);
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.tabla th,
+.tabla td {
+  padding: 14px 18px;
+  border-bottom: 1px solid #f3f4f6;
+  vertical-align: middle;
+}
+
+.idCorta {
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #0284c7;
+}
+
+.monto {
+  font-weight: 800;
+  color: var(--texto-primario);
+  white-space: nowrap;
+}
+
+.walletCorta {
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 0.75rem;
+  max-width: 140px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.badgeEstado {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.estadoPendiente {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.estadoEscrow {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.estadoEnviado {
+  background: #e0e7ff;
+  color: #3730a3;
+}
+
+.estadoOk {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.estadoDisputa {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.estadoOtro {
+  background: #f3f4f6;
+  color: #4b5563;
+}
+
+.paginacion {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 16px 18px;
+  border-top: 1px solid #f3f4f6;
+  background: color-mix(in srgb, #f9fafb 80%, #fff);
+}
+
+.textoPaginacion {
+  margin: 0;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: color-mix(in srgb, var(--texto) 48%, transparent);
+}
+
+.botonesPag {
+  display: flex;
+  gap: 8px;
+}
+
+.botonPag {
+  padding: 8px 16px;
+  border-radius: 10px;
+  border: 1px solid #e5e7eb;
+  background: #fff;
+  font-weight: 800;
+  font-size: 0.82rem;
+  cursor: pointer;
+}
+
+.botonPag:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.botonPag:not(:disabled):hover {
+  background: #f9fafb;
+}
+
+.mensajeVacio {
+  padding: 28px 18px;
+  text-align: center;
+  color: color-mix(in srgb, var(--texto) 48%, transparent);
+  font-weight: 600;
+}
+
+.alerta {
+  padding: 14px 18px;
+  border-radius: 12px;
+  background: #fef2f2;
+  color: #991b1b;
+  font-weight: 700;
+  font-size: 0.9rem;
+}

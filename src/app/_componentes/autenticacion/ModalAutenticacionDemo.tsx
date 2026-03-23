@@ -18,25 +18,29 @@ import {
   registrarUsuarioTrustpay,
 } from "../../_lib/apiTrustpay";
 import { guardarSesionTrustpay } from "../../demoAuth";
-import { useNotificacion } from "../ProveedorNotificaciones";
 import type { ModoModal } from "./tiposAuth";
+
+/** Aclara 401 típicos del login (wallet merchant vs admin). */
+function enriquecerMensajeAuth(err: ErrorApiTrustpay, modo: ModoModal): string {
+  const m = err.message;
+  if (err.codigoEstado === 0) return m;
+  if (modo !== "ingresar") return m;
+
+  if (err.codigoEstado === 401) {
+    if (/obligatoria para iniciar sesión/i.test(m)) {
+      return `${m} Conectá Phantom (devnet) con la misma dirección que usaste al registrarte.`;
+    }
+    if (/coincide con la registrada|no coincide/i.test(m)) {
+      return `${m} Probá otra cuenta en Phantom o creá una cuenta nueva con tu wallet actual.`;
+    }
+  }
+  return m;
+}
 
 type PaisRegistro = {
   codigo: string;
   etiqueta: string;
 };
-
-function normalizarCadenaNoVacia(valor: unknown): string | null {
-  if (typeof valor !== "string") return null;
-  const v = valor.trim();
-  return v.length > 0 ? v : null;
-}
-
-function extraerWalletAddressDesdeApi(user: unknown): string | null {
-  if (!user || typeof user !== "object") return null;
-  const u = user as Record<string, unknown>;
-  return normalizarCadenaNoVacia(u.walletAddress) ?? normalizarCadenaNoVacia(u.wallet_address) ?? null;
-}
 
 // Países con nombre tal como suele esperarse en el backend (string legible).
 const paisesRegistro: PaisRegistro[] = [
@@ -63,7 +67,6 @@ export default function ModalAutenticacionDemo({
   alCerrar: () => void;
 }>) {
   const router = useRouter();
-  const { mostrarNotificacion } = useNotificacion();
   const { connected, publicKey } = useWallet();
 
   const [modoModal, setModoModal] = useState<ModoModal>(modoInicial);
@@ -75,6 +78,7 @@ export default function ModalAutenticacionDemo({
   const wrapperPaisRef = useRef<HTMLDivElement | null>(null);
 
   const [cargando, setCargando] = useState(false);
+  const [mensajeAuth, setMensajeAuth] = useState<string | null>(null);
 
   const paisSeleccionado = useMemo(() => {
     return paisesRegistro.find((p) => p.codigo === codigoPais) ?? paisesRegistro[0]!;
@@ -92,6 +96,7 @@ export default function ModalAutenticacionDemo({
     setContrasena("");
     setNombreCompleto("");
     setCodigoPais("bo");
+    setMensajeAuth(null);
     setPaisDropdownAbierto(false);
   }, [abierta]);
 
@@ -139,11 +144,18 @@ export default function ModalAutenticacionDemo({
     evento.preventDefault();
     if (cargando) return;
 
+    setMensajeAuth(null);
     setCargando(true);
 
     try {
       if (modoModal === "ingresar") {
-        const respuesta = await iniciarSesionTrustpay(correo, contrasena);
+        const walletLogin =
+          connected && publicKey ? publicKey.toBase58() : undefined;
+        const respuesta = await iniciarSesionTrustpay(
+          correo,
+          contrasena,
+          walletLogin
+        );
         guardarSesionTrustpay({
           token: respuesta.token,
           user: {
@@ -152,7 +164,7 @@ export default function ModalAutenticacionDemo({
             email: respuesta.user.email,
             role: respuesta.user.role,
             country: respuesta.user.country,
-            walletAddress: extraerWalletAddressDesdeApi(respuesta.user),
+            walletAddress: respuesta.user.walletAddress,
             isVerified: respuesta.user.isVerified,
             isActive: respuesta.user.isActive,
           },
@@ -163,37 +175,15 @@ export default function ModalAutenticacionDemo({
       }
 
       if (!nombreCompleto.trim()) {
-        mostrarNotificacion("Indica tu nombre completo.");
+        setMensajeAuth("Indica tu nombre completo.");
         setCargando(false);
         return;
       }
 
       if (!connected || !publicKey) {
-        mostrarNotificacion("Conectá Phantom (devnet) para continuar.");
+        setMensajeAuth("Conectá Phantom (devnet) para continuar.");
         setCargando(false);
         return;
-      }
-
-      const walletAddressRegistro = publicKey.toBase58();
-
-      // Solo desarrollo: verificar en consola / localStorage qué wallet se manda al registrar (quitar cuando no haga falta).
-      if (process.env.NODE_ENV === "development") {
-        console.info(
-          "[TrustPay dev] Registro obligatorio con wallet — walletAddress enviado al API:",
-          walletAddressRegistro
-        );
-        try {
-          window.localStorage.setItem(
-            "trustpay_dev_ultimo_registro_wallet",
-            JSON.stringify({
-              wallet_address: walletAddressRegistro,
-              email: correo.trim(),
-              ts: new Date().toISOString(),
-            })
-          );
-        } catch {
-          // localStorage lleno o bloqueado
-        }
       }
 
       const respuesta = await registrarUsuarioTrustpay({
@@ -201,7 +191,7 @@ export default function ModalAutenticacionDemo({
         password: contrasena,
         fullName: nombreCompleto.trim(),
         country: paisSeleccionado.etiqueta,
-        walletAddress: walletAddressRegistro,
+        walletAddress: publicKey.toBase58(),
       });
 
       guardarSesionTrustpay({
@@ -212,7 +202,7 @@ export default function ModalAutenticacionDemo({
           email: respuesta.user.email,
           role: respuesta.user.role,
           country: respuesta.user.country,
-          walletAddress: extraerWalletAddressDesdeApi(respuesta.user),
+          walletAddress: respuesta.user.walletAddress,
           isVerified: respuesta.user.isVerified,
           isActive: respuesta.user.isActive,
         },
@@ -221,9 +211,9 @@ export default function ModalAutenticacionDemo({
       redirigirSegunRol(respuesta.user.role);
     } catch (error) {
       if (error instanceof ErrorApiTrustpay) {
-        mostrarNotificacion(error.message, 14_000);
+        setMensajeAuth(enriquecerMensajeAuth(error, modoModal));
       } else {
-        mostrarNotificacion("No pudimos completar la solicitud. Intenta de nuevo.");
+        setMensajeAuth("No pudimos completar la solicitud. Intenta de nuevo.");
       }
     } finally {
       setCargando(false);
@@ -232,8 +222,8 @@ export default function ModalAutenticacionDemo({
 
   if (!abierta) return null;
 
-  const claseTamano =
-    modoModal === "ingresar" ? estilosModal.tamanoIngresar : estilosModal.tamanoRegistro;
+  /** Mismo ancho en ambos modos: login también incluye bloque Phantom. */
+  const claseTamano = estilosModal.tamanoRegistro;
 
   return (
     <div
@@ -253,23 +243,12 @@ export default function ModalAutenticacionDemo({
           <div className={estilosModal.modalScroll}>
             <div className={estilosModal.cabeceraCompacta}>
               <div>
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 10,
-                    marginBottom: 8,
-                  }}
-                >
-                  <img src="/imagenes/logo-phantom.svg" alt="" width={30} height={30} />
-                  <span style={{ fontWeight: 900, color: "rgba(236, 245, 255, 0.96)" }}>TrustPay</span>
-                </div>
                 <h2 id="titulo-modal" className={estilosModal.tituloModal}>
                   {modoModal === "ingresar" ? "Entrá a TrustPay" : "Alta de comercio"}
                 </h2>
                 <p className={estilosModal.hintLinea}>
                   {modoModal === "ingresar"
-                    ? "Correo y contraseña. Sin billetera."
+                    ? "Correo y contraseña. Comercios: conectá Phantom con la misma wallet del registro."
                     : "Datos básicos + Phantom (devnet) en una sola pantalla."}
                 </p>
               </div>
@@ -294,7 +273,10 @@ export default function ModalAutenticacionDemo({
                 aria-selected={modoModal === "ingresar"}
                 className={`${estilosModal.segmentoBoton} ${modoModal === "ingresar" ? estilosModal.segmentoBotonActivo : ""}`}
                 disabled={cargando}
-                onClick={() => setModoModal("ingresar")}
+                onClick={() => {
+                  setMensajeAuth(null);
+                  setModoModal("ingresar");
+                }}
               >
                 Iniciar sesión
               </button>
@@ -304,11 +286,20 @@ export default function ModalAutenticacionDemo({
                 aria-selected={modoModal === "registrar"}
                 className={`${estilosModal.segmentoBoton} ${modoModal === "registrar" ? estilosModal.segmentoBotonActivo : ""}`}
                 disabled={cargando}
-                onClick={() => setModoModal("registrar")}
+                onClick={() => {
+                  setMensajeAuth(null);
+                  setModoModal("registrar");
+                }}
               >
                 Crear cuenta
               </button>
             </div>
+
+            {mensajeAuth ? (
+              <p className={estilosModal.mensajeAuth} role="alert">
+                {mensajeAuth}
+              </p>
+            ) : null}
 
             <form className={estilosModal.formulario} onSubmit={enviarFormulario}>
               {modoModal === "registrar" ? (
@@ -394,14 +385,14 @@ export default function ModalAutenticacionDemo({
                   <label
                     className={`${estilosModal.etiqueta} ${estilosModal.campoLargo}`}
                   >
-                    Nombre COMPLETO
+                    Nombre o razón social
                     <input
                       className={estilosModal.input}
                       type="text"
                       name="nombreCompleto"
                       required
-                      placeholder="Ej. Juan Pérez"
-                      autoComplete="name"
+                      placeholder="Ej. Mi negocio SRL"
+                      autoComplete="organization"
                       value={nombreCompleto}
                       onChange={(e) => setNombreCompleto(e.target.value)}
                     />
@@ -425,8 +416,10 @@ export default function ModalAutenticacionDemo({
                   </div>
                 </div>
               ) : (
-                <>
-                  <label className={estilosModal.etiqueta}>
+                <div className={estilosModal.gridRegistro}>
+                  <label
+                    className={`${estilosModal.etiqueta} ${estilosModal.campoLargo}`}
+                  >
                     Correo
                     <input
                       className={estilosModal.input}
@@ -453,7 +446,25 @@ export default function ModalAutenticacionDemo({
                       onChange={(e) => setContrasena(e.target.value)}
                     />
                   </label>
-                </>
+
+                  <div
+                    className={`${estilosModal.cintaWallet} ${estilosModal.campoLargo}`}
+                  >
+                    <div className={estilosModal.cintaWalletTextos}>
+                      <p className={estilosModal.cintaWalletKicker}>Billetera Solana</p>
+                      <p className={estilosModal.cintaWalletDetalle}>
+                        Comercios: conectá Phantom (devnet) con la misma dirección que usaste al
+                        registrarte. Cuentas administrador pueden entrar sin conectar.
+                      </p>
+                      {connected && publicKey ? (
+                        <span className={estilosModal.pillOk}>Phantom conectado</span>
+                      ) : null}
+                    </div>
+                    <div className={estilosModal.cintaWalletAccion}>
+                      <BotonConexionWallet compacto />
+                    </div>
+                  </div>
+                </div>
               )}
 
               <button
