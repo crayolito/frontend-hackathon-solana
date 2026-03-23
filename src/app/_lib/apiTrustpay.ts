@@ -61,6 +61,18 @@ async function parsearError(respuesta: Response): Promise<never> {
   throw new ErrorApiTrustpay(mensaje, respuesta.status, cuerpo);
 }
 
+function mensajeErrorRed(base: string, causa: unknown): string {
+  const texto =
+    causa instanceof Error ? causa.message : typeof causa === "string" ? causa : "";
+  const esConexion =
+    /failed to fetch|networkerror|load failed|connection refused|aborted/i.test(texto) ||
+    texto === "";
+  if (esConexion) {
+    return `No se pudo conectar con el API (${base}). ¿Está el backend en marcha en ese puerto? (p. ej. npm run start:dev en la carpeta del servidor).`;
+  }
+  return `Error de red: ${texto || "desconocido"}`;
+}
+
 async function solicitudJson<T>(
   ruta: string,
   opciones: RequestInit & { token?: string }
@@ -74,10 +86,15 @@ async function solicitudJson<T>(
     encabezados.set("Authorization", `Bearer ${opciones.token}`);
   }
 
-  const respuesta = await fetch(`${base}${ruta}`, {
-    ...opciones,
-    headers: encabezados,
-  });
+  let respuesta: Response;
+  try {
+    respuesta = await fetch(`${base}${ruta}`, {
+      ...opciones,
+      headers: encabezados,
+    });
+  } catch (causa) {
+    throw new ErrorApiTrustpay(mensajeErrorRed(base, causa), 0, causa);
+  }
 
   if (!respuesta.ok) {
     await parsearError(respuesta);
@@ -92,10 +109,21 @@ async function solicitudJson<T>(
   return JSON.parse(texto) as T;
 }
 
-export async function iniciarSesionTrustpay(correo: string, contrasena: string) {
+/** Si enviás `walletAddress`, debe coincidir con la de la cuenta (merchants). Los admin pueden omitirla. */
+export async function iniciarSesionTrustpay(
+  correo: string,
+  contrasena: string,
+  walletAddress?: string
+) {
+  const cuerpo: { email: string; password: string; walletAddress?: string } = {
+    email: correo.trim(),
+    password: contrasena,
+  };
+  const w = walletAddress?.trim();
+  if (w) cuerpo.walletAddress = w;
   return solicitudJson<RespuestaLoginRegistro>("/auth/login", {
     method: "POST",
-    body: JSON.stringify({ email: correo.trim(), password: contrasena }),
+    body: JSON.stringify(cuerpo),
   });
 }
 

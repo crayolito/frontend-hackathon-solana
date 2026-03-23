@@ -20,6 +20,23 @@ import {
 import { guardarSesionTrustpay } from "../../demoAuth";
 import type { ModoModal } from "./tiposAuth";
 
+/** Aclara 401 típicos del login (wallet merchant vs admin). */
+function enriquecerMensajeAuth(err: ErrorApiTrustpay, modo: ModoModal): string {
+  const m = err.message;
+  if (err.codigoEstado === 0) return m;
+  if (modo !== "ingresar") return m;
+
+  if (err.codigoEstado === 401) {
+    if (/obligatoria para iniciar sesión/i.test(m)) {
+      return `${m} Conectá Phantom (devnet) con la misma dirección que usaste al registrarte.`;
+    }
+    if (/coincide con la registrada|no coincide/i.test(m)) {
+      return `${m} Probá otra cuenta en Phantom o creá una cuenta nueva con tu wallet actual.`;
+    }
+  }
+  return m;
+}
+
 type PaisRegistro = {
   codigo: string;
   etiqueta: string;
@@ -132,7 +149,13 @@ export default function ModalAutenticacionDemo({
 
     try {
       if (modoModal === "ingresar") {
-        const respuesta = await iniciarSesionTrustpay(correo, contrasena);
+        const walletLogin =
+          connected && publicKey ? publicKey.toBase58() : undefined;
+        const respuesta = await iniciarSesionTrustpay(
+          correo,
+          contrasena,
+          walletLogin
+        );
         guardarSesionTrustpay({
           token: respuesta.token,
           user: {
@@ -188,7 +211,7 @@ export default function ModalAutenticacionDemo({
       redirigirSegunRol(respuesta.user.role);
     } catch (error) {
       if (error instanceof ErrorApiTrustpay) {
-        setMensajeAuth(error.message);
+        setMensajeAuth(enriquecerMensajeAuth(error, modoModal));
       } else {
         setMensajeAuth("No pudimos completar la solicitud. Intenta de nuevo.");
       }
@@ -199,8 +222,8 @@ export default function ModalAutenticacionDemo({
 
   if (!abierta) return null;
 
-  const claseTamano =
-    modoModal === "ingresar" ? estilosModal.tamanoIngresar : estilosModal.tamanoRegistro;
+  /** Mismo ancho en ambos modos: login también incluye bloque Phantom. */
+  const claseTamano = estilosModal.tamanoRegistro;
 
   return (
     <div
@@ -225,7 +248,7 @@ export default function ModalAutenticacionDemo({
                 </h2>
                 <p className={estilosModal.hintLinea}>
                   {modoModal === "ingresar"
-                    ? "Correo y contraseña. Sin billetera."
+                    ? "Correo y contraseña. Comercios: conectá Phantom con la misma wallet del registro."
                     : "Datos básicos + Phantom (devnet) en una sola pantalla."}
                 </p>
               </div>
@@ -393,8 +416,10 @@ export default function ModalAutenticacionDemo({
                   </div>
                 </div>
               ) : (
-                <>
-                  <label className={estilosModal.etiqueta}>
+                <div className={estilosModal.gridRegistro}>
+                  <label
+                    className={`${estilosModal.etiqueta} ${estilosModal.campoLargo}`}
+                  >
                     Correo
                     <input
                       className={estilosModal.input}
@@ -421,7 +446,25 @@ export default function ModalAutenticacionDemo({
                       onChange={(e) => setContrasena(e.target.value)}
                     />
                   </label>
-                </>
+
+                  <div
+                    className={`${estilosModal.cintaWallet} ${estilosModal.campoLargo}`}
+                  >
+                    <div className={estilosModal.cintaWalletTextos}>
+                      <p className={estilosModal.cintaWalletKicker}>Billetera Solana</p>
+                      <p className={estilosModal.cintaWalletDetalle}>
+                        Comercios: conectá Phantom (devnet) con la misma dirección que usaste al
+                        registrarte. Cuentas administrador pueden entrar sin conectar.
+                      </p>
+                      {connected && publicKey ? (
+                        <span className={estilosModal.pillOk}>Phantom conectado</span>
+                      ) : null}
+                    </div>
+                    <div className={estilosModal.cintaWalletAccion}>
+                      <BotonConexionWallet compacto />
+                    </div>
+                  </div>
+                </div>
               )}
 
               <button
