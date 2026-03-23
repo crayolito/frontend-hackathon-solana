@@ -22,7 +22,30 @@ import estilos from "../../cliente/_componentes/desarrollador.module.css";
 import ZonaSubidaLogoCloudinary from "./ZonaSubidaLogoCloudinary";
 
 const CLAVE_LOGO_CUENTA = "trustpay_logo_cuenta_marca";
-const CLAVE_PREFS_TRANSACCIONES = "trustpay_prefs_transacciones_cuenta";
+
+function normalizarCadenaNoVacia(valor: unknown): string | null {
+  if (typeof valor !== "string") return null;
+  const v = valor.trim();
+  return v.length > 0 ? v : null;
+}
+
+function extraerWalletAddressDesdeApi(datos: Record<string, unknown>): string | null {
+  return (
+    normalizarCadenaNoVacia(datos.walletAddress) ??
+    normalizarCadenaNoVacia(datos.wallet_address) ??
+    null
+  );
+}
+
+function extraerLogoMarcaDesdeApi(datos: Record<string, unknown>): string | null {
+  return (
+    normalizarCadenaNoVacia(datos.logoUrl) ??
+    normalizarCadenaNoVacia(datos.logo_url) ??
+    normalizarCadenaNoVacia(datos.brandLogoUrl) ??
+    normalizarCadenaNoVacia(datos.brand_logo_url) ??
+    null
+  );
+}
 
 // Formularios de perfil, contraseña y baja de cuenta contra el API TrustPay (admin o merchant).
 export default function ContenidoCuentaApiTrustpay() {
@@ -48,8 +71,7 @@ export default function ContenidoCuentaApiTrustpay() {
   const [eliminando, setEliminando] = useState(false);
 
   const [logoMarcaUrl, setLogoMarcaUrl] = useState("");
-  const [correoPorTransaccion, setCorreoPorTransaccion] = useState(true);
-  const [resumenDiarioTx, setResumenDiarioTx] = useState(true);
+  const [mensajeVerificacionCuenta, setMensajeVerificacionCuenta] = useState<string | null>(null);
 
   const sincronizarUsuario = useCallback((u: UsuarioSesion) => {
     setUsuario(u);
@@ -69,25 +91,28 @@ export default function ContenidoCuentaApiTrustpay() {
       try {
         const datos = await obtenerUsuarioYo(token);
         if (cancelado) return;
+        const d = datos as unknown as Record<string, unknown>;
+        const walletAddress = extraerWalletAddressDesdeApi(d);
+        const isVerified = typeof d.isVerified === "boolean" ? d.isVerified : undefined;
+        const isActive = typeof d.isActive === "boolean" ? d.isActive : undefined;
         const u: UsuarioSesion = {
           id: datos.id,
           fullName: datos.fullName,
           email: datos.email,
           role: datos.role,
           country: datos.country,
-          walletAddress: datos.walletAddress,
-          isVerified: datos.isVerified,
-          isActive: datos.isActive,
+          walletAddress,
+          isVerified,
+          isActive,
         };
         sincronizarUsuario(u);
         try {
-          const logoGuardado = localStorage.getItem(CLAVE_LOGO_CUENTA);
-          if (logoGuardado) setLogoMarcaUrl(logoGuardado);
-          const prefsCrudo = localStorage.getItem(CLAVE_PREFS_TRANSACCIONES);
-          if (prefsCrudo) {
-            const p = JSON.parse(prefsCrudo) as { correo?: boolean; resumen?: boolean };
-            if (typeof p.correo === "boolean") setCorreoPorTransaccion(p.correo);
-            if (typeof p.resumen === "boolean") setResumenDiarioTx(p.resumen);
+          const logoApi = extraerLogoMarcaDesdeApi(d);
+          if (logoApi) {
+            setLogoMarcaUrl(logoApi);
+          } else {
+            const logoGuardado = localStorage.getItem(CLAVE_LOGO_CUENTA);
+            if (logoGuardado) setLogoMarcaUrl(logoGuardado);
           }
         } catch {
           /* ignore */
@@ -113,20 +138,6 @@ export default function ContenidoCuentaApiTrustpay() {
       cancelado = true;
     };
   }, [router, sincronizarUsuario]);
-
-  const persistirPreferenciasTransacciones = useCallback(
-    (correo: boolean, resumen: boolean) => {
-      try {
-        localStorage.setItem(
-          CLAVE_PREFS_TRANSACCIONES,
-          JSON.stringify({ correo, resumen }),
-        );
-      } catch {
-        /* ignore */
-      }
-    },
-    [],
-  );
 
   const persistirLogoMarca = useCallback((url: string) => {
     setLogoMarcaUrl(url);
@@ -339,50 +350,35 @@ export default function ContenidoCuentaApiTrustpay() {
 
       <section className={estilos.tarjeta}>
         <div className={estilos.cabeceraTarjeta}>
-          <h2 className={estilos.tituloTarjeta}>Transacciones y avisos</h2>
+          <h2 className={estilos.tituloTarjeta}>Estado de verificación</h2>
         </div>
         <div className={estilos.cuerpoTarjeta}>
           <p className={estilos.subtituloTarjeta} style={{ marginTop: 0 }}>
-            Preferencias a nivel cuenta (demo local). Cuando exista endpoint, se sincronizarán con el servidor.
+            Este estado lo define el backend. Usá el botón para confirmar en pantalla.
           </p>
-          <label style={{ display: "block", cursor: "pointer", marginBottom: 16 }}>
-            <div style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
-              <input
-                type="checkbox"
-                checked={correoPorTransaccion}
-                onChange={(e) => {
-                  const v = e.target.checked;
-                  setCorreoPorTransaccion(v);
-                  persistirPreferenciasTransacciones(v, resumenDiarioTx);
-                }}
-              />
-              <span>
-                <strong style={{ fontSize: "0.95rem" }}>Correo por cada cobro</strong>
-                <p className={estilos.subtituloTarjeta} style={{ marginTop: 4 }}>
-                  Aviso inmediato cuando se confirme un pago hacia tus negocios.
-                </p>
-              </span>
-            </div>
-          </label>
-          <label style={{ display: "block", cursor: "pointer" }}>
-            <div style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
-              <input
-                type="checkbox"
-                checked={resumenDiarioTx}
-                onChange={(e) => {
-                  const v = e.target.checked;
-                  setResumenDiarioTx(v);
-                  persistirPreferenciasTransacciones(correoPorTransaccion, v);
-                }}
-              />
-              <span>
-                <strong style={{ fontSize: "0.95rem" }}>Resumen diario de movimientos</strong>
-                <p className={estilos.subtituloTarjeta} style={{ marginTop: 4 }}>
-                  Un solo correo al día con totales y conteo de transacciones.
-                </p>
-              </span>
-            </div>
-          </label>
+          <div style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
+            {usuario.isVerified === true ? (
+              <span className={estilos.badgeVerde}>Verificado</span>
+            ) : (
+              <span className={estilos.badgeGris}>No verificado</span>
+            )}
+            <button
+              type="button"
+              className={estilos.botonSecundario}
+              onClick={() => {
+                setMensajeVerificacionCuenta(
+                  usuario.isVerified === true
+                    ? "Confirmado: tu cuenta ya está verificada."
+                    : "No aparece verificada todavía. Revisá el flujo de verificación y volvé a consultar."
+                );
+              }}
+            >
+              {usuario.isVerified === true ? "Confirmar verificado" : "Confirmar estado"}
+            </button>
+          </div>
+          {mensajeVerificacionCuenta ? (
+            <p style={{ marginTop: 14, fontSize: "0.9rem" }}>{mensajeVerificacionCuenta}</p>
+          ) : null}
         </div>
       </section>
 

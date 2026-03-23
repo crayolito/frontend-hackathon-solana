@@ -14,6 +14,10 @@
   flex-direction: column;
   justify-content: flex-start;
   min-height: 0;
+  /* Mantiene el logout y el usuario visibles al scrollear el contenido principal. */
+  position: sticky;
+  top: 0;
+  height: 100vh;
 }
 
 .barraCabecera {

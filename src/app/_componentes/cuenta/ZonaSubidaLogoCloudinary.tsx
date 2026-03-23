@@ -7,6 +7,7 @@ import estilos from "./zonaSubidaLogoCloudinary.module.css";
 
 const MAX_TAMANIO_MB = 8;
 const TIPOS_ACEPTADOS = ["image/jpeg", "image/png", "image/webp", "image/gif", "image/svg+xml"];
+const LOGO_DEFAULT_SRC = "/imagenes/negocio-default.svg";
 
 type Props = {
   url: string;
@@ -100,10 +101,10 @@ export default function ZonaSubidaLogoCloudinary({
         >
           {url ? (
             <img className={estilos.imagenPreview} src={url} alt="" />
+          ) : subiendo ? (
+            <span className={estilos.placeholder}>Subiendo…</span>
           ) : (
-            <span className={estilos.placeholder}>
-              {subiendo ? "Subiendo…" : textoPlaceholder}
-            </span>
+            <img className={estilos.imagenPreview} src={LOGO_DEFAULT_SRC} alt="" />
           )}
         </button>
         <div className={estilos.acciones}>

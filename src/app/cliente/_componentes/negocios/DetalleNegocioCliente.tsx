@@ -19,7 +19,6 @@ import { useNotificacion } from "../../../_componentes/ProveedorNotificaciones";
 import estilos from "./negocios.module.css";
 import { leerQrsLocalesNegocio } from "./almacenamientoQrLocal";
 import FormularioCrearQr from "./FormularioCrearQr";
-import MetricasNegocioMock from "./MetricasNegocioMock";
 import VistaQrCodigo from "./VistaQrCodigo";
 
 type Props = {
@@ -62,6 +61,8 @@ export default function DetalleNegocioCliente({ idNegocio }: Props) {
   const router = useRouter();
   const [negocio, setNegocio] = useState<NegocioTrustpay | null | undefined>(undefined);
   const [cargando, setCargando] = useState(true);
+
+  const LOGO_NEGOCIO_DEFAULT_SRC = "/imagenes/negocio-default.svg";
 
   const [nombreEdit, setNombreEdit] = useState("");
   const [descripcionEdit, setDescripcionEdit] = useState("");
@@ -210,9 +211,14 @@ export default function DetalleNegocioCliente({ idNegocio }: Props) {
 
       <section className={estilosDev.tarjeta}>
         <div className={estilosDev.cabeceraTarjeta}>
-          <h2 className={estilosDev.tituloTarjeta} style={{ margin: 0 }}>
-            {negocio.name}
-          </h2>
+          <div style={{ display: "flex", alignItems: "center", gap: 12, minWidth: 0, flex: "1 1 280px" }}>
+            <div className={estilos.wrapLogoTarjeta} aria-hidden="true">
+              <img className={estilos.logoTarjeta} src={negocio.logoUrl ?? LOGO_NEGOCIO_DEFAULT_SRC} alt="" />
+            </div>
+            <h2 className={estilosDev.tituloTarjeta} style={{ margin: 0 }}>
+              {negocio.name}
+            </h2>
+          </div>
           <button
             type="button"
             className={estilosDev.botonPeligro}
@@ -303,8 +309,6 @@ export default function DetalleNegocioCliente({ idNegocio }: Props) {
           </form>
         </div>
       </section>
-
-      <MetricasNegocioMock idNegocio={idNegocio} />
 
       <FormularioCrearQr
         idNegocio={idNegocio}

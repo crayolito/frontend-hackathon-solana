@@ -55,19 +55,36 @@ export default function ResumenNegociosEnPanel() {
         </Link>
       </div>
       <div className={estilosDev.cuerpoTarjeta}>
-        {!falloCarga && total !== null ? (
-          <p style={{ margin: 0, color: "var(--texto-secundario)" }}>
-            Tenés <strong>{total}</strong> de {MAX_NEGOCIOS_POR_COMERCIO} negocios registrados.
-          </p>
-        ) : null}
-        {!falloCarga && total === null ? (
-          <p style={{ margin: 0, color: "var(--texto-secundario)" }}>Cargando resumen…</p>
-        ) : null}
-        {falloCarga ? (
-          <p style={{ margin: 0, color: "var(--texto-secundario)" }}>
-            No pudimos cargar el resumen; revisá la notificación arriba a la derecha.
-          </p>
-        ) : null}
+        <div style={{ display: "flex", gap: 14, alignItems: "center", flexWrap: "wrap" }}>
+          <img
+            src="/imagenes/negocio-default.svg"
+            alt=""
+            width={54}
+            height={54}
+            style={{
+              borderRadius: 14,
+              border: "1px solid #e2e8f0",
+              background: "#f8fafc",
+              padding: 8,
+              boxSizing: "border-box",
+            }}
+          />
+          <div style={{ flex: "1 1 240px" }}>
+            {!falloCarga && total !== null ? (
+              <p style={{ margin: 0, color: "var(--texto-secundario)" }}>
+                Tenés <strong>{total}</strong> de {MAX_NEGOCIOS_POR_COMERCIO} negocios registrados.
+              </p>
+            ) : null}
+            {!falloCarga && total === null ? (
+              <p style={{ margin: 0, color: "var(--texto-secundario)" }}>Cargando resumen…</p>
+            ) : null}
+            {falloCarga ? (
+              <p style={{ margin: 0, color: "var(--texto-secundario)" }}>
+                No pudimos cargar el resumen; revisá la notificación arriba a la derecha.
+              </p>
+            ) : null}
+          </div>
+        </div>
       </div>
     </section>
   );

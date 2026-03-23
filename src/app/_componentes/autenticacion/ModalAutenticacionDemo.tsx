@@ -26,6 +26,18 @@ type PaisRegistro = {
   etiqueta: string;
 };
 
+function normalizarCadenaNoVacia(valor: unknown): string | null {
+  if (typeof valor !== "string") return null;
+  const v = valor.trim();
+  return v.length > 0 ? v : null;
+}
+
+function extraerWalletAddressDesdeApi(user: unknown): string | null {
+  if (!user || typeof user !== "object") return null;
+  const u = user as Record<string, unknown>;
+  return normalizarCadenaNoVacia(u.walletAddress) ?? normalizarCadenaNoVacia(u.wallet_address) ?? null;
+}
+
 // Países con nombre tal como suele esperarse en el backend (string legible).
 const paisesRegistro: PaisRegistro[] = [
   { codigo: "ar", etiqueta: "Argentina" },
@@ -140,7 +152,7 @@ export default function ModalAutenticacionDemo({
             email: respuesta.user.email,
             role: respuesta.user.role,
             country: respuesta.user.country,
-            walletAddress: respuesta.user.walletAddress,
+            walletAddress: extraerWalletAddressDesdeApi(respuesta.user),
             isVerified: respuesta.user.isVerified,
             isActive: respuesta.user.isActive,
           },
@@ -200,7 +212,7 @@ export default function ModalAutenticacionDemo({
           email: respuesta.user.email,
           role: respuesta.user.role,
           country: respuesta.user.country,
-          walletAddress: respuesta.user.walletAddress,
+          walletAddress: extraerWalletAddressDesdeApi(respuesta.user),
           isVerified: respuesta.user.isVerified,
           isActive: respuesta.user.isActive,
         },

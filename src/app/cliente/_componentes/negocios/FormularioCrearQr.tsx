@@ -1,6 +1,5 @@
 "use client";
 
-import { useWallet } from "@solana/wallet-adapter-react";
 import { useCallback, useState, type FormEvent } from "react";
 import { v4 as uuidv4 } from "uuid";
 
@@ -9,7 +8,6 @@ import {
   ErrorApiTrustpay,
 } from "../../../_lib/apiTrustpay";
 import { obtenerTokenSesion } from "../../../demoAuth";
-import BotonConexionWallet from "../../../solana/BotonConexionWallet";
 import estilosDev from "../desarrollador.module.css";
 import { useNotificacion } from "../../../_componentes/ProveedorNotificaciones";
 import estilos from "./negocios.module.css";
@@ -32,7 +30,6 @@ function solAStringLamports(texto: string): string | null {
 // Alta de QR de caja: monto fijo (lamports) o variable (null), requiere Bearer.
 export default function FormularioCrearQr({ idNegocio, alCrear }: Props) {
   const { mostrarNotificacion } = useNotificacion();
-  const { connected } = useWallet();
   const [etiqueta, setEtiqueta] = useState("");
   const [montoVariable, setMontoVariable] = useState(true);
   const [solFijo, setSolFijo] = useState("0.05");
@@ -41,6 +38,7 @@ export default function FormularioCrearQr({ idNegocio, alCrear }: Props) {
   const enviar = useCallback(
     async (e: FormEvent) => {
       e.preventDefault();
+      if (cargando) return;
       const token = obtenerTokenSesion();
       if (!token) {
         mostrarNotificacion("No hay sesión.");
@@ -103,15 +101,6 @@ export default function FormularioCrearQr({ idNegocio, alCrear }: Props) {
         </div>
       </div>
       <div className={estilosDev.cuerpoTarjeta}>
-        {!connected ? (
-          <div style={{ marginBottom: 14 }}>
-            <p className={estilosDev.subtituloTarjeta} style={{ marginBottom: 10 }}>
-              Conectá Phantom si el backend lo requiere para firmar; el alta usa tu sesión API.
-            </p>
-            <BotonConexionWallet />
-          </div>
-        ) : null}
-
         <form onSubmit={enviar}>
           <label className={estilosDev.etiqueta} htmlFor="qr-etiqueta">
             Etiqueta

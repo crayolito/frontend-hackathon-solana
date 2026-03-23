@@ -26,6 +26,7 @@ const CATEGORIAS = [
   { valor: "ecommerce", etiqueta: "E-commerce" },
   { valor: "other", etiqueta: "Otro" },
 ];
+const LOGO_NEGOCIO_DEFAULT_SRC = "/imagenes/negocio-default.svg";
 
 function mensajeAmigableErrorApi(mensaje: string) {
   if (/simulation|blockchain|on-chain|program error|custom program/i.test(mensaje)) {
@@ -79,6 +80,7 @@ export default function ListaNegociosCliente() {
 
   const enviarCrear = async (ev: FormEvent) => {
     ev.preventDefault();
+    if (creando) return;
     const token = obtenerTokenSesion();
     if (!token) {
       mostrarNotificacion("Sesión no válida.");
@@ -178,11 +180,13 @@ export default function ListaNegociosCliente() {
           <div className={estilos.gridNegocios}>
             {negocios.map((n) => (
               <Link key={n.id} href={`/cliente/negocios/${n.id}`} className={estilos.tarjetaNegocio}>
-                {n.logoUrl ? (
-                  <div className={estilos.wrapLogoTarjeta}>
-                    <img className={estilos.logoTarjeta} src={n.logoUrl} alt="" />
-                  </div>
-                ) : null}
+                <div className={estilos.wrapLogoTarjeta} aria-hidden="true">
+                  <img
+                    className={estilos.logoTarjeta}
+                    src={n.logoUrl ?? LOGO_NEGOCIO_DEFAULT_SRC}
+                    alt=""
+                  />
+                </div>
                 <h3 className={estilos.nombreNegocio}>{n.name}</h3>
                 <p className={estilos.metaNegocio}>{n.category}</p>
                 <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 8 }}>
