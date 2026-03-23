@@ -255,3 +255,160 @@ export async function alternarActivoUsuarioAdmin(token: string, idUsuario: strin
     }
   );
 }
+
+// --- Métricas escrow + comisión (admin) ---
+
+export type ComisionAdminRespuesta = {
+  commissionBps: number;
+  updatedAt: string;
+};
+
+export type FilaMetricaMerchant = {
+  userId: string;
+  email: string;
+  totalPayments: number;
+  volumeLamports: string;
+  volumeSol: string;
+  estimatedCommissionLamports: string;
+  estimatedCommissionSol: string;
+  businessCount: number;
+};
+
+export type MetricasMerchantsPaginado = {
+  commissionBps: number;
+  data: FilaMetricaMerchant[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+};
+
+export async function obtenerComisionAdmin(token: string) {
+  return solicitudJson<ComisionAdminRespuesta>("/admin/settings/commission", {
+    method: "GET",
+    token,
+  });
+}
+
+export async function actualizarComisionAdmin(token: string, commissionBps: number) {
+  return solicitudJson<ComisionAdminRespuesta>("/admin/settings/commission", {
+    method: "PATCH",
+    token,
+    body: JSON.stringify({ commissionBps }),
+  });
+}
+
+export type ConsultaMetricasMerchants = {
+  page?: number;
+  limit?: number;
+  sort?: "count" | "volume";
+  from?: string;
+  to?: string;
+};
+
+export async function obtenerMetricasMerchantsAdmin(
+  token: string,
+  consulta: ConsultaMetricasMerchants = {}
+) {
+  const q = new URLSearchParams();
+  if (consulta.page != null) q.set("page", String(consulta.page));
+  if (consulta.limit != null) q.set("limit", String(consulta.limit));
+  if (consulta.sort) q.set("sort", consulta.sort);
+  if (consulta.from) q.set("from", consulta.from);
+  if (consulta.to) q.set("to", consulta.to);
+  const sufijo = q.toString() ? `?${q.toString()}` : "";
+  return solicitudJson<MetricasMerchantsPaginado>(
+    `/admin/metrics/merchants/payments${sufijo}`,
+    { method: "GET", token }
+  );
+}
+
+const LAMPORTS_PER_SOL_BIG = BigInt("1000000000");
+
+/** Suma volumen y comisión recorriendo todas las páginas (máx. 100 por página en API). */
+export async function agregarMetricasMerchantsTodasLasPaginas(token: string) {
+  const limit = 100;
+  let page = 1;
+  let commissionBps = 0;
+  let totalMerchants = 0;
+  let totalPagos = 0;
+  let volumenLamports = BigInt(0);
+  let comisionLamports = BigInt(0);
+  let totalPages = 1;
+
+  while (page <= totalPages) {
+    const r = await obtenerMetricasMerchantsAdmin(token, { page, limit, sort: "volume" });
+    commissionBps = r.commissionBps;
+    totalMerchants = r.total;
+    totalPages = r.totalPages;
+    for (const row of r.data) {
+      totalPagos += row.totalPayments;
+      volumenLamports += BigInt(row.volumeLamports || "0");
+      comisionLamports += BigInt(row.estimatedCommissionLamports || "0");
+    }
+    page += 1;
+  }
+
+  return {
+    commissionBps,
+    totalMerchants,
+    totalPagos,
+    volumenLamports,
+    volumenSol: formatearLamportsASol(volumenLamports),
+    comisionLamports,
+    comisionSol: formatearLamportsASol(comisionLamports),
+  };
+}
+
+export function formatearLamportsASol(lamports: bigint): string {
+  const whole = lamports / LAMPORTS_PER_SOL_BIG;
+  const frac = lamports % LAMPORTS_PER_SOL_BIG;
+  if (frac === BigInt(0)) return whole.toString();
+  const fracStr = frac.toString().padStart(9, "0").replace(/0+$/, "");
+  return `${whole}.${fracStr}`;
+}
+
+// --- Series temporales + distribución (admin) ---
+
+export type PuntoSeriePagos = {
+  bucketStart: string;
+  paymentCount: number;
+  volumeLamports: string;
+  volumeSol: string;
+};
+
+export type SeriePagosAdminRespuesta = {
+  groupBy: "day" | "week";
+  buckets: number;
+  range: { from: string; to: string };
+  data: PuntoSeriePagos[];
+};
+
+export type DistribucionMerchantsAdminRespuesta = {
+  totalMerchants: number;
+  nuevos: number;
+  bajoVolumen: number;
+  medio: number;
+  altoValor: number;
+};
+
+export async function obtenerSeriePagosAdmin(
+  token: string,
+  consulta: { groupBy?: "day" | "week"; buckets?: number } = {}
+) {
+  const q = new URLSearchParams();
+  if (consulta.groupBy) q.set("groupBy", consulta.groupBy);
+  if (consulta.buckets != null) q.set("buckets", String(consulta.buckets));
+  const sufijo = q.toString() ? `?${q.toString()}` : "";
+  return solicitudJson<SeriePagosAdminRespuesta>(
+    `/admin/metrics/payments/timeseries${sufijo}`,
+    { method: "GET", token }
+  );
+}
+
+export async function obtenerDistribucionMerchantsAdmin(token: string) {
+  return solicitudJson<DistribucionMerchantsAdminRespuesta>(
+    `/admin/metrics/merchants/distribution`,
+    { method: "GET", token }
+  );
+}

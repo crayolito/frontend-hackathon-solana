@@ -1,21 +1,90 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import estilos from "./configuracion-admin.module.css";
+import { obtenerTokenSesion } from "../../../demoAuth";
+import {
+  ErrorApiTrustpay,
+  obtenerComisionAdmin,
+  actualizarComisionAdmin,
+} from "../../../_lib/apiTrustpay";
 
-// Formulario de ajustes del comercio: sin backend; guardado simulado (demo).
+// Ajustes de plataforma: comisión real (GET/PATCH /admin/settings/commission); resto demo.
 export default function ContenidoConfiguracionAdmin() {
-  const [comision, setComision] = useState("0,8");
+  const [comisionPct, setComisionPct] = useState("");
+  const [comisionCargando, setComisionCargando] = useState(true);
+  const [comisionError, setComisionError] = useState<string | null>(null);
+  const [comisionGuardando, setComisionGuardando] = useState(false);
+
   const [diasEscrow, setDiasEscrow] = useState("7");
   const [alertaDisputa, setAlertaDisputa] = useState(true);
   const [webhook, setWebhook] = useState(false);
   const [idioma, setIdioma] = useState("es");
   const [zona, setZona] = useState("America/La_Paz");
 
-  const guardar = useCallback(() => {
+  useEffect(() => {
+    const token = obtenerTokenSesion();
+    if (!token) {
+      setComisionCargando(false);
+      setComisionError("Inicia sesión como admin para cargar la comisión.");
+      return;
+    }
+    let cancelado = false;
+    (async () => {
+      try {
+        const r = await obtenerComisionAdmin(token);
+        if (cancelado) return;
+        setComisionPct((r.commissionBps / 100).toFixed(2));
+        setComisionError(null);
+      } catch (e) {
+        if (cancelado) return;
+        if (e instanceof ErrorApiTrustpay) {
+          setComisionError(e.message);
+        } else {
+          setComisionError("No se pudo cargar la comisión.");
+        }
+      } finally {
+        if (!cancelado) setComisionCargando(false);
+      }
+    })();
+    return () => {
+      cancelado = true;
+    };
+  }, []);
+
+  const guardarComision = useCallback(async () => {
+    const token = obtenerTokenSesion();
+    if (!token) {
+      window.alert("Sin sesión.");
+      return;
+    }
+    const raw = comisionPct.replace(",", ".").trim();
+    const pct = Number.parseFloat(raw);
+    if (Number.isNaN(pct) || pct < 0 || pct > 100) {
+      window.alert("Indica un porcentaje entre 0 y 100.");
+      return;
+    }
+    const bps = Math.round(pct * 100);
+    setComisionGuardando(true);
+    setComisionError(null);
+    try {
+      await actualizarComisionAdmin(token, bps);
+      window.alert("Comisión de plataforma actualizada.");
+    } catch (e) {
+      if (e instanceof ErrorApiTrustpay) {
+        setComisionError(e.message);
+      } else {
+        setComisionError("Error al guardar.");
+      }
+    } finally {
+      setComisionGuardando(false);
+    }
+  }, [comisionPct]);
+
+  const guardarDemo = useCallback(() => {
     window.alert(
-      "Cambios guardados en modo demo. Más adelante esto persistirá en backend o on-chain según diseño.",
+      "El resto de opciones siguen en modo demo. La comisión usa el botón «Guardar comisión».",
     );
   }, []);
 
@@ -30,22 +99,41 @@ export default function ContenidoConfiguracionAdmin() {
           Escrow y comisiones
         </h2>
         <p className={estilos.descripcionTarjeta}>
-          Parametros tipo facturacion de pasarela: comision de la plataforma y tiempo minimo de custodia
-          antes de liberar o disputar.
+          Comisión global de la plataforma (basis points en API). Se aplica en métricas de comisión
+          estimada.
         </p>
+        {comisionError ? (
+          <p className={estilos.ayuda} style={{ color: "#b91c1c" }} role="alert">
+            {comisionError}
+          </p>
+        ) : null}
         <div className={estilos.gridCampos}>
           <div>
             <label className={estilos.etiqueta} htmlFor="comision">
-              Comision plataforma (%)
+              Comisión plataforma (%)
             </label>
             <input
               id="comision"
               className={estilos.inputTexto}
-              value={comision}
-              onChange={(e) => setComision(e.target.value)}
+              value={comisionCargando ? "…" : comisionPct}
+              onChange={(e) => setComisionPct(e.target.value)}
               inputMode="decimal"
+              disabled={comisionCargando || comisionGuardando}
             />
-            <p className={estilos.ayuda}>Se aplicara sobre el monto neto en SOL o USDC segun el flujo.</p>
+            <p className={estilos.ayuda}>
+              Equivale a <code>commissionBps</code> en el backend (100 bps = 1%). Endpoint:{" "}
+              <code>/admin/settings/commission</code>.
+            </p>
+            <div className={estilos.filaBotones} style={{ marginTop: 12 }}>
+              <button
+                type="button"
+                className={estilos.botonPrimario}
+                onClick={guardarComision}
+                disabled={comisionCargando || comisionGuardando}
+              >
+                {comisionGuardando ? "Guardando…" : "Guardar comisión"}
+              </button>
+            </div>
           </div>
           <div>
             <label className={estilos.etiqueta} htmlFor="dias-escrow">
@@ -58,6 +146,7 @@ export default function ContenidoConfiguracionAdmin() {
               onChange={(e) => setDiasEscrow(e.target.value)}
               inputMode="numeric"
             />
+            <p className={estilos.ayuda}>Demo local; lógica en backend si aplica.</p>
           </div>
         </div>
       </section>
@@ -176,10 +265,12 @@ export default function ContenidoConfiguracionAdmin() {
       </section>
 
       <div className={estilos.filaBotones}>
-        <button type="button" className={estilos.botonPrimario} onClick={guardar}>
-          Guardar cambios
+        <button type="button" className={estilos.botonPrimario} onClick={guardarDemo}>
+          Guardar resto (demo)
         </button>
-        <p className={estilos.notaPie}>Los valores se mantienen solo en esta sesión hasta que conectemos persistencia.</p>
+        <p className={estilos.notaPie}>
+          La comisión de plataforma se guarda con «Guardar comisión» arriba (API real).
+        </p>
       </div>
     </div>
   );
