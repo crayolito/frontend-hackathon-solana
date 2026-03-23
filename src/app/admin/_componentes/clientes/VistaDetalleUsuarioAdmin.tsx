@@ -32,6 +32,14 @@ function etiquetaActivo(activo: boolean | undefined) {
   return "Activo";
 }
 
+function etiquetaRol(rol: RolTrustpayApi) {
+  return rol === "admin" ? "Administrador" : "Comercio";
+}
+
+function etiquetaVerificado(verificado: boolean | undefined) {
+  return verificado ? "Verificado" : "Sin verificar";
+}
+
 function textoBotonToggle(activo: boolean | undefined) {
   if (activo === false) return "Activar cuenta";
   return "Desactivar cuenta";
@@ -192,7 +200,11 @@ export default function VistaDetalleUsuarioAdmin({
             {etiquetaActivo(usuario.isActive)}
           </span>
           {" · "}
-          Rol actual: <strong>{usuario.role}</strong>
+          <span className={`${estilos.pillEstado} ${estilos.pillRol}`}>Rol: {etiquetaRol(usuario.role)}</span>
+          {" · "}
+          <span className={`${estilos.pillEstado} ${usuario.isVerified ? estilos.estadoActivo : estilos.estadoPendiente}`}>
+            {etiquetaVerificado(usuario.isVerified)}
+          </span>
         </p>
 
         <div className={estilos.gridDatos}>
@@ -225,10 +237,13 @@ export default function VistaDetalleUsuarioAdmin({
 
         {mostrarConfiguracion ? (
           <div className={estilos.formularioAdmin}>
-            <p className={estilos.etiquetaCampo}>Gestionar cuenta (admin)</p>
+            <p className={estilos.tituloGestion}>Gestión de cuenta (Administrador)</p>
+            <p className={estilos.ayudaGestion}>
+              Desde aquí puedes actualizar rol y estado de la cuenta del usuario.
+            </p>
             <div className={estilos.filaForm}>
               <label className={estilos.etiquetaSelect} htmlFor="rol-usuario">
-                Rol
+                Rol del usuario
                 <select
                   id="rol-usuario"
                   className={estilos.selectRol}
@@ -255,7 +270,9 @@ export default function VistaDetalleUsuarioAdmin({
               </button>
               <button
                 type="button"
-                className={estilos.botonAlternar}
+                className={`${estilos.botonAlternar} ${
+                  usuario.isActive === false ? estilos.botonActivar : estilos.botonDesactivar
+                }`}
                 disabled={alternando}
                 onClick={() => void ejecutarToggle()}
               >
