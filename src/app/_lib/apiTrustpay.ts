@@ -5,7 +5,11 @@ const URL_POR_DEFECTO = "https://trustpay-backend.fly.dev";
 
 export function obtenerUrlBaseTrustpay() {
   const desdeEntorno = process.env.NEXT_PUBLIC_TRUSTPAY_API_URL?.trim();
-  return desdeEntorno && desdeEntorno.length > 0 ? desdeEntorno : URL_POR_DEFECTO;
+  const base = desdeEntorno && desdeEntorno.length > 0 ? desdeEntorno : URL_POR_DEFECTO;
+
+  // Normalizamos para evitar errores si el entorno trae un sufijo `/eos`
+  // o barras finales (por ejemplo: `.../eos/`).
+  return base.replace(/\/+$/u, "").replace(/\/eos$/iu, "");
 }
 
 export type RolTrustpayApi = "admin" | "merchant";

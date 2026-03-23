@@ -229,7 +229,7 @@ export default function VistaDetalleUsuarioAdmin({ idUsuario }: Props) {
               disabled={guardando}
               onClick={() => void guardarCambios()}
             >
-              {guardando ? "Guardando…" : "Guardar con PATCH"}
+              {guardando ? "Guardando…" : "Guardar cambios"}
             </button>
             <button
               type="button"
@@ -237,7 +237,7 @@ export default function VistaDetalleUsuarioAdmin({ idUsuario }: Props) {
               disabled={alternando}
               onClick={() => void ejecutarToggle()}
             >
-              {alternando ? "Procesando…" : "Alternar activo (POST)"}
+              {alternando ? "Procesando…" : "Alternar estado"}
             </button>
           </div>
           {mensaje ? (

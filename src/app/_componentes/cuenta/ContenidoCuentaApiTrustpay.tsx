@@ -1,5 +1,6 @@
 "use client";
 
+import { useWallet } from "@solana/wallet-adapter-react";
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
@@ -48,6 +49,7 @@ function extraerLogoMarcaDesdeApi(datos: Record<string, unknown>): string | null
 // Formularios de perfil, contraseña y baja de cuenta contra el API TrustPay (admin o merchant).
 export default function ContenidoCuentaApiTrustpay() {
   const router = useRouter();
+  const { connected, publicKey } = useWallet();
   const [cargandoPerfil, setCargandoPerfil] = useState(true);
   const [usuario, setUsuario] = useState<UsuarioSesion | null>(null);
   const [mensajePerfil, setMensajePerfil] = useState<string | null>(null);
@@ -61,7 +63,6 @@ export default function ContenidoCuentaApiTrustpay() {
   const [guardandoContrasena, setGuardandoContrasena] = useState(false);
 
   const [logoMarcaUrl, setLogoMarcaUrl] = useState("");
-  const [mensajeVerificacionCuenta, setMensajeVerificacionCuenta] = useState<string | null>(null);
 
   const sincronizarUsuario = useCallback((u: UsuarioSesion) => {
     setUsuario(u);
@@ -137,6 +138,11 @@ export default function ContenidoCuentaApiTrustpay() {
     } catch {
       /* ignore */
     }
+  }, []);
+
+  const acortarDireccion = useCallback((base58: string) => {
+    if (base58.length <= 12) return base58;
+    return `${base58.slice(0, 4)}…${base58.slice(-4)}`;
   }, []);
 
   const guardarPerfil = useCallback(async () => {
@@ -257,7 +263,7 @@ export default function ContenidoCuentaApiTrustpay() {
 
       <section className={estilos.tarjeta}>
         <div className={estilos.cabeceraTarjeta}>
-          <h2 className={estilos.tituloTarjeta}>Marca y wallet de la cuenta</h2>
+          <h2 className={estilos.tituloTarjeta}>Marca y wallets</h2>
         </div>
         <div className={estilos.cuerpoTarjeta}>
           <div className={estilos.grid2}>
@@ -275,66 +281,63 @@ export default function ContenidoCuentaApiTrustpay() {
 
             <div>
               <p className={estilos.subtituloTarjeta} style={{ marginTop: 0 }}>
-                Es la dirección que registraste y la que usamos al crear negocios si Phantom no está conectada.
+                Acá ves tu wallet guardada y, si conectás Phantom, también la wallet “activa” para nuevos negocios.
               </p>
-              <span className={estilos.etiqueta}>Dirección en cuenta</span>
-              <p
-                style={{
-                  margin: "6px 0 14px",
-                  fontFamily: "var(--fuente-geist-mono, ui-monospace, monospace)",
-                  fontSize: "0.82rem",
-                  wordBreak: "break-all",
-                  fontWeight: 600,
-                }}
-              >
-                {usuario.walletAddress ?? "— Sin wallet guardada —"}
-              </p>
-              <span className={estilos.etiqueta}>Phantom (devnet)</span>
-              <div style={{ marginTop: 8 }}>
+              <div style={{ marginBottom: 14 }}>
+                <span className={estilos.etiqueta}>Wallet guardada</span>
+                <p
+                  style={{
+                    margin: "6px 0 0",
+                    fontFamily: "var(--fuente-geist-mono, ui-monospace, monospace)",
+                    fontSize: "0.82rem",
+                    wordBreak: "break-all",
+                    fontWeight: 600,
+                  }}
+                >
+                  {usuario.walletAddress ?? "— Sin wallet guardada —"}
+                </p>
+
                 {usuario.walletAddress ? (
-                  <span className={estilos.badgeGris} style={{ display: "inline-flex", alignItems: "center" }}>
-                    Wallet guardada
-                  </span>
-                ) : (
+                  <div style={{ marginTop: 10 }}>
+                    <button
+                      type="button"
+                      className={estilos.botonSecundario}
+                      onClick={async () => {
+                        await navigator.clipboard.writeText(usuario.walletAddress as string);
+                      }}
+                    >
+                      Copiar wallet
+                    </button>
+                  </div>
+                ) : null}
+              </div>
+
+              <div style={{ marginTop: 2 }}>
+                <span className={estilos.etiqueta}>Phantom (devnet)</span>
+                <div style={{ marginTop: 8 }}>
                   <BotonConexionWallet />
-                )}
+                </div>
+
+                <p className={estilos.subtituloTarjeta} style={{ marginTop: 10 }}>
+                  Si Phantom está conectada, los negocios nuevos usan esa wallet aunque la wallet guardada sea otra.
+                </p>
+
+                {connected && publicKey ? (
+                  <p
+                    style={{
+                      margin: "0",
+                      fontFamily: "var(--fuente-geist-mono, ui-monospace, monospace)",
+                      fontSize: "0.82rem",
+                      wordBreak: "break-all",
+                      fontWeight: 700,
+                    }}
+                  >
+                    Wallet Phantom activa: {acortarDireccion(publicKey.toBase58())}
+                  </p>
+                ) : null}
               </div>
             </div>
           </div>
-        </div>
-      </section>
-
-      <section className={estilos.tarjeta}>
-        <div className={estilos.cabeceraTarjeta}>
-          <h2 className={estilos.tituloTarjeta}>Estado de verificación</h2>
-        </div>
-        <div className={estilos.cuerpoTarjeta}>
-          <p className={estilos.subtituloTarjeta} style={{ marginTop: 0 }}>
-            Este estado lo define el backend. Usá el botón para confirmar en pantalla.
-          </p>
-          <div style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
-            {usuario.isVerified === true ? (
-              <span className={estilos.badgeVerde}>Verificado</span>
-            ) : (
-              <span className={estilos.badgeGris}>No verificado</span>
-            )}
-            <button
-              type="button"
-              className={estilos.botonSecundario}
-              onClick={() => {
-                setMensajeVerificacionCuenta(
-                  usuario.isVerified === true
-                    ? "Confirmado: tu cuenta ya está verificada."
-                    : "No aparece verificada todavía. Revisá el flujo de verificación y volvé a consultar."
-                );
-              }}
-            >
-              {usuario.isVerified === true ? "Confirmar verificado" : "Confirmar estado"}
-            </button>
-          </div>
-          {mensajeVerificacionCuenta ? (
-            <p style={{ marginTop: 14, fontSize: "0.9rem" }}>{mensajeVerificacionCuenta}</p>
-          ) : null}
         </div>
       </section>
 
@@ -371,6 +374,9 @@ export default function ContenidoCuentaApiTrustpay() {
               />
             </div>
           </div>
+          <p className={estilos.subtituloTarjeta} style={{ marginTop: 14 }}>
+            Se valida en el backend. Si falla, te mostramos el motivo.
+          </p>
           {mensajeContrasena ? (
             <p style={{ marginTop: 14, fontSize: "0.9rem" }}>{mensajeContrasena}</p>
           ) : null}
@@ -379,7 +385,7 @@ export default function ContenidoCuentaApiTrustpay() {
           <button
             type="button"
             className={estilos.botonPrimario}
-            disabled={guardandoContrasena}
+            disabled={guardandoContrasena || !contrasenaActual.trim() || !contrasenaNueva.trim()}
             onClick={() => void enviarCambioContrasena()}
           >
             {guardandoContrasena ? "Enviando…" : "Actualizar contraseña"}
@@ -387,7 +393,7 @@ export default function ContenidoCuentaApiTrustpay() {
         </div>
       </section>
 
-      {/* Removimos "Verificar contraseña" y "Eliminar cuenta" para evitar fricción en el panel. */}
+      {/* Removimos secciones de verificación para reducir fricción en el panel. */}
     </div>
   );
 }

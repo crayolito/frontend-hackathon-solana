@@ -30,7 +30,9 @@
 }
 
 .tarjetaNegocio {
-  display: block;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
   padding: 18px 20px;
   border-radius: 16px;
   border: 1px solid color-mix(in srgb, var(--texto-primario, #171717) 10%, transparent);
@@ -38,20 +40,28 @@
   text-decoration: none;
   color: inherit;
   box-shadow: 0 2px 8px rgba(15, 23, 42, 0.06);
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease,
+    transform 0.15s ease;
 }
 
 .tarjetaNegocio:hover {
   border-color: color-mix(in srgb, var(--panel-izquierdo-acento, #0284c7) 45%, transparent);
   box-shadow: 0 6px 20px rgba(2, 132, 199, 0.12);
+  transform: translateY(-2px);
+}
+
+.tarjetaNegocio:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--panel-izquierdo-acento, #0284c7) 60%, transparent);
+  outline-offset: 3px;
 }
 
 .wrapLogoTarjeta {
-  width: 48px;
-  height: 48px;
-  border-radius: 12px;
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
   overflow: hidden;
-  margin-bottom: 10px;
   border: 1px solid #e2e8f0;
   background: #f8fafc;
   display: flex;
@@ -67,9 +77,9 @@
 
 /* Solo en el “detalle de negocio”: el logo necesita más presencia visual. */
 .wrapLogoDetalleNegocio {
-  width: 64px;
-  height: 64px;
-  border-radius: 16px;
+  width: 92px;
+  height: 92px;
+  border-radius: 22px;
   overflow: hidden;
   border: 1px solid #e2e8f0;
   background: #f8fafc;
@@ -102,6 +112,10 @@
   font-size: 1.05rem;
   font-weight: 800;
   color: var(--texto-primario, #171717);
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .metaNegocio {

@@ -253,6 +253,17 @@ export default function ModalAutenticacionDemo({
           <div className={estilosModal.modalScroll}>
             <div className={estilosModal.cabeceraCompacta}>
               <div>
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 10,
+                    marginBottom: 8,
+                  }}
+                >
+                  <img src="/imagenes/logo-phantom.svg" alt="" width={30} height={30} />
+                  <span style={{ fontWeight: 900, color: "rgba(236, 245, 255, 0.96)" }}>TrustPay</span>
+                </div>
                 <h2 id="titulo-modal" className={estilosModal.tituloModal}>
                   {modoModal === "ingresar" ? "Entrá a TrustPay" : "Alta de comercio"}
                 </h2>
@@ -383,14 +394,14 @@ export default function ModalAutenticacionDemo({
                   <label
                     className={`${estilosModal.etiqueta} ${estilosModal.campoLargo}`}
                   >
-                    Nombre o razón social
+                    Nombre COMPLETO
                     <input
                       className={estilosModal.input}
                       type="text"
                       name="nombreCompleto"
                       required
-                      placeholder="Ej. Mi negocio SRL"
-                      autoComplete="organization"
+                      placeholder="Ej. Juan Pérez"
+                      autoComplete="name"
                       value={nombreCompleto}
                       onChange={(e) => setNombreCompleto(e.target.value)}
                     />

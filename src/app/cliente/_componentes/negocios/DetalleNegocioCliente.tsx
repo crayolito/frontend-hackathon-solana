@@ -236,7 +236,15 @@ export default function DetalleNegocioCliente({ idNegocio }: Props) {
         <div className={estilosDev.cabeceraTarjeta}>
           <div style={{ display: "flex", alignItems: "flex-start", gap: 14, minWidth: 0, flex: "1 1 280px" }}>
             <div className={estilos.wrapLogoDetalleNegocio} aria-hidden="true">
-              <img className={estilos.logoDetalleNegocio} src={negocio.logoUrl ?? LOGO_NEGOCIO_DEFAULT_SRC} alt="" />
+              <img
+                className={estilos.logoDetalleNegocio}
+                src={negocio.logoUrl ?? LOGO_NEGOCIO_DEFAULT_SRC}
+                alt={negocio.name}
+                loading="eager"
+                onError={(ev) => {
+                  ev.currentTarget.src = LOGO_NEGOCIO_DEFAULT_SRC;
+                }}
+              />
             </div>
             <div style={{ minWidth: 0 }}>
               <h2 className={estilosDev.tituloTarjeta} style={{ margin: 0 }}>
@@ -245,34 +253,15 @@ export default function DetalleNegocioCliente({ idNegocio }: Props) {
               {negocio.description ? (
                 <p className={estilos.descripcionDetalleNegocio}>{negocio.description}</p>
               ) : null}
+
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 10, marginTop: 10 }}>
+                <span className={estilosDev.badgeGris}>{negocio.category || "Categoría"}</span>
+                {negocio.isVerified === true ? <span className={estilosDev.badgeVerde}>Verificado</span> : null}
+                {negocio.isActive === false ? <span className={estilosDev.badgeRojo}>Inactivo</span> : null}
+              </div>
             </div>
           </div>
-          <button
-            type="button"
-            className={estilosDev.botonPeligro}
-            disabled={eliminando}
-            onClick={() => void confirmarEliminar()}
-          >
-            {eliminando ? "Eliminando…" : "Eliminar negocio"}
-          </button>
-        </div>
-        <div className={estilosDev.cuerpoTarjeta}>
-          <div
-            style={{
-              display: "flex",
-              flexWrap: "wrap",
-              gap: 10,
-              alignItems: "center",
-              justifyContent: "space-between",
-              marginBottom: 10,
-            }}
-          >
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 10, alignItems: "center" }}>
-              <span className={estilosDev.badgeGris}>{negocio.category || "Categoría"}</span>
-              {negocio.isVerified === true ? <span className={estilosDev.badgeVerde}>Verificado</span> : null}
-              {negocio.isActive === false ? <span className={estilosDev.badgeRojo}>Inactivo</span> : null}
-            </div>
-
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 10 }}>
             {negocio.isVerified === true ? null : (
               <button
                 type="button"
@@ -283,8 +272,18 @@ export default function DetalleNegocioCliente({ idNegocio }: Props) {
                 {verificandoNegocio ? "Verificando…" : "Verificar negocio"}
               </button>
             )}
-          </div>
 
+            <button
+              type="button"
+              className={estilosDev.botonPeligro}
+              disabled={eliminando}
+              onClick={() => void confirmarEliminar()}
+            >
+              {eliminando ? "Eliminando…" : "Eliminar negocio"}
+            </button>
+          </div>
+        </div>
+        <div className={estilosDev.cuerpoTarjeta}>
           <div className={estilosDev.grid2} style={{ marginTop: 14 }}>
             {negocio.walletAddress ? (
               <div>

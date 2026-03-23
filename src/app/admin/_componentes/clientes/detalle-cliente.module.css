@@ -25,19 +25,22 @@
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.08);
   padding: 22px;
   margin-bottom: 24px;
+  /* Asegura contraste siempre (evita “texto blanco sobre fondo blanco”). */
+  color-scheme: light;
+  color: #0f172a;
 }
 
 .tituloFicha {
   margin: 0 0 6px;
   font-size: 1.5rem;
   font-weight: 900;
-  color: var(--texto-primario, #1a1a2e);
+  color: #1a1a2e;
 }
 
 .metaFicha {
   margin: 0 0 18px;
   font-size: 0.9rem;
-  color: color-mix(in srgb, var(--texto) 48%, transparent);
+  color: #475569;
   font-weight: 600;
 }
 
@@ -62,7 +65,7 @@
   font-weight: 800;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: color-mix(in srgb, var(--texto) 48%, transparent);
+  color: #64748b;
   margin: 0 0 6px;
 }
 
@@ -70,7 +73,7 @@
   margin: 0;
   font-size: 0.95rem;
   font-weight: 700;
-  color: var(--texto-primario);
+  color: #0f172a;
 }
 
 .filaCartera {
@@ -129,7 +132,7 @@
 
 .estadoSuspendido {
   background: #f3f4f6;
-  color: color-mix(in srgb, var(--texto) 55%, transparent);
+  color: #64748b;
 }
 
 /* Formulario admin: rol y cuenta activa (PATCH + toggle-active). */
@@ -166,6 +169,18 @@
   font-weight: 600;
   min-width: 160px;
   background: #fff;
+  color: #0f172a;
+  color-scheme: light;
+}
+
+.selectRol:focus-visible {
+  outline: 2px solid #6c63ff;
+  outline-offset: 2px;
+}
+
+.selectRol option {
+  background: #fff;
+  color: #0f172a;
 }
 
 .checkActivo {
