@@ -257,7 +257,18 @@ export default function VistaDetalleUsuarioAdmin({
         <div className={estilos.gridDatos}>
           <div>
             <p className={estilos.etiquetaCampo}>Correo</p>
-            <p className={estilos.valorCampo}>{usuario.email}</p>
+            {mostrarConfiguracion ? (
+              <input
+                id="correo-usuario"
+                className={estilos.inputTexto}
+                type="email"
+                value={correoEdit}
+                onChange={(e) => setCorreoEdit(e.target.value)}
+                placeholder="correo@dominio.com"
+              />
+            ) : (
+              <p className={estilos.valorCampo}>{usuario.email}</p>
+            )}
           </div>
           <div>
             <p className={estilos.etiquetaCampo}>ID</p>
@@ -265,11 +276,43 @@ export default function VistaDetalleUsuarioAdmin({
           </div>
           <div>
             <p className={estilos.etiquetaCampo}>País</p>
-            <p className={estilos.valorCampo}>{usuario.country}</p>
+            {mostrarConfiguracion ? (
+              <input
+                id="pais-usuario"
+                className={estilos.inputTexto}
+                value={paisEdit}
+                onChange={(e) => setPaisEdit(e.target.value)}
+                placeholder="País"
+              />
+            ) : (
+              <p className={estilos.valorCampo}>{usuario.country}</p>
+            )}
           </div>
+          {mostrarConfiguracion ? (
+            <div>
+              <p className={estilos.etiquetaCampo}>Rol del usuario</p>
+              <select
+                id="rol-usuario"
+                className={estilos.selectRol}
+                value={rolEdit}
+                onChange={(e) => setRolEdit(e.target.value as RolTrustpayApi)}
+              >
+                <option value="merchant">merchant</option>
+                <option value="admin">admin</option>
+              </select>
+            </div>
+          ) : null}
           <div className={estilos.campoAncho}>
             <p className={estilos.etiquetaCampo}>Cartera Solana</p>
-            {usuario.walletAddress ? (
+            {mostrarConfiguracion ? (
+              <input
+                id="cartera-usuario"
+                className={estilos.inputTexto}
+                value={carteraEdit}
+                onChange={(e) => setCarteraEdit(e.target.value)}
+                placeholder="Wallet (opcional)"
+              />
+            ) : usuario.walletAddress ? (
               <div className={estilos.filaCartera}>
                 <span className={estilos.carteraCompleta}>{usuario.walletAddress}</span>
                 <button type="button" className={estilos.botonCopiar} onClick={copiarCartera}>
@@ -284,54 +327,7 @@ export default function VistaDetalleUsuarioAdmin({
 
         {mostrarConfiguracion ? (
           <div className={estilos.formularioAdmin}>
-            <p className={estilos.tituloGestion}>Gestión de cuenta (Administrador)</p>
-            <p className={estilos.ayudaGestion}>
-              Desde aquí puedes actualizar rol, correo, país, cartera y estado de la cuenta.
-            </p>
             <div className={estilos.filaForm}>
-              <label className={estilos.etiquetaSelect} htmlFor="rol-usuario">
-                Rol del usuario
-                <select
-                  id="rol-usuario"
-                  className={estilos.selectRol}
-                  value={rolEdit}
-                  onChange={(e) => setRolEdit(e.target.value as RolTrustpayApi)}
-                >
-                  <option value="merchant">merchant</option>
-                  <option value="admin">admin</option>
-                </select>
-              </label>
-              <label className={estilos.etiquetaInput} htmlFor="correo-usuario">
-                Correo
-                <input
-                  id="correo-usuario"
-                  className={estilos.inputTexto}
-                  type="email"
-                  value={correoEdit}
-                  onChange={(e) => setCorreoEdit(e.target.value)}
-                  placeholder="correo@dominio.com"
-                />
-              </label>
-              <label className={estilos.etiquetaInput} htmlFor="pais-usuario">
-                País
-                <input
-                  id="pais-usuario"
-                  className={estilos.inputTexto}
-                  value={paisEdit}
-                  onChange={(e) => setPaisEdit(e.target.value)}
-                  placeholder="País"
-                />
-              </label>
-              <label className={estilos.etiquetaInput} htmlFor="cartera-usuario">
-                Cartera Solana
-                <input
-                  id="cartera-usuario"
-                  className={estilos.inputTexto}
-                  value={carteraEdit}
-                  onChange={(e) => setCarteraEdit(e.target.value)}
-                  placeholder="Wallet (opcional)"
-                />
-              </label>
               <label className={estilos.checkActivo}>
                 <input type="checkbox" checked={activoEdit} onChange={(e) => setActivoEdit(e.target.checked)} />
                 Cuenta activa
