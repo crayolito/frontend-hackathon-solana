@@ -20,7 +20,7 @@ import {
 import { guardarSesionTrustpay } from "../../demoAuth";
 import type { ModoModal } from "./tiposAuth";
 
-/** Aclara 401 típicos del login (wallet merchant vs admin). */
+/** Mensajes cortos para 401 típicos del login (wallet). */
 function enriquecerMensajeAuth(err: ErrorApiTrustpay, modo: ModoModal): string {
   const m = err.message;
   if (err.codigoEstado === 0) return m;
@@ -28,10 +28,10 @@ function enriquecerMensajeAuth(err: ErrorApiTrustpay, modo: ModoModal): string {
 
   if (err.codigoEstado === 401) {
     if (/obligatoria para iniciar sesión/i.test(m)) {
-      return `${m} Conectá Phantom (devnet) con la misma dirección que usaste al registrarte.`;
+      return "Conectá Phantom con la wallet del registro.";
     }
     if (/coincide con la registrada|no coincide/i.test(m)) {
-      return `${m} Probá otra cuenta en Phantom o creá una cuenta nueva con tu wallet actual.`;
+      return "La wallet no coincide con la del registro.";
     }
   }
   return m;
@@ -149,12 +149,15 @@ export default function ModalAutenticacionDemo({
 
     try {
       if (modoModal === "ingresar") {
-        const walletLogin =
-          connected && publicKey ? publicKey.toBase58() : undefined;
+        if (!connected || !publicKey) {
+          setMensajeAuth("Conectá Phantom para entrar.");
+          setCargando(false);
+          return;
+        }
         const respuesta = await iniciarSesionTrustpay(
           correo,
           contrasena,
-          walletLogin
+          publicKey.toBase58()
         );
         guardarSesionTrustpay({
           token: respuesta.token,
@@ -181,7 +184,7 @@ export default function ModalAutenticacionDemo({
       }
 
       if (!connected || !publicKey) {
-        setMensajeAuth("Conectá Phantom (devnet) para continuar.");
+        setMensajeAuth("Conectá Phantom para continuar.");
         setCargando(false);
         return;
       }
@@ -213,7 +216,7 @@ export default function ModalAutenticacionDemo({
       if (error instanceof ErrorApiTrustpay) {
         setMensajeAuth(enriquecerMensajeAuth(error, modoModal));
       } else {
-        setMensajeAuth("No pudimos completar la solicitud. Intenta de nuevo.");
+        setMensajeAuth("Algo falló. Probá de nuevo.");
       }
     } finally {
       setCargando(false);
@@ -248,8 +251,8 @@ export default function ModalAutenticacionDemo({
                 </h2>
                 <p className={estilosModal.hintLinea}>
                   {modoModal === "ingresar"
-                    ? "Correo y contraseña. Comercios: conectá Phantom con la misma wallet del registro."
-                    : "Datos básicos + Phantom (devnet) en una sola pantalla."}
+                    ? "Correo, contraseña y Phantom (misma wallet del registro)."
+                    : "Datos + Phantom (devnet)."}
                 </p>
               </div>
               <button
@@ -402,9 +405,9 @@ export default function ModalAutenticacionDemo({
                     className={`${estilosModal.cintaWallet} ${estilosModal.campoLargo}`}
                   >
                     <div className={estilosModal.cintaWalletTextos}>
-                      <p className={estilosModal.cintaWalletKicker}>Cobros en cadena</p>
+                      <p className={estilosModal.cintaWalletKicker}>Wallet</p>
                       <p className={estilosModal.cintaWalletDetalle}>
-                        Vinculá Phantom para guardar tu dirección de cobro.
+                        Phantom con la dirección de cobro.
                       </p>
                       {connected && publicKey ? (
                         <span className={estilosModal.pillOk}>Listo para registrar</span>
@@ -451,13 +454,12 @@ export default function ModalAutenticacionDemo({
                     className={`${estilosModal.cintaWallet} ${estilosModal.campoLargo}`}
                   >
                     <div className={estilosModal.cintaWalletTextos}>
-                      <p className={estilosModal.cintaWalletKicker}>Billetera Solana</p>
+                      <p className={estilosModal.cintaWalletKicker}>Wallet</p>
                       <p className={estilosModal.cintaWalletDetalle}>
-                        Comercios: conectá Phantom (devnet) con la misma dirección que usaste al
-                        registrarte. Cuentas administrador pueden entrar sin conectar.
+                        Misma wallet que al registrarte (obligatorio).
                       </p>
                       {connected && publicKey ? (
-                        <span className={estilosModal.pillOk}>Phantom conectado</span>
+                        <span className={estilosModal.pillOk}>Listo</span>
                       ) : null}
                     </div>
                     <div className={estilosModal.cintaWalletAccion}>
