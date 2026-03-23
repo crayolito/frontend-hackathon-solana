@@ -75,7 +75,7 @@ export default function ResumenNegociosEnPanel() {
               const el = ev.currentTarget;
               el.src = URL_IMAGEN_NEGOCIO_FALLBACK_LOCAL;
               el.style.objectFit = "contain";
-              el.style.padding = 8;
+              el.style.padding = "8px";
               el.style.background = "#f8fafc";
             }}
           />
