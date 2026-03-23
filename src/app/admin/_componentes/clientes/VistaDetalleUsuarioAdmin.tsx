@@ -247,39 +247,11 @@ export default function VistaDetalleUsuarioAdmin({
             {etiquetaActivo(usuario.isActive)}
           </span>
           {" · "}
-          {mostrarConfiguracion ? (
-            <label className={estilos.metaRolEditable} htmlFor="rol-usuario-meta">
-              Rol:
-              <select
-                id="rol-usuario-meta"
-                className={estilos.selectRol}
-                value={rolEdit}
-                onChange={(e) => setRolEdit(e.target.value as RolTrustpayApi)}
-              >
-                <option value="merchant">merchant</option>
-                <option value="admin">admin</option>
-              </select>
-            </label>
-          ) : (
-            <span className={`${estilos.pillEstado} ${estilos.pillRol}`}>Rol: {etiquetaRol(usuario.role)}</span>
-          )}
+          <span className={`${estilos.pillEstado} ${estilos.pillRol}`}>Rol actual: {etiquetaRol(usuario.role)}</span>
           {" · "}
           <span className={`${estilos.pillEstado} ${usuario.isVerified ? estilos.estadoActivo : estilos.estadoPendiente}`}>
             {etiquetaVerificado(usuario.isVerified)}
           </span>
-          {mostrarConfiguracion && usuario.isVerified !== true ? (
-            <>
-              {" · "}
-              <button
-                type="button"
-                className={estilos.botonVerificar}
-                disabled={verificando}
-                onClick={() => void ejecutarVerificar()}
-              >
-                {verificando ? "Verificando…" : "Verificar usuario"}
-              </button>
-            </>
-          ) : null}
         </p>
 
         <div className={estilos.gridDatos}>
@@ -314,9 +286,21 @@ export default function VistaDetalleUsuarioAdmin({
           <div className={estilos.formularioAdmin}>
             <p className={estilos.tituloGestion}>Gestión de cuenta (Administrador)</p>
             <p className={estilos.ayudaGestion}>
-              Desde aquí puedes actualizar rol y estado de la cuenta del usuario.
+              Desde aquí puedes actualizar rol, correo, país, cartera y estado de la cuenta.
             </p>
             <div className={estilos.filaForm}>
+              <label className={estilos.etiquetaSelect} htmlFor="rol-usuario">
+                Rol del usuario
+                <select
+                  id="rol-usuario"
+                  className={estilos.selectRol}
+                  value={rolEdit}
+                  onChange={(e) => setRolEdit(e.target.value as RolTrustpayApi)}
+                >
+                  <option value="merchant">merchant</option>
+                  <option value="admin">admin</option>
+                </select>
+              </label>
               <label className={estilos.etiquetaInput} htmlFor="correo-usuario">
                 Correo
                 <input
@@ -372,6 +356,16 @@ export default function VistaDetalleUsuarioAdmin({
               >
                 {alternando ? "Procesando…" : textoBotonToggle(usuario.isActive)}
               </button>
+              {usuario.isVerified !== true ? (
+                <button
+                  type="button"
+                  className={estilos.botonVerificar}
+                  disabled={verificando}
+                  onClick={() => void ejecutarVerificar()}
+                >
+                  {verificando ? "Verificando…" : "Verificar usuario"}
+                </button>
+              ) : null}
             </div>
             {mensaje ? (
               <p
