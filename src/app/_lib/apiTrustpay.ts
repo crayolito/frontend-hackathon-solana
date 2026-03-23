@@ -453,6 +453,32 @@ export async function eliminarNegocioTrustpay(token: string, idNegocio: string) 
   });
 }
 
+/**
+ * Verifica un negocio (backend).
+ * Como el path exacto puede variar según la implementación, probamos:
+ * 1) `POST /businesses/:id/verify`
+ * 2) fallback: `PATCH /businesses/:id` con `{ isVerified: true }`
+ */
+export async function verificarNegocioTrustpay(token: string, idNegocio: string) {
+  try {
+    const crudo = await solicitudJson<unknown>(`/businesses/${encodeURIComponent(idNegocio)}/verify`, {
+      method: "POST",
+      token,
+    });
+    return extraerNegocioDeRespuesta(crudo);
+  } catch (e) {
+    if (e instanceof ErrorApiTrustpay && e.codigoEstado === 404) {
+      const crudoFallback = await solicitudJson<unknown>(`/businesses/${encodeURIComponent(idNegocio)}`, {
+        method: "PATCH",
+        token,
+        body: JSON.stringify({ isVerified: true }),
+      });
+      return extraerNegocioDeRespuesta(crudoFallback);
+    }
+    throw e;
+  }
+}
+
 /** Respuesta del alta de QR: el backend puede devolver distintas formas; el front normaliza con resolverVistaQr. */
 export async function crearQrNegocioTrustpay(
   token: string,

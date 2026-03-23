@@ -11,6 +11,7 @@ import {
   listarNegociosTrustpay,
   listarQrCodesNegocioTrustpay,
   obtenerNegocioTrustpay,
+  verificarNegocioTrustpay,
   type NegocioTrustpay,
 } from "../../../_lib/apiTrustpay";
 import { obtenerTokenSesion } from "../../../demoAuth";
@@ -69,6 +70,8 @@ export default function DetalleNegocioCliente({ idNegocio }: Props) {
   const [guardandoNombre, setGuardandoNombre] = useState(false);
 
   const [eliminando, setEliminando] = useState(false);
+  const [modalVerificarNegocioAbierto, setModalVerificarNegocioAbierto] = useState(false);
+  const [verificandoNegocio, setVerificandoNegocio] = useState(false);
   const [tickQr, setTickQr] = useState(0);
   const [qrsApi, setQrsApi] = useState<unknown[]>([]);
   const [cargandoQrsApi, setCargandoQrsApi] = useState(false);
@@ -184,6 +187,26 @@ export default function DetalleNegocioCliente({ idNegocio }: Props) {
     }
   };
 
+  const confirmarVerificarNegocio = async () => {
+    const token = obtenerTokenSesion();
+    if (!token) return;
+    setVerificandoNegocio(true);
+    try {
+      await verificarNegocioTrustpay(token, idNegocio);
+      setModalVerificarNegocioAbierto(false);
+      mostrarNotificacion("Negocio verificado (si el backend lo aprobó).", 14_000);
+      await recargarNegocio();
+    } catch (e) {
+      if (e instanceof ErrorApiTrustpay) {
+        mostrarNotificacion(mensajeAmigableErrorApi(e.message), 16_000);
+      } else {
+        mostrarNotificacion("No se pudo verificar el negocio.");
+      }
+    } finally {
+      setVerificandoNegocio(false);
+    }
+  };
+
   if (cargando && negocio === undefined) {
     return (
       <div className={estilos.contenedor}>
@@ -211,13 +234,18 @@ export default function DetalleNegocioCliente({ idNegocio }: Props) {
 
       <section className={estilosDev.tarjeta}>
         <div className={estilosDev.cabeceraTarjeta}>
-          <div style={{ display: "flex", alignItems: "center", gap: 12, minWidth: 0, flex: "1 1 280px" }}>
-            <div className={estilos.wrapLogoTarjeta} aria-hidden="true">
-              <img className={estilos.logoTarjeta} src={negocio.logoUrl ?? LOGO_NEGOCIO_DEFAULT_SRC} alt="" />
+          <div style={{ display: "flex", alignItems: "flex-start", gap: 14, minWidth: 0, flex: "1 1 280px" }}>
+            <div className={estilos.wrapLogoDetalleNegocio} aria-hidden="true">
+              <img className={estilos.logoDetalleNegocio} src={negocio.logoUrl ?? LOGO_NEGOCIO_DEFAULT_SRC} alt="" />
             </div>
-            <h2 className={estilosDev.tituloTarjeta} style={{ margin: 0 }}>
-              {negocio.name}
-            </h2>
+            <div style={{ minWidth: 0 }}>
+              <h2 className={estilosDev.tituloTarjeta} style={{ margin: 0 }}>
+                {negocio.name}
+              </h2>
+              {negocio.description ? (
+                <p className={estilos.descripcionDetalleNegocio}>{negocio.description}</p>
+              ) : null}
+            </div>
           </div>
           <button
             type="button"
@@ -229,10 +257,32 @@ export default function DetalleNegocioCliente({ idNegocio }: Props) {
           </button>
         </div>
         <div className={estilosDev.cuerpoTarjeta}>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 10, alignItems: "center", marginBottom: 10 }}>
-            <span className={estilosDev.badgeGris}>{negocio.category || "Categoría"}</span>
-            {negocio.isVerified === true ? <span className={estilosDev.badgeVerde}>Verificado</span> : null}
-            {negocio.isActive === false ? <span className={estilosDev.badgeRojo}>Inactivo</span> : null}
+          <div
+            style={{
+              display: "flex",
+              flexWrap: "wrap",
+              gap: 10,
+              alignItems: "center",
+              justifyContent: "space-between",
+              marginBottom: 10,
+            }}
+          >
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 10, alignItems: "center" }}>
+              <span className={estilosDev.badgeGris}>{negocio.category || "Categoría"}</span>
+              {negocio.isVerified === true ? <span className={estilosDev.badgeVerde}>Verificado</span> : null}
+              {negocio.isActive === false ? <span className={estilosDev.badgeRojo}>Inactivo</span> : null}
+            </div>
+
+            {negocio.isVerified === true ? null : (
+              <button
+                type="button"
+                className={estilosDev.botonSecundario}
+                disabled={verificandoNegocio}
+                onClick={() => setModalVerificarNegocioAbierto(true)}
+              >
+                {verificandoNegocio ? "Verificando…" : "Verificar negocio"}
+              </button>
+            )}
           </div>
 
           <div className={estilosDev.grid2} style={{ marginTop: 14 }}>
@@ -303,6 +353,50 @@ export default function DetalleNegocioCliente({ idNegocio }: Props) {
           </form>
         </div>
       </section>
+
+      {modalVerificarNegocioAbierto ? (
+        <div
+          className={estilos.modalFondo}
+          role="presentation"
+          onMouseDown={(ev) => {
+            if (ev.target === ev.currentTarget) setModalVerificarNegocioAbierto(false);
+          }}
+        >
+          <div
+            className={estilos.modalCaja}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="titulo-modal-verificar-negocio"
+            onMouseDown={(ev) => ev.stopPropagation()}
+          >
+            <h2 id="titulo-modal-verificar-negocio" className={estilos.modalTitulo}>
+              Verificar negocio
+            </h2>
+            <p className={estilos.hintModal} style={{ marginTop: 0 }}>
+              Confirmás y el backend intentará marcar este negocio como verificado. Podés cancelar si todavía no estás listo.
+            </p>
+
+            <div className={estilos.filaBotones}>
+              <button
+                type="button"
+                className={estilosDev.botonSecundario}
+                onClick={() => setModalVerificarNegocioAbierto(false)}
+                disabled={verificandoNegocio}
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                className={estilosDev.botonPrimario}
+                onClick={() => void confirmarVerificarNegocio()}
+                disabled={verificandoNegocio}
+              >
+                {verificandoNegocio ? "Verificando…" : "Confirmar"}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
 
       <FormularioCrearQr
         idNegocio={idNegocio}
