@@ -1,8 +1,9 @@
 "use client";
 
 import estilosHome from "../../home.module.css";
+import BotonConexionWallet from "../../solana/BotonConexionWallet";
 
-// Barra superior del home TrustPay: marca e inicio de sesión.
+// Barra superior del home TrustPay: Phantom, marca e inicio de sesión.
 export default function CabeceraCompraSegura({
   onIniciarSesion,
 }: Readonly<{
@@ -23,6 +24,9 @@ export default function CabeceraCompraSegura({
         </div>
 
         <div className={estilosHome.headerAcciones}>
+          <div className={estilosHome.headerWalletSlot}>
+            <BotonConexionWallet compacto />
+          </div>
           <button
             type="button"
             className={estilosHome.botonHeader}

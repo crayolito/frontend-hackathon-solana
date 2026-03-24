@@ -16,7 +16,7 @@ export default function PieDePaginaCompraSegura() {
                 </a>
               </li>
               <li>
-                <Link href="/documentacion" className={estilosHome.footerEnlace}>
+                <Link href="/api-docs" className={estilosHome.footerEnlace}>
                   Documentación
                 </Link>
               </li>
@@ -41,7 +41,7 @@ export default function PieDePaginaCompraSegura() {
             <h3 className={estilosHome.footerColTitulo}>Developers</h3>
             <ul className={estilosHome.footerLista}>
               <li>
-                <Link href="/documentacion" className={estilosHome.footerEnlace}>
+                <Link href="/api-docs" className={estilosHome.footerEnlace}>
                   Documentación
                 </Link>
               </li>

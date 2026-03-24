@@ -1,41 +1,129 @@
 import estilos from "./documentacion-cliente.module.css";
+import { obtenerUrlBaseTrustpay } from "../../_lib/apiTrustpay";
+import BloqueCodigoCopiar from "./BloqueCodigoCopiar";
 
-// Guía funcional para el comercio: flujos, cuenta y cobros (referencia de producto).
-export default function ContenidoDocumentacionCliente() {
+type Props = {
+  baseUrl?: string;
+};
+
+function Metodo({ verbo }: { verbo: "GET" | "POST" }) {
+  const clase = verbo === "GET" ? estilos.metodoGet : estilos.metodoPost;
+  return <span className={`${estilos.metodo} ${clase}`}>{verbo}</span>;
+}
+
+/** Referencia de integración: /api/payments + webhooks. */
+export default function ContenidoDocumentacionCliente({ baseUrl: baseProp }: Props) {
+  const base = baseProp ?? obtenerUrlBaseTrustpay();
+
   return (
     <article className={estilos.prosa}>
-      <h2>Qué es esta área</h2>
-      <p>
-        Desde el panel del <strong>comercio</strong> gestionás negocios, QRs, un listado de{" "}
-        <strong>Transacciones</strong> (demo con datos fijos) y tu{" "}
-        <strong>Cuenta</strong> (perfil, marca, wallet y avisos). El resto se conecta al backend cuando esté listo.
+      <p className={estilos.intro}>
+        Usá la <strong>URL base</strong> de abajo. Las rutas <code>/api/payments/...</code> se autentican con{" "}
+        <code>x-api-key</code> y <code>x-secret-key</code> — no uses <code>Authorization: Bearer</code>. Las
+        claves son <strong>generales</strong> (mismas para todos tus negocios); las generás en TrustPay en{" "}
+        <strong>Cuenta → Credenciales API</strong>. Red: <strong>devnet</strong>.
       </p>
 
-      <h2>Flujo general</h2>
-      <ol className={estilos.lista}>
-        <li>El comprador paga y el fondo queda en escrow on-chain según tu reglas.</li>
-        <li>En producción podrás recibir eventos en tu servidor (webhooks) cuando el backend lo exponga.</li>
-        <li>
-          En <strong>Developers &amp; API</strong> tenés una firma de eventos simulada para la demo de integración.
-        </li>
-        <li>Los cobros se asocian a la wallet de tu cuenta o a Phantom; revisala en <strong>Cuenta</strong>.</li>
-      </ol>
+      <div className={estilos.urlBase}>{base}</div>
 
-      <h2>Transacciones en el panel</h2>
-      <p>
-        La pantalla <strong>Transacciones</strong> muestra KPIs y movimientos de ejemplo para la presentación. Cuando
-        exista API de movimientos, reemplazamos esos datos por los reales sin cambiar el diseño base.
-      </p>
-      <div className={estilos.tarjetaInfo}>
-        Los webhooks hacia tu URL siguen siendo parte del modelo de producto; en esta hackathon el foco está en el
-        flujo de cobro y el panel del comercio.
-      </div>
+      <nav className={estilos.toc} aria-label="Índice de la documentación">
+        <h2 className={estilos.tocTitulo}>Contenidos</h2>
+        <ol className={estilos.tocLista}>
+          <li>
+            <a href="#autenticacion">Headers</a>
+          </li>
+          <li>
+            <a href="#crear-pago-qr">Crear pago (POST) — cURL</a>
+          </li>
+          <li>
+            <a href="#estado-pago">Estado del pago (GET) — cURL</a>
+          </li>
+          <li>
+            <a href="#webhooks">Webhooks</a>
+          </li>
+        </ol>
+      </nav>
 
-      <h2>Cuenta</h2>
+      <h2 id="autenticacion">Headers</h2>
+      <p>En cada request autenticado a <code>/api/payments/...</code> (excepto el GET público de estado):</p>
+      <BloqueCodigoCopiar titulo="Headers">
+        {`x-api-key: Api_Key
+x-secret-key: Secret_Key
+Content-Type: application/json`}
+      </BloqueCodigoCopiar>
+
+      <h2 id="crear-pago-qr">
+        <Metodo verbo="POST" /> <code>/api/payments/qr</code>
+      </h2>
       <p>
-        Perfil sincronizado con el API, logo de marca (subida vía Cloudinary en el navegador), wallet de la cuenta,
-        conexión Phantom y preferencias de avisos por transacción (hoy guardadas en local hasta exista endpoint).
+        Crea un intent de pago con QR. Sustituí <code>Api_Key</code> y <code>Secret_Key</code> por tus valores
+        reales. Con <strong>credenciales generales</strong>, enviá <code>businessId</code> (UUID del negocio
+        donde debe aplicarse el pago).
       </p>
+      <BloqueCodigoCopiar titulo="cURL (bash / Git Bash / macOS / Linux)">
+        {`curl -X POST "${base}/api/payments/qr" \\
+  -H "Content-Type: application/json" \\
+  -H "x-api-key: Api_Key" \\
+  -H "x-secret-key: Secret_Key" \\
+  -d '{
+    "businessId": "UUID_DEL_NEGOCIO",
+    "amount": 0.01,
+    "orderId": "pedido-001",
+    "sellerWallet": null,
+    "webhookUrl": "https://tu-servidor.com/webhook",
+    "expiresInMinutes": 15,
+    "description": "Compra demo"
+  }'`}
+      </BloqueCodigoCopiar>
+      <p className={estilos.nota}>
+        <code>amount</code>: monto del pedido en SOL (&gt; 0), es decir lo que recibe el vendedor en escrow. El
+        comprador paga <code>amount</code> + comisión de plataforma (configurable en el panel admin, p. ej. 1%).
+        La respuesta incluye <code>commissionAmount</code>, <code>totalAmount</code> y <code>commissionBps</code>.{" "}
+        <code>businessId</code>: obligatorio con claves de cuenta. Si omitís <code>sellerWallet</code>, se usa la
+        wallet del negocio indicado. Guardá el <code>id</code> del pago para el GET de estado.
+      </p>
+
+      <h2 id="estado-pago">
+        <Metodo verbo="GET" /> <code>/api/payments/:paymentId/status</code>
+      </h2>
+      <p>Público: no lleva headers de API Key. Reemplazá <code>PAYMENT_ID</code> por el id del pago.</p>
+      <BloqueCodigoCopiar titulo="cURL">
+        {`curl -sS "${base}/api/payments/PAYMENT_ID/status"`}
+      </BloqueCodigoCopiar>
+      <p className={estilos.nota}>
+        Podés repetir la llamada desde el navegador del comprador o desde tu backend para polling.
+      </p>
+
+      <h2 id="webhooks">Webhooks</h2>
+      <p>
+        Configurás la URL del webhook y el secreto de firma desde el panel de TrustPay. Cuando hay un evento,
+        recibís un <code>POST</code> con cuerpo JSON y estos headers:
+      </p>
+      <BloqueCodigoCopiar titulo="Headers de la petición entrante">
+        {`Content-Type: application/json
+X-TrustPay-Signature: <hex_hmac_sha256>
+X-TrustPay-Event: <tipo_de_evento>`}
+      </BloqueCodigoCopiar>
+      <p>
+        Verificá la firma: HMAC-SHA256 del <strong>cuerpo crudo</strong> (el mismo string JSON recibido) con tu{" "}
+        <code>signingSecret</code> (te lo mostramos al crear el endpoint). Debe coincidir en hexadecimal con{" "}
+        <code>X-TrustPay-Signature</code>.
+      </p>
+      <BloqueCodigoCopiar titulo="Ejemplo de cuerpo">
+        {`{
+  "type": "escrow.locked",
+  "data": {},
+  "created_at": "2026-03-23T12:00:00.000Z"
+}`}
+      </BloqueCodigoCopiar>
+      <p className={estilos.nota}>
+        Eventos típicos: <code>escrow.locked</code>, <code>escrow.released</code>, <code>payment.expired</code>,{" "}
+        etc. Respondé HTTP 2xx si procesaste bien; si no, se reintenta.
+      </p>
+      <BloqueCodigoCopiar titulo="Verificar firma con OpenSSL (ejemplo local)">
+        {`# Guardá el body en body.json y el secreto en SECRET (sin saltos extra al final)
+echo -n "$(cat body.json)" | openssl dgst -sha256 -hmac "TU_SIGNING_SECRET" -hex`}
+      </BloqueCodigoCopiar>
     </article>
   );
 }

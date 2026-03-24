@@ -56,6 +56,36 @@ const paisesRegistro: PaisRegistro[] = [
   { codigo: "ve", etiqueta: "Venezuela" },
 ];
 
+/** Misma cinta Phantom en login y registro (mismo texto que «Crear cuenta»). */
+function CintaWalletPhantom({
+  variante,
+  conectado,
+  direccionLista,
+}: Readonly<{
+  variante: "registrar" | "ingresar";
+  conectado: boolean;
+  direccionLista: boolean;
+}>) {
+  return (
+    <div className={`${estilosModal.cintaWallet} ${estilosModal.campoLargo}`}>
+      <div className={estilosModal.cintaWalletTextos}>
+        <p className={estilosModal.cintaWalletKicker}>1 · Wallet</p>
+        <p className={estilosModal.cintaWalletDetalle}>
+          Phantom con la dirección de cobro de tu comercio.
+        </p>
+        {conectado && direccionLista ? (
+          <span className={estilosModal.pillOk}>
+            {variante === "registrar" ? "Listo para registrar" : "Listo para entrar"}
+          </span>
+        ) : null}
+      </div>
+      <div className={estilosModal.cintaWalletAccion}>
+        <BotonConexionWallet compacto />
+      </div>
+    </div>
+  );
+}
+
 // Modal de login y registro contra el API TrustPay (admin o merchant).
 export default function ModalAutenticacionDemo({
   abierta,
@@ -247,12 +277,12 @@ export default function ModalAutenticacionDemo({
             <div className={estilosModal.cabeceraCompacta}>
               <div>
                 <h2 id="titulo-modal" className={estilosModal.tituloModal}>
-                  {modoModal === "ingresar" ? "Entrá a TrustPay" : "Alta de comercio"}
+                  {modoModal === "ingresar" ? "Entrá a TrustPay Ahora!!" : "Alta de comercio"}
                 </h2>
                 <p className={estilosModal.hintLinea}>
                   {modoModal === "ingresar"
-                    ? "Correo, contraseña y Phantom (misma wallet del registro)."
-                    : "Datos + Phantom (devnet)."}
+                    ? "Misma pantalla que en alta: Phantom y luego correo y contraseña (devnet)."
+                    : "Conectá Phantom y completá los datos (devnet)."}
                 </p>
               </div>
               <button
@@ -307,6 +337,12 @@ export default function ModalAutenticacionDemo({
             <form className={estilosModal.formulario} onSubmit={enviarFormulario}>
               {modoModal === "registrar" ? (
                 <div className={estilosModal.gridRegistro}>
+                  <CintaWalletPhantom
+                    variante="registrar"
+                    conectado={connected}
+                    direccionLista={!!publicKey}
+                  />
+
                   <label
                     className={`${estilosModal.etiqueta} ${estilosModal.campoLargo}`}
                   >
@@ -400,26 +436,15 @@ export default function ModalAutenticacionDemo({
                       onChange={(e) => setNombreCompleto(e.target.value)}
                     />
                   </label>
-
-                  <div
-                    className={`${estilosModal.cintaWallet} ${estilosModal.campoLargo}`}
-                  >
-                    <div className={estilosModal.cintaWalletTextos}>
-                      <p className={estilosModal.cintaWalletKicker}>Wallet</p>
-                      <p className={estilosModal.cintaWalletDetalle}>
-                        Phantom con la dirección de cobro.
-                      </p>
-                      {connected && publicKey ? (
-                        <span className={estilosModal.pillOk}>Listo para registrar</span>
-                      ) : null}
-                    </div>
-                    <div className={estilosModal.cintaWalletAccion}>
-                      <BotonConexionWallet compacto />
-                    </div>
-                  </div>
                 </div>
               ) : (
                 <div className={estilosModal.gridRegistro}>
+                  <CintaWalletPhantom
+                    variante="ingresar"
+                    conectado={connected}
+                    direccionLista={!!publicKey}
+                  />
+
                   <label
                     className={`${estilosModal.etiqueta} ${estilosModal.campoLargo}`}
                   >
@@ -449,23 +474,6 @@ export default function ModalAutenticacionDemo({
                       onChange={(e) => setContrasena(e.target.value)}
                     />
                   </label>
-
-                  <div
-                    className={`${estilosModal.cintaWallet} ${estilosModal.campoLargo}`}
-                  >
-                    <div className={estilosModal.cintaWalletTextos}>
-                      <p className={estilosModal.cintaWalletKicker}>Wallet</p>
-                      <p className={estilosModal.cintaWalletDetalle}>
-                        Misma wallet que al registrarte (obligatorio).
-                      </p>
-                      {connected && publicKey ? (
-                        <span className={estilosModal.pillOk}>Listo</span>
-                      ) : null}
-                    </div>
-                    <div className={estilosModal.cintaWalletAccion}>
-                      <BotonConexionWallet compacto />
-                    </div>
-                  </div>
                 </div>
               )}
 

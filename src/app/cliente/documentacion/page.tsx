@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 
-// La documentación vive en la ruta pública `/documentacion` (CTA desde el home).
+/** La documentación técnica vive en la vista dedicada `/api-docs` (mismo estilo que api-docs públicos tipo Vemper). */
 export default function PaginaDocumentacionClienteRedirige() {
-  redirect("/documentacion");
+  redirect("/api-docs");
 }

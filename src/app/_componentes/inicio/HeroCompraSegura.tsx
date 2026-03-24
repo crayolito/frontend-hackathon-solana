@@ -32,7 +32,7 @@ export default function HeroCompraSegura({
           >
             Abre tu cuenta gratis
           </button>
-          <a className={estilosHome.botonSecundario} href="/documentacion">
+          <a className={estilosHome.botonSecundario} href="/api-docs">
             Ver documentación
           </a>
         </div>

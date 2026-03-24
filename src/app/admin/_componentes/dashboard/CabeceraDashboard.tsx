@@ -8,6 +8,8 @@ import estilos from "./cabecera-dashboard.module.css";
 type Props = {
   /** Si se omite, no se muestra el boton de exportar. */
   alExportar?: () => void;
+  /** Deshabilita el botón mientras se genera el CSV (p. ej. analítica comercio). */
+  exportandoCsv?: boolean;
   titulo?: string;
   subtitulo?: string;
   /** Si es false, oculta el selector de mes (p. ej. Configuracion). */
@@ -16,6 +18,7 @@ type Props = {
 
 export default function CabeceraDashboard({
   alExportar,
+  exportandoCsv = false,
   titulo = "Rendimiento del negocio",
   subtitulo = "Visión mensual detallada para la gestión estratégica",
   mostrarSelectorMes = true,
@@ -49,13 +52,14 @@ export default function CabeceraDashboard({
             type="button"
             className={estilos.botonExportar}
             onClick={alExportar}
+            disabled={exportandoCsv}
           >
             <span
               className={estilosMascara.iconoExportarMascara}
               style={estiloMascaraIcono("/file.svg")}
               aria-hidden
             />
-            Exportar datos
+            {exportandoCsv ? "Exportando…" : "Exportar datos"}
           </button>
         ) : null}
       </div>

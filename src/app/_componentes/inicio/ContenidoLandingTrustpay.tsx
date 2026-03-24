@@ -233,7 +233,7 @@ export default function ContenidoLandingTrustpay({
               automatizar. Pensado para equipos que necesitan documentación seria.
             </p>
             <div className={estilosHome.landingDocCta}>
-              <Link href="/documentacion" className={estilosHome.landingDocBoton}>
+              <Link href="/api-docs" className={estilosHome.landingDocBoton}>
                 <IconoLibroDocs color="currentColor" tamano={20} />
                 Ver documentación para integrar
               </Link>
@@ -385,7 +385,7 @@ export default function ContenidoLandingTrustpay({
               negocio en Latinoamérica pueda cobrar en cripto de forma simple, rápida y segura.
             </p>
             <div className={estilosHome.landingEquipoAcciones}>
-              <Link href="/documentacion" className={estilosHome.landingDocBotonSecundario}>
+              <Link href="/api-docs" className={estilosHome.landingDocBotonSecundario}>
                 Documentación técnica
               </Link>
             </div>
@@ -416,7 +416,7 @@ export default function ContenidoLandingTrustpay({
             Crear mi cuenta gratis
           </button>
           <Link
-            href="/documentacion"
+            href="/api-docs"
             className={`${estilosHome.botonSecundario} ${estilosHome.landingBotonLink}`}
           >
             Leer documentación

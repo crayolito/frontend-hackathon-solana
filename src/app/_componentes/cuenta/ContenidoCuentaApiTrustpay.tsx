@@ -19,6 +19,7 @@ import {
 import BotonConexionWallet from "../../solana/BotonConexionWallet";
 import estilos from "../../cliente/_componentes/desarrollador.module.css";
 import ZonaSubidaLogoCloudinary from "./ZonaSubidaLogoCloudinary";
+import SeccionCredencialesApiPublica from "./SeccionCredencialesApiPublica";
 
 const CLAVE_LOGO_CUENTA = "trustpay_logo_cuenta_marca";
 
@@ -261,6 +262,67 @@ export default function ContenidoCuentaApiTrustpay() {
           >
             {guardandoPerfil ? "Guardando…" : "Guardar perfil"}
           </button>
+        </div>
+      </section>
+
+      <SeccionCredencialesApiPublica />
+
+      <section className={estilos.tarjeta}>
+        <div className={estilos.cabeceraTarjeta}>
+          <h2 className={estilos.tituloTarjeta}>
+            <span className={estilos.walletTituloEmoji} aria-hidden>
+              💎
+            </span>
+            Tu wallet
+          </h2>
+        </div>
+        <div className={estilos.cuerpoTarjeta}>
+          {usuario.walletAddress ? (
+            <div className={estilos.walletCajaDestacada}>
+              <div className={estilos.walletCajaCabecera}>
+                <span className={estilos.walletEmojiGrande} aria-hidden>
+                  ✨
+                </span>
+                <span className={estilos.walletEtiquetaCaja}>Dirección en tu cuenta</span>
+              </div>
+              <p className={estilos.walletDireccionCompleta} title={usuario.walletAddress}>
+                🔗 {usuario.walletAddress}
+              </p>
+              <button
+                type="button"
+                className={`${estilos.botonSecundario} ${estilos.walletBotonCopiar}`}
+                onClick={async () => {
+                  await navigator.clipboard.writeText(usuario.walletAddress as string);
+                }}
+              >
+                📋 Copiar dirección
+              </button>
+            </div>
+          ) : (
+            <p className={estilos.walletSinDato}>
+              <span aria-hidden>🔍 </span>
+              Todavía no tenés una wallet guardada en el registro. Conectá Phantom abajo o
+              completá el alta con tu dirección.
+            </p>
+          )}
+
+          <div className={estilos.walletPhantomBloque}>
+            <span className={estilos.etiqueta}>Phantom (devnet)</span>
+            <div style={{ marginTop: 8 }}>
+              <BotonConexionWallet compacto />
+            </div>
+            {connected && publicKey ? (
+              <p className={estilos.walletPhantomActiva}>
+                <span aria-hidden>🦄</span>
+                <span>Conectada:</span>
+                <span title={publicKey.toBase58()}>{acortarDireccion(publicKey.toBase58())}</span>
+              </p>
+            ) : (
+              <p className={estilos.subtituloTarjeta} style={{ marginTop: 10, marginBottom: 0 }}>
+                Conectá Phantom para firmar y crear negocios con esa dirección.
+              </p>
+            )}
+          </div>
         </div>
       </section>
 

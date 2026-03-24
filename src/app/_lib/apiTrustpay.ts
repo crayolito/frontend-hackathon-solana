@@ -486,6 +486,116 @@ export async function obtenerDistribucionMerchantsAdmin(token: string) {
   );
 }
 
+// --- Métricas merchant (JWT; sin rutas /admin) ---
+
+export type MetricasMisNegociosPagosRespuesta = {
+  data: Array<{
+    businessId: string;
+    businessName: string;
+    paymentCount: number;
+    volumeLamports: string;
+    volumeSol: string;
+  }>;
+};
+
+export async function obtenerMetricasMisNegociosPagos(
+  token: string,
+  consulta: { sort?: "count" | "volume"; from?: string; to?: string } = {}
+) {
+  const q = new URLSearchParams();
+  if (consulta.sort) q.set("sort", consulta.sort);
+  if (consulta.from) q.set("from", consulta.from);
+  if (consulta.to) q.set("to", consulta.to);
+  const sufijo = q.toString() ? `?${q.toString()}` : "";
+  return solicitudJson<MetricasMisNegociosPagosRespuesta>(
+    `/metrics/my-businesses/payments${sufijo}`,
+    { method: "GET", token }
+  );
+}
+
+export type RespuestaEscrowLockedMerchant = {
+  totalLockedLamports: string;
+  totalLockedSol: string;
+  paymentCount: number;
+  byBusiness: Array<{
+    businessId: string;
+    businessName: string;
+    paymentCount: number;
+    lockedLamports: string;
+    lockedSol: string;
+  }>;
+  statusesIncluded: string[];
+};
+
+export async function obtenerResumenEscrowMerchant(token: string, businessId?: string) {
+  const q = new URLSearchParams();
+  if (businessId) q.set("businessId", businessId);
+  const sufijo = q.toString() ? `?${q.toString()}` : "";
+  return solicitudJson<RespuestaEscrowLockedMerchant>(
+    `/metrics/my-businesses/escrow-locked${sufijo}`,
+    { method: "GET", token }
+  );
+}
+
+export async function obtenerSeriePagosMerchant(
+  token: string,
+  consulta: { groupBy?: "day" | "week"; buckets?: number } = {}
+) {
+  const q = new URLSearchParams();
+  if (consulta.groupBy) q.set("groupBy", consulta.groupBy);
+  if (consulta.buckets != null) q.set("buckets", String(consulta.buckets));
+  const sufijo = q.toString() ? `?${q.toString()}` : "";
+  return solicitudJson<SeriePagosAdminRespuesta>(
+    `/metrics/my-payments/timeseries${sufijo}`,
+    { method: "GET", token }
+  );
+}
+
+/** Agrega filas de GET /metrics/my-businesses/payments (todos tus negocios). */
+export async function agregarMetricasMisNegocios(token: string) {
+  const r = await obtenerMetricasMisNegociosPagos(token, { sort: "volume" });
+  let totalPagos = 0;
+  let volumenLamports = BigInt(0);
+  for (const row of r.data) {
+    totalPagos += row.paymentCount;
+    volumenLamports += BigInt(row.volumeLamports || "0");
+  }
+  const negociosConActividad = r.data.filter((x) => x.paymentCount > 0).length;
+  return {
+    totalNegocios: r.data.length,
+    negociosConActividad,
+    totalPagos,
+    volumenLamports,
+    volumenSol: formatearLamportsASol(volumenLamports),
+  };
+}
+
+export type EmbudoPagosMerchantRespuesta = {
+  steps: Array<{
+    key: string;
+    label: string;
+    count: number;
+    percentOfFirst: number;
+  }>;
+  /** Presente en API reciente; si falta, el front asume 0 pendientes. */
+  countsByStatus?: {
+    pending: number;
+    escrow_locked: number;
+    disputed: number;
+    shipped: number;
+    released: number;
+    auto_released: number;
+  };
+};
+
+/** Ordenes por estado: iniciadas → pagados → entrega → liberados (tus negocios). */
+export async function obtenerEmbudoPagosMerchant(token: string) {
+  return solicitudJson<EmbudoPagosMerchantRespuesta>(
+    "/metrics/my-businesses/payment-funnel",
+    { method: "GET", token }
+  );
+}
+
 // --- Comercio (merchant): negocios y pagos escrow (JWT) ---
 
 export type NegocioTrustpay = {
@@ -547,6 +657,31 @@ export async function listarPagosEscrowNegocio(
     `/businesses/${encodeURIComponent(businessId)}/payments?${q}`,
     { method: "GET", token }
   );
+}
+
+export type PagoConNegocio = PagoEscrowMerchantItem & { businessName: string };
+
+/** Últimos pagos de todos los negocios del merchant (paralelo por negocio). */
+export async function listarPagosRecientesTodosNegocios(
+  token: string,
+  limite = 40
+): Promise<PagoConNegocio[]> {
+  const primera = await listarNegociosUsuario(token, 1, 80);
+  const negocios = primera.data;
+  if (negocios.length === 0) return [];
+
+  const lotes = await Promise.all(
+    negocios.map(async (b) => {
+      const r = await listarPagosEscrowNegocio(token, b.id, 1, 25);
+      return r.data.map((p) => ({ ...p, businessName: b.name }));
+    })
+  );
+  const mezcla = lotes.flat();
+  mezcla.sort(
+    (a, b) =>
+      new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+  );
+  return mezcla.slice(0, limite);
 }
 
 // --- Compatibilidad con módulos legacy de "negocios" ---
@@ -653,13 +788,15 @@ export async function eliminarNegocioTrustpay(token: string, idNegocio: string) 
   });
 }
 
-/** Marca el negocio como verificado vía PATCH (mismo recurso que actualizar). */
+/** Verifica el negocio on-chain y en BD (POST /businesses/:id/verify). */
 export async function verificarNegocioTrustpay(token: string, idNegocio: string) {
-  return solicitudJson<NegocioTrustpay>(`/businesses/${encodeURIComponent(idNegocio)}`, {
-    method: "PATCH",
-    token,
-    body: JSON.stringify({ isVerified: true }),
-  });
+  return solicitudJson<NegocioTrustpay>(
+    `/businesses/${encodeURIComponent(idNegocio)}/verify`,
+    {
+      method: "POST",
+      token,
+    }
+  );
 }
 
 export async function crearQrNegocioTrustpay(
@@ -708,4 +845,118 @@ export async function listarQrCodesNegocioTrustpay(
     return { items, total, page: outPage, limit: outLimit, totalPages };
   }
   return { items: [], total: 0, page, limit, totalPages: 1 };
+}
+
+// --- API pública de pagos: claves por negocio O credenciales generales /users/me/api-keys (JWT en TrustPay) ---
+
+export type ApiKeyNegocioItem = {
+  id: string;
+  name: string | null;
+  publishableKey: string;
+  secretKeyPreview: string | null;
+  network: string;
+  lastUsedAt: string | null;
+  revokedAt: string | null;
+  disabledAt: string | null;
+  createdAt: string;
+};
+
+export type ApiKeyNegocioCreada = {
+  id: string;
+  publishableKey: string;
+  secretKey: string;
+  secretKeyPreview: string | null;
+  network: string;
+  name: string | null;
+  createdAt: string;
+  message: string;
+};
+
+export async function listarApiKeysNegocio(
+  token: string,
+  businessId: string,
+  page = 1,
+  limit = 50
+) {
+  const q = new URLSearchParams({ page: String(page), limit: String(limit) });
+  return solicitudJson<{
+    data: ApiKeyNegocioItem[];
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  }>(`/businesses/${encodeURIComponent(businessId)}/api-keys?${q}`, {
+    method: "GET",
+    token,
+  });
+}
+
+export async function crearApiKeyNegocio(
+  token: string,
+  businessId: string,
+  datos?: { name?: string | null; network?: "devnet" | "testnet" | "mainnet" }
+) {
+  return solicitudJson<ApiKeyNegocioCreada>(
+    `/businesses/${encodeURIComponent(businessId)}/api-keys`,
+    {
+      method: "POST",
+      token,
+      body: JSON.stringify({
+        name: datos?.name ?? null,
+        network: datos?.network ?? "devnet",
+      }),
+    }
+  );
+}
+
+export async function revocarApiKeyNegocio(
+  token: string,
+  businessId: string,
+  keyId: string
+) {
+  return solicitudJson<{ revoked: boolean }>(
+    `/businesses/${encodeURIComponent(businessId)}/api-keys/${encodeURIComponent(keyId)}/revoke`,
+    {
+      method: "PATCH",
+      token,
+    }
+  );
+}
+
+/** Credenciales generales del comercio (mismas claves para todos los negocios; solo devnet). */
+export async function listarApiKeysCuentaMercado(token: string, page = 1, limit = 50) {
+  const q = new URLSearchParams({ page: String(page), limit: String(limit) });
+  return solicitudJson<{
+    data: ApiKeyNegocioItem[];
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  }>(`/users/me/api-keys?${q}`, {
+    method: "GET",
+    token,
+  });
+}
+
+export async function crearApiKeyCuentaMercado(
+  token: string,
+  datos?: { name?: string | null }
+) {
+  return solicitudJson<ApiKeyNegocioCreada>(`/users/me/api-keys`, {
+    method: "POST",
+    token,
+    body: JSON.stringify({
+      name: datos?.name ?? null,
+    }),
+  });
+}
+
+export async function revocarApiKeyCuentaMercado(token: string, keyId: string) {
+  return solicitudJson<{ revoked: boolean }>(
+    `/users/me/api-keys/${encodeURIComponent(keyId)}/revoke`,
+    {
+      method: "PATCH",
+      token,
+    }
+  );
 }

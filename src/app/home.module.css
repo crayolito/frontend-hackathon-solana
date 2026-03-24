@@ -61,6 +61,14 @@
   display: flex;
   align-items: center;
   gap: 10px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+/* Phantom compacto en la barra del home (junto a «Iniciar sesión»). */
+.headerWalletSlot {
+  min-width: 0;
+  max-width: min(220px, 52vw);
 }
 
 /* Contenedor del botón Phantom + avisos (ej. extensión no instalada). */

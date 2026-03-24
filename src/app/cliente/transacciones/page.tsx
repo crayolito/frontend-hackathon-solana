@@ -6,7 +6,7 @@ export default function PaginaTransaccionesCliente() {
     <>
       <CabeceraAreaCliente
         titulo="Transacciones"
-        subtitulo="Resumen y listado de cobros (demo con datos fijos)."
+        subtitulo="Resumen y últimos pagos reales de tus negocios (API TrustPay)."
       />
       <ContenidoTransaccionesCliente />
     </>

@@ -24,6 +24,7 @@ const opcionesCliente: OpcionCliente[] = [
   { href: "/cliente/analytics", etiqueta: "Analítica", iconoSrc: "/iconos/icon-analytics.svg" },
   { href: "/cliente/negocios", etiqueta: "Negocios", iconoSrc: "/iconos/icon-transacciones.svg" },
   { href: "/cliente/transacciones", etiqueta: "Transacciones", iconoSrc: "/iconos/icon-transacciones.svg" },
+  { href: "/api-docs", etiqueta: "Documentación", iconoSrc: "/iconos/icon-llave.svg" },
   { href: "/cliente/settings", etiqueta: "Cuenta", iconoSrc: "/iconos/icon-settings.svg" },
 ];
 
