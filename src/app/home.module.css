@@ -97,6 +97,54 @@
   box-sizing: border-box;
 }
 
+/* En móvil: instalar Phantom y abrir la dApp en el navegador de la app (flujo equivalente a la extensión). */
+.phantomAyudaMovil {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  font-size: 12px;
+  line-height: 1.45;
+  color: rgba(15, 23, 42, 0.88);
+  background: rgba(241, 245, 249, 0.95);
+  border: 1px solid rgba(148, 163, 184, 0.45);
+  box-sizing: border-box;
+  max-width: min(280px, 92vw);
+}
+
+.phantomAyudaMovilTitulo {
+  margin: 0;
+  font-weight: 700;
+  font-size: 11px;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: rgba(51, 65, 85, 0.95);
+}
+
+.phantomAyudaMovilEnlaces {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.phantomAyudaMovilEnlace {
+  color: #4f46e5;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.phantomAyudaMovilEnlace:hover {
+  color: #4338ca;
+}
+
+.phantomAyudaMovilNota {
+  margin: 0;
+  font-size: 11px;
+  color: rgba(71, 85, 105, 0.95);
+}
+
 .phantomCarteraBtn {
   display: flex;
   align-items: center;
