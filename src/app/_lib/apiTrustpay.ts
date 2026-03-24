@@ -109,6 +109,33 @@ async function solicitudJson<T>(
   return JSON.parse(texto) as T;
 }
 
+// --- Comprador: confirmar recepción (liberar escrow), sin JWT ---
+
+export type ResumenPagoPublico = {
+  status: string;
+  buyerWallet: string | null;
+  orderId: string | null;
+  description: string | null;
+  businessName: string | null;
+};
+
+export async function obtenerResumenPagoPublico(paymentId: string) {
+  return solicitudJson<ResumenPagoPublico>(
+    `/api/payments/${encodeURIComponent(paymentId)}/status`,
+    { method: "GET" }
+  );
+}
+
+export async function solicitarTransaccionConfirmarRecepcion(paymentId: string, account: string) {
+  return solicitudJson<{ transaction: string; message: string }>(
+    `/api/payments/${encodeURIComponent(paymentId)}/confirm`,
+    {
+      method: "POST",
+      body: JSON.stringify({ account: account.trim() }),
+    }
+  );
+}
+
 /** Si enviás `walletAddress`, debe coincidir con la de la cuenta (merchants). Los admin pueden omitirla. */
 export async function iniciarSesionTrustpay(
   correo: string,
@@ -845,6 +872,33 @@ export async function listarQrCodesNegocioTrustpay(
     return { items, total, page: outPage, limit: outLimit, totalPages };
   }
   return { items: [], total: 0, page, limit, totalPages: 1 };
+}
+
+// --- API pública: negocios (x-api-key + x-secret-key, mismo par que pagos) ---
+
+/** Lista negocios visibles para la clave (1 ítem si la clave es por negocio; todos los activos si es credencial de cuenta). */
+export async function listarNegociosApiPublica(publishableKey: string, secretKey: string) {
+  return solicitudJson<{ data: NegocioTrustpay[] }>("/api/businesses", {
+    method: "GET",
+    headers: {
+      "x-api-key": publishableKey.trim(),
+      "x-secret-key": secretKey.trim(),
+    },
+  });
+}
+
+export async function obtenerNegocioApiPublica(
+  publishableKey: string,
+  secretKey: string,
+  businessId: string
+) {
+  return solicitudJson<NegocioTrustpay>(`/api/businesses/${encodeURIComponent(businessId)}`, {
+    method: "GET",
+    headers: {
+      "x-api-key": publishableKey.trim(),
+      "x-secret-key": secretKey.trim(),
+    },
+  });
 }
 
 // --- API pública de pagos: claves por negocio O credenciales generales /users/me/api-keys (JWT en TrustPay) ---

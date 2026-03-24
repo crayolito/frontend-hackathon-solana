@@ -1,0 +1,169 @@
+.ancho {
+  max-width: 520px;
+  margin: 0 auto;
+}
+
+.cabecera {
+  margin-bottom: 24px;
+  text-align: center;
+}
+
+.marca {
+  display: inline-block;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(168, 180, 255, 0.95);
+  margin-bottom: 8px;
+}
+
+.titulo {
+  margin: 0 0 10px;
+  font-size: 1.45rem;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.subtitulo {
+  margin: 0;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: rgba(232, 232, 237, 0.78);
+}
+
+.caja {
+  background: rgba(22, 22, 34, 0.92);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  padding: 18px 20px;
+  margin-bottom: 20px;
+}
+
+.linea {
+  margin: 0 0 10px;
+  font-size: 0.92rem;
+  line-height: 1.45;
+}
+
+.linea:last-child {
+  margin-bottom: 0;
+}
+
+.etiqueta {
+  display: inline-block;
+  min-width: 7.5rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: rgba(232, 232, 237, 0.55);
+  margin-right: 8px;
+}
+
+.mono {
+  font-family: var(--fuente-geist-mono, ui-monospace, monospace);
+  font-size: 0.82rem;
+  word-break: break-all;
+}
+
+.code {
+  font-family: var(--fuente-geist-mono, ui-monospace, monospace);
+  font-size: 0.85rem;
+  background: rgba(0, 0, 0, 0.35);
+  padding: 2px 8px;
+  border-radius: 6px;
+}
+
+.muted {
+  color: rgba(232, 232, 237, 0.65);
+  text-align: center;
+}
+
+.error {
+  color: #fca5a5;
+}
+
+.errorBanner {
+  color: #fecaca;
+  background: rgba(127, 29, 29, 0.35);
+  border: 1px solid rgba(248, 113, 113, 0.35);
+  border-radius: 10px;
+  padding: 12px 14px;
+  margin-bottom: 16px;
+  font-size: 0.9rem;
+}
+
+.exito {
+  color: #86efac;
+  font-size: 0.92rem;
+  margin-bottom: 16px;
+  word-break: break-all;
+}
+
+.aviso {
+  font-size: 0.9rem;
+  color: rgba(252, 211, 77, 0.95);
+  line-height: 1.45;
+  margin: 0 0 12px;
+}
+
+.walletRow {
+  margin-bottom: 16px;
+  display: flex;
+  justify-content: center;
+}
+
+.botonWallet {
+  width: 100%;
+  max-width: 360px;
+}
+
+.botonPrimario {
+  display: block;
+  width: 100%;
+  max-width: 360px;
+  margin: 0 auto 12px;
+  padding: 14px 20px;
+  border: none;
+  border-radius: 12px;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  background: linear-gradient(135deg, #6366f1, #4f46e5);
+  color: #fff;
+}
+
+.botonPrimario:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.ayuda {
+  font-size: 0.82rem;
+  color: rgba(232, 232, 237, 0.55);
+  text-align: center;
+  line-height: 1.45;
+  margin: 0 0 20px;
+}
+
+.pie {
+  text-align: center;
+  font-size: 0.88rem;
+  color: rgba(232, 232, 237, 0.55);
+}
+
+.enlace {
+  color: #a5b4fc;
+  text-decoration: underline;
+}
+
+.enlaceBoton {
+  background: none;
+  border: none;
+  color: #a5b4fc;
+  text-decoration: underline;
+  cursor: pointer;
+  font: inherit;
+  padding: 0;
+}
