@@ -625,6 +625,8 @@ export type PagoEscrowMerchantItem = {
   orderId: string | null;
   status: string;
   amount: number;
+  /** Si viene del API, el pago fue en SPL (no solo SOL nativo). */
+  tokenMint?: string | null;
   sellerWallet: string;
   buyerWallet: string | null;
   escrowPda: string | null;
