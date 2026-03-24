@@ -2,12 +2,11 @@
 
 import { WalletAdapterNetwork, type Adapter, type WalletError } from "@solana/wallet-adapter-base";
 import { ConnectionProvider, WalletProvider } from "@solana/wallet-adapter-react";
+import { PhantomWalletAdapter } from "@solana/wallet-adapter-wallets";
 import { clusterApiUrl } from "@solana/web3.js";
 import type { ReactNode } from "react";
 import { useCallback, useMemo } from "react";
 import { registrarErrorWalletDetallado } from "./registroWalletConsola";
-
-const carterasWalletStandard: Adapter[] = [];
 
 export default function ProveedorSolana({
   children: hijos,
@@ -22,7 +21,7 @@ export default function ProveedorSolana({
   return (
     <ConnectionProvider endpoint={endpoint}>
       <WalletProvider
-        wallets={carterasWalletStandard}
+        wallets={carteras}
         autoConnect={false}
         onError={alErrorWallet}
       >
