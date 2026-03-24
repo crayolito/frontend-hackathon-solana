@@ -1,5 +1,6 @@
 // Layout para todo el area `/admin` (barra lateral + contenido).
 // Solo entra sesión con rol API `admin`; iconos en `public/iconos`.
+// En pantallas ≤900px la barra es un drawer (mismo patrón que el área comercio).
 "use client";
 
 import type { ReactNode } from "react";
@@ -31,6 +32,7 @@ export default function LayoutDeAdministracion({ children }: Readonly<{ children
   const rutaActual = usePathname();
   const router = useRouter();
   const [sesionLista, setSesionLista] = useState(false);
+  const [menuAbierto, setMenuAbierto] = useState(false);
 
   useEffect(() => {
     const datos = obtenerSesionTrustpay();
@@ -50,6 +52,14 @@ export default function LayoutDeAdministracion({ children }: Readonly<{ children
     window.scrollTo({ top: 0, left: 0, behavior: "auto" });
   }, [sesionLista]);
 
+  useEffect(() => {
+    setMenuAbierto(false);
+    const activo = document.activeElement;
+    if (activo instanceof HTMLElement && activo.closest('[data-purpose="admin-sidebar"]')) {
+      activo.blur();
+    }
+  }, [rutaActual]);
+
   const cerrarSesionYSalir = () => {
     cerrarSesion();
     window.scrollTo({ top: 0, left: 0, behavior: "auto" });
@@ -61,13 +71,6 @@ export default function LayoutDeAdministracion({ children }: Readonly<{ children
     return rutaActual?.startsWith(opcion.ruta) ?? false;
   };
 
-  useEffect(() => {
-    const activo = document.activeElement;
-    if (activo instanceof HTMLElement && activo.closest('[data-purpose="admin-sidebar"]')) {
-      activo.blur();
-    }
-  }, [rutaActual]);
-
   if (!sesionLista) {
     return (
       <div className={estilos.contenedor} style={{ padding: 28, fontWeight: 700 }}>
@@ -78,7 +81,20 @@ export default function LayoutDeAdministracion({ children }: Readonly<{ children
 
   return (
     <div className={estilos.contenedor}>
-      <aside className={estilos.barra} data-purpose="admin-sidebar">
+      {menuAbierto ? (
+        <button
+          type="button"
+          className={estilos.fondoAtrasAdmin}
+          aria-label="Cerrar menú"
+          onClick={() => setMenuAbierto(false)}
+        />
+      ) : null}
+
+      <aside
+        id="menu-admin"
+        className={`${estilos.barra} ${estilos.barraMovilAdmin} ${menuAbierto ? estilos.barraMovilAdminAbierta : ""}`}
+        data-purpose="admin-sidebar"
+      >
         <div className={estilos.barraCabecera}>
           <div className={estilos.encabezadoMarca}>
             <Image
@@ -106,6 +122,7 @@ export default function LayoutDeAdministracion({ children }: Readonly<{ children
               href={opcion.ruta}
               scroll
               className={`${estilos.enlace} ${esActivo(opcion) ? estilos.enlacePrincipal : ""}`}
+              onClick={() => setMenuAbierto(false)}
             >
               <span
                 className={estilos.mascaraIconoNav}
@@ -132,9 +149,24 @@ export default function LayoutDeAdministracion({ children }: Readonly<{ children
         </button>
       </aside>
 
-      <main className={estilos.contenido} data-purpose="admin-main">
-        {children}
-      </main>
+      <div className={estilos.columnaPrincipalAdmin}>
+        <header className={estilos.barraSuperiorAdmin}>
+          <button
+            type="button"
+            className={estilos.botonMenuAdmin}
+            aria-expanded={menuAbierto}
+            aria-controls="menu-admin"
+            onClick={() => setMenuAbierto((v) => !v)}
+          >
+            <span className={estilos.iconoMenuAdmin} />
+          </button>
+          <h1 className={estilos.tituloBarraAdmin}>TrustPay · Admin</h1>
+        </header>
+
+        <main className={estilos.contenido} data-purpose="admin-main">
+          {children}
+        </main>
+      </div>
     </div>
   );
 }
