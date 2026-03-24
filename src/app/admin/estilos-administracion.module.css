@@ -201,11 +201,16 @@
   margin: 0;
   font-size: 22px;
   color: var(--texto-primario, #171717);
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .cabecera p {
   margin: 0;
   font-size: 14px;
   color: var(--texto-secundario, rgba(0, 0, 0, 0.6));
+  max-width: 100%;
+  overflow-wrap: anywhere;
 }
 

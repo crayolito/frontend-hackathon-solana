@@ -23,6 +23,33 @@
   align-items: center;
   justify-content: space-between;
   gap: 16px;
+  min-width: 0;
+}
+
+@media (max-width: 560px) {
+  .headerInner {
+    flex-wrap: wrap;
+    row-gap: 12px;
+    padding: 12px 14px;
+  }
+
+  .marca {
+    min-width: 0;
+    flex: 1 1 auto;
+  }
+
+  .headerAcciones {
+    flex: 1 1 100%;
+    min-width: 0;
+    justify-content: flex-end;
+    gap: 8px;
+  }
+
+  .headerWalletSlot {
+    max-width: none;
+    flex: 1 1 auto;
+    min-width: 0;
+  }
 }
 
 .marca {
@@ -68,16 +95,17 @@
 /* Phantom compacto en la barra del home (junto a «Iniciar sesión»). */
 .headerWalletSlot {
   min-width: 0;
-  max-width: min(220px, 52vw);
+  max-width: min(220px, min(52vw, 100%));
 }
 
-/* Contenedor del botón Phantom + avisos (ej. extensión no instalada). */
+/* Contenedor del botón Phantom. */
 .phantomCarteraEnvolver {
   display: flex;
   flex-direction: column;
   align-items: stretch;
   gap: 8px;
-  max-width: min(280px, 46vw);
+  max-width: min(280px, min(46vw, 100%));
+  min-width: 0;
 }
 
 .phantomCarteraEnvolverCompacto {
@@ -97,54 +125,6 @@
   box-sizing: border-box;
 }
 
-/* En móvil: instalar Phantom y abrir la dApp en el navegador de la app (flujo equivalente a la extensión). */
-.phantomAyudaMovil {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  padding: 8px 10px;
-  border-radius: 10px;
-  font-size: 12px;
-  line-height: 1.45;
-  color: rgba(15, 23, 42, 0.88);
-  background: rgba(241, 245, 249, 0.95);
-  border: 1px solid rgba(148, 163, 184, 0.45);
-  box-sizing: border-box;
-  max-width: min(280px, 92vw);
-}
-
-.phantomAyudaMovilTitulo {
-  margin: 0;
-  font-weight: 700;
-  font-size: 11px;
-  letter-spacing: 0.02em;
-  text-transform: uppercase;
-  color: rgba(51, 65, 85, 0.95);
-}
-
-.phantomAyudaMovilEnlaces {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.phantomAyudaMovilEnlace {
-  color: #4f46e5;
-  font-weight: 600;
-  text-decoration: underline;
-  text-underline-offset: 2px;
-}
-
-.phantomAyudaMovilEnlace:hover {
-  color: #4338ca;
-}
-
-.phantomAyudaMovilNota {
-  margin: 0;
-  font-size: 11px;
-  color: rgba(71, 85, 105, 0.95);
-}
-
 .phantomCarteraBtn {
   display: flex;
   align-items: center;
@@ -156,7 +136,18 @@
   cursor: pointer;
   text-align: left;
   transition: filter 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
-  max-width: min(280px, 46vw);
+  max-width: min(280px, min(46vw, 100%));
+  min-width: 0;
+}
+
+@media (max-width: 560px) {
+  .phantomCarteraBtn {
+    max-width: 100%;
+  }
+
+  .phantomCarteraEnvolver:not(.phantomCarteraEnvolverCompacto) {
+    max-width: 100%;
+  }
 }
 
 .phantomCarteraBtn:hover:not(:disabled) {
@@ -196,6 +187,9 @@
 .phantomCarteraTituloCompacto {
   font-size: 12px;
   line-height: 1.2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .phantomCarteraSubCompacto {
@@ -226,6 +220,9 @@
   color: rgba(236, 245, 255, 0.95);
   letter-spacing: 0.02em;
   line-height: 1.25;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .phantomCarteraSub {
@@ -247,6 +244,8 @@
   color: var(--primario);
   cursor: pointer;
   font-weight: 700;
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 
 .botonHeader:hover {

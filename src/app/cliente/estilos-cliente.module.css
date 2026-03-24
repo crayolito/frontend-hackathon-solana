@@ -43,6 +43,7 @@
   background: var(--superficie, #f0f2f5);
   border-bottom: 1px solid rgba(0, 0, 0, 0.06);
   flex-shrink: 0;
+  min-width: 0;
 }
 
 .barraSuperiorIzquierda {
@@ -308,10 +309,15 @@
   margin: 0;
   font-size: clamp(1.15rem, 2.5vw, 1.35rem);
   color: var(--texto-primario, #171717);
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .cabecera p {
   margin: 0;
   font-size: clamp(0.85rem, 2vw, 0.95rem);
   color: var(--texto-secundario, rgba(0, 0, 0, 0.6));
+  max-width: 100%;
+  overflow-wrap: anywhere;
 }

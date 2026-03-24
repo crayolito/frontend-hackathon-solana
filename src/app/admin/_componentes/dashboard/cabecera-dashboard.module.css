@@ -22,12 +22,38 @@
   font-weight: 800;
   color: var(--texto-primario, #1a1a2e);
   letter-spacing: -0.02em;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .subtituloPrincipal {
   margin: 6px 0 0;
   font-size: 0.95rem;
   color: color-mix(in srgb, var(--texto) 48%, transparent);
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 600px) {
+  .tituloPrincipal {
+    font-size: 1.35rem;
+  }
+
+  .accionesCabecera {
+    width: 100%;
+  }
+
+  .selectorMes {
+    min-width: 0;
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .botonExportar {
+    width: 100%;
+    justify-content: center;
+  }
 }
 
 .accionesCabecera {

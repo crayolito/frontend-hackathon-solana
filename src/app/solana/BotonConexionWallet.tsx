@@ -8,11 +8,7 @@ import { flushSync } from "react-dom";
 import { LAMPORTS_PER_SOL } from "@solana/web3.js";
 import { useNotificacion } from "../_componentes/ProveedorNotificaciones";
 import estilosHome from "../home.module.css";
-import {
-  enlaceAbrirSitioEnNavegadorPhantom,
-  enlaceTiendaPhantomSegunDispositivo,
-  esClienteTelefonoOTablet,
-} from "./entornoPhantomMovil";
+import { esClienteTelefonoOTablet } from "./entornoPhantomMovil";
 import { registrarErrorWalletDetallado } from "./registroWalletConsola";
 
 const NOMBRE_PHANTOM = "Phantom" as WalletName;
@@ -23,9 +19,8 @@ function acortarDireccion(base58: string) {
 }
 
 /**
- * Phantom con logo del proyecto, texto claro y logs en consola (solo desarrollo).
- * En escritorio prioriza la extensión; en móvil intenta Phantom inyectada, luego Mobile Wallet Adapter (Android),
- * y muestra enlaces para instalar la app o abrir la dApp dentro de Phantom.
+ * Phantom con logo del proyecto. Escritorio: extensión; móvil: app inyectada o Mobile Wallet Adapter (Android).
+ * Sin bloques extra bajo el botón: solo el mismo control, textos más cortos en pantallas chicas.
  */
 export default function BotonConexionWallet({
   className: claseExtra,
@@ -54,15 +49,7 @@ export default function BotonConexionWallet({
 
   const adaptadorParaConectar = entradaPhantom ?? entradaAdaptadorMovilSolana;
 
-  const enlacesMovil = useMemo(() => {
-    if (!esMovil || typeof window === "undefined") {
-      return { abrirEnPhantom: null as string | null, tienda: "" };
-    }
-    return {
-      abrirEnPhantom: enlaceAbrirSitioEnNavegadorPhantom(),
-      tienda: enlaceTiendaPhantomSegunDispositivo(),
-    };
-  }, [esMovil]);
+  const etiquetasCortas = compacto || esMovil;
 
   useEffect(() => {
     if (!connected || !publicKey) return;
@@ -114,18 +101,18 @@ export default function BotonConexionWallet({
           error,
           adaptadorParaConectar.adapter,
         );
+        if (esClienteTelefonoOTablet()) {
+          mostrarNotificacion("No se pudo abrir Phantom. ¿Tenés la app instalada?", 8000);
+        }
       }
       return;
     }
 
-    if (esMovil) {
-      mostrarNotificacion(
-        "En el celular no hay extensión de Phantom. Instalá la app Phantom o abrí esta página desde el Explorador dentro de Phantom (enlace abajo del botón). En Android con Chrome también podés conectar si ya tenés Phantom instalada.",
-        14_000,
-      );
+    if (esClienteTelefonoOTablet()) {
+      mostrarNotificacion("Instalá la app Phantom desde phantom.app.", 7000);
       if (process.env.NODE_ENV === "development") {
         console.warn(
-          "[Wallet] Móvil: sin Phantom inyectada ni adaptador móvil Solana. Carteras detectadas:",
+          "[Wallet] Móvil: sin cartera disponible. Detectadas:",
           wallets.map((w) => w.adapter.name),
         );
       }
@@ -133,18 +120,18 @@ export default function BotonConexionWallet({
     }
 
     mostrarNotificacion(
-      "No encontramos la extensión Phantom en el navegador. Instalá el complemento desde phantom.app, recargá la página y volvé a intentar.",
-      10_000,
+      "Instalá la extensión Phantom desde phantom.app y recargá la página.",
+      9000,
     );
     if (process.env.NODE_ENV === "development") {
       console.warn(
-        "[Wallet] Phantom no está en la lista. ¿Extensión instalada? Carteras detectadas:",
+        "[Wallet] Phantom no está en la lista. Carteras detectadas:",
         wallets.map((w) => w.adapter.name),
       );
     }
-  }, [adaptadorParaConectar, connected, disconnect, esMovil, mostrarNotificacion, select, wallets]);
+  }, [adaptadorParaConectar, connected, disconnect, mostrarNotificacion, select, wallets]);
 
-  const tituloPrincipal = compacto
+  const tituloPrincipal = etiquetasCortas
     ? connecting
       ? "Conectando…"
       : connected
@@ -159,15 +146,7 @@ export default function BotonConexionWallet({
   const subtitulo =
     connected && publicKey
       ? acortarDireccion(publicKey.toBase58())
-      : compacto
-        ? esMovil
-          ? "Phantom · devnet (móvil)"
-          : "Phantom · devnet"
-        : esMovil
-          ? "Phantom · devnet · móvil o extensión"
-          : "Phantom · red devnet";
-
-  const mostrarBloqueAyudaMovil = esMovil && !connected && Boolean(enlacesMovil.abrirEnPhantom);
+      : "Phantom · devnet";
 
   return (
     <div
@@ -200,32 +179,6 @@ export default function BotonConexionWallet({
           </span>
         </span>
       </button>
-      {mostrarBloqueAyudaMovil ? (
-        <div className={estilosHome.phantomAyudaMovil}>
-          <p className={estilosHome.phantomAyudaMovilTitulo}>En el celular</p>
-          <div className={estilosHome.phantomAyudaMovilEnlaces}>
-            <a
-              className={estilosHome.phantomAyudaMovilEnlace}
-              href={enlacesMovil.abrirEnPhantom ?? "#"}
-              rel="noopener noreferrer"
-            >
-              Abrir esta página en Phantom
-            </a>
-            <a
-              className={estilosHome.phantomAyudaMovilEnlace}
-              href={enlacesMovil.tienda}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Instalar Phantom (App Store / Play Store)
-            </a>
-          </div>
-          <p className={estilosHome.phantomAyudaMovilNota}>
-            En Android con Chrome, el botón Conectar puede abrir Phantom si la app está instalada. En iPhone, lo más
-            fiable suele ser abrir el primer enlace.
-          </p>
-        </div>
-      ) : null}
     </div>
   );
 }
