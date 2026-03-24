@@ -18,6 +18,8 @@ export default function ProveedorSolana({
     registrarErrorWalletDetallado("WalletProvider.onError", error, adapter ?? null);
   }, []);
 
+  const carteras = useMemo(() => [new PhantomWalletAdapter()], []);
+
   return (
     <ConnectionProvider endpoint={endpoint}>
       <WalletProvider
